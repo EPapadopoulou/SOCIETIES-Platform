@@ -40,12 +40,16 @@ import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxEntity;
 import org.societies.api.context.model.CtxEntityIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
+import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.CtxModelType;
+import org.societies.api.context.model.IndividualCtxEntity;
 import org.societies.api.context.model.util.SerialisationHelper;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
+import org.societies.api.identity.INetworkNode;
 import org.societies.api.identity.IdentityType;
 import org.societies.api.internal.context.broker.ICtxBroker;
+import org.societies.api.internal.context.model.CtxAttributeTypes;
 import org.societies.api.internal.personalisation.IPersonalisationManager;
 import org.societies.api.internal.personalisation.model.PreferenceDetails;
 import org.societies.api.osgi.event.IEventMgr;
@@ -72,11 +76,13 @@ public class TestContextEvent  {
 	IInternalPersonalisationManager persoMgr = Mockito.mock(IInternalPersonalisationManager.class);
 	ICtxBroker broker = Mockito.mock(ICtxBroker.class);
 	private ICommManager commManager = Mockito.mock(ICommManager.class);
-	private IIdentity mockId;
+	private IIdentityManager idMgr = Mockito.mock(IIdentityManager.class);
+	private MockIdentity userId;
 	private CtxEntityIdentifier ctxEntityId;
-	private CtxEntity ctxEntity;
+	private IndividualCtxEntity ctxEntity;
 	private CtxEntityIdentifier ctxPrefEntityId;
 	private Registry registry;
+	private CtxAttributeIdentifier registryCtxId;
 	private CtxAttribute prefAttribute;
 	private PreferenceDetails details;
 	private ServiceResourceIdentifier serviceID;
@@ -84,6 +90,7 @@ public class TestContextEvent  {
 	private CtxAttributeIdentifier ctxLocationAttributeId;
 	private CtxAttribute locationAttribute;
 	private String uuid = UUID.randomUUID().toString();
+	private CtxAttribute registryCtxAttribute;
 	
 	@Before
 	public void Setup(){
@@ -95,9 +102,10 @@ public class TestContextEvent  {
 		pcm.setUserPrefLearning(Mockito.mock(IC45Learning.class));
 		pcm.setCommManager(commManager);
 
-		mockId = new MockIdentity(IdentityType.CSS, "myId", "domain");
-		ctxEntityId = new CtxEntityIdentifier(mockId.getJid(), "Person", new Long(1));
-		ctxEntity = new CtxEntity(ctxEntityId);	
+		userId = new MockIdentity(IdentityType.CSS, "user", "ict-societies.eu");
+		
+		ctxEntityId = new CtxEntityIdentifier(userId.getJid(), "Person", new Long(1));
+		ctxEntity = new IndividualCtxEntity(ctxEntityId);
 		serviceID = new ServiceResourceIdentifier();
 		try {
 			serviceID.setIdentifier(new URI("css://mycss.com/MediaPlayer"));
@@ -114,7 +122,31 @@ public class TestContextEvent  {
 		this.setupPreference(details, "100", "10");
 
 		this.setupRegistry(details, preference);
+		Mockito.when(commManager.getIdManager()).thenReturn(this.idMgr);
+		Mockito.when(commManager.getIdManager().getThisNetworkNode()).thenReturn(this.userId);
+		try {
+			Mockito.when(broker.retrieve(ctxEntityId)).thenReturn(new AsyncResult(ctxEntity));
+			Mockito.when(this.broker.retrieveIndividualEntity(this.userId)).thenReturn(new AsyncResult<IndividualCtxEntity>(ctxEntity));
+			Mockito.when(broker.retrieve(ctxLocationAttributeId)).thenReturn(new AsyncResult(locationAttribute));
+			List<CtxIdentifier> tempEntityList = new ArrayList<CtxIdentifier>();
+			tempEntityList.add(ctxEntityId);
+			Mockito.when(broker.lookup(CtxModelType.ENTITY, "Person")).thenReturn(new AsyncResult(tempEntityList));
+			List<CtxIdentifier> tempAttributeList = new ArrayList<CtxIdentifier>();
+			tempAttributeList.add(ctxLocationAttributeId);
+			Mockito.when(broker.lookup(CtxModelType.ATTRIBUTE, "location")).thenReturn(new AsyncResult(tempAttributeList));	
+			List<CtxIdentifier> regCtxIds = new ArrayList<CtxIdentifier>();
+			regCtxIds.add(registryCtxId);
+			Mockito.when(broker.lookup(CtxModelType.ATTRIBUTE, "PREFERENCE_REGISTRY")).thenReturn(new AsyncResult(regCtxIds));
+			Mockito.when(broker.retrieve(registryCtxId)).thenReturn(new AsyncResult<CtxModelObject>(this.registryCtxAttribute));
+			List<CtxIdentifier> tempPrefEntityIDsList = new ArrayList<CtxIdentifier>();		
+			Mockito.when(broker.lookup(CtxModelType.ENTITY, "PREFERENCE")).thenReturn(new AsyncResult(tempPrefEntityIDsList));
+		} catch (CtxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		pcm.initialisePreferenceManagement();
+		
 	}
 
 	
@@ -123,6 +155,14 @@ public class TestContextEvent  {
 		locationAttribute = new CtxAttribute(ctxLocationAttributeId);
 		locationAttribute.setStringValue("home");
 		
+		registryCtxId = new CtxAttributeIdentifier(ctxEntityId, "PREFERENCE_REGISTRY", new Long(1));
+		registryCtxAttribute = new CtxAttribute(registryCtxId); 
+		try {
+			registryCtxAttribute.setBinaryValue(SerialisationHelper.serialise(this.registry));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 
@@ -131,21 +171,11 @@ public class TestContextEvent  {
 		try{
 
 		
-		Mockito.when(commManager.getIdManager()).thenReturn(Mockito.mock(IIdentityManager.class));
-		Mockito.when(broker.retrieve(ctxEntityId)).thenReturn(new AsyncResult(ctxEntity));
-		Mockito.when(broker.retrieve(ctxLocationAttributeId)).thenReturn(new AsyncResult(locationAttribute));
-		List<CtxIdentifier> tempEntityList = new ArrayList<CtxIdentifier>();
-		tempEntityList.add(ctxEntityId);
-		Mockito.when(broker.lookup(CtxModelType.ENTITY, "Person")).thenReturn(new AsyncResult(tempEntityList));
-		List<CtxIdentifier> tempAttributeList = new ArrayList<CtxIdentifier>();
-		tempAttributeList.add(ctxLocationAttributeId);
-		Mockito.when(broker.lookup(CtxModelType.ATTRIBUTE, "location")).thenReturn(new AsyncResult(tempAttributeList));	
-		Mockito.when(broker.lookup(CtxModelType.ATTRIBUTE, "PREFERENCE_REGISTRY")).thenReturn(new AsyncResult(this.registry));
-		List<CtxIdentifier> tempPrefEntityIDsList = new ArrayList<CtxIdentifier>();		
-		Mockito.when(broker.lookup(CtxModelType.ENTITY, "PREFERENCE")).thenReturn(new AsyncResult(tempPrefEntityIDsList));
-		pcm.processServiceStarted(mockId, "media", serviceID);
 		
-		Future<List<IPreferenceOutcome>> futureOutcomes = pcm.getOutcome(mockId, locationAttribute, this.uuid);
+
+		pcm.processServiceStarted(userId, "media", serviceID);
+		
+		Future<List<IPreferenceOutcome>> futureOutcomes = pcm.getOutcome(userId, locationAttribute, this.uuid);
 		List<IPreferenceOutcome> outcomes = futureOutcomes.get();
 		
 		if (outcomes==null){
@@ -153,10 +183,7 @@ public class TestContextEvent  {
 		}else{
 			System.out.println("Successful test: getOutcome(Identity arg0, CtxAttribute arg1, IPersonalisationInternalCallback arg2)");
 		}
-		}catch (CtxException ctxE){
-			TestCase.fail();
-			ctxE.printStackTrace();
-		} catch (InterruptedException e) {
+		}catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -171,7 +198,7 @@ public class TestContextEvent  {
 		
 		registry = new Registry();
 		try {
-		ctxPrefEntityId = new CtxEntityIdentifier(mockId.getJid(), "PREFERENCE", new Long(3));
+		ctxPrefEntityId = new CtxEntityIdentifier(userId.getJid(), "PREFERENCE", new Long(3));
 		CtxEntity ctxPrefEntity = new CtxEntity(ctxPrefEntityId);
 		
 		String preferenceContextType = registry.getNameForNewPreference();
@@ -220,7 +247,7 @@ public class TestContextEvent  {
 			action.setServiceID(sId);
 			action.setServiceType("media");			
 			
-			Future<List<IPreferenceOutcome>> futureOutcomes = pcm.getOutcome(mockId, action, uuid);
+			Future<List<IPreferenceOutcome>> futureOutcomes = pcm.getOutcome(userId, action, uuid);
 			List<IPreferenceOutcome> outcomes = futureOutcomes.get();
 			
 			if (outcomes==null){

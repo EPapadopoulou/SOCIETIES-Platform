@@ -25,6 +25,7 @@
 package org.societies.personalisation.UserPreferenceManagement.impl.evaluation;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.societies.personalisation.preference.api.model.IPreference;
 
@@ -42,7 +43,8 @@ public class ConflictResolver {
 	}
 	
 	
-	public  IPreference resolveConflicts(ArrayList<IPreference> outcomes){
+	public  IPreference resolveConflicts(List<IPreference> outcomes){
+		System.out.println("Resolving conflicts between: "+outcomes);
 		int confLevel = outcomes.get(0).getOutcome().getConfidenceLevel();
 		int index = -1; 
 		for (int i = 1; i < outcomes.size(); i++){

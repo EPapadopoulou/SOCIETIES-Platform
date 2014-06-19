@@ -30,7 +30,9 @@ import java.util.Hashtable;
 import java.util.List;
 
 import javax.swing.JOptionPane;
+import javax.swing.tree.TreeNode;
 
+import org.apache.commons.collections.iterators.ArrayListIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.model.CtxIdentifier;
@@ -86,7 +88,7 @@ public class PreferenceEvaluator {
 			return new Hashtable<IPreferenceOutcome,List<CtxIdentifier>>();
 		}
 	}
-	
+
 	public Hashtable<IPreferenceOutcome,List<CtxIdentifier>> evaluatePreference(IPreference ptn){
 		Hashtable<IPreferenceOutcome,List<CtxIdentifier>> temp = new Hashtable<IPreferenceOutcome,List<CtxIdentifier>>();
 		IPreference p = this.evaluatePreferenceInternal(ptn);
@@ -110,108 +112,75 @@ public class PreferenceEvaluator {
 				}
 			}*/
 
-			
+
 			temp.put(p.getOutcome(), ctxIds);
 			return temp;
 		}else{
 			return new Hashtable<IPreferenceOutcome,List<CtxIdentifier>>();
 		}
 	}
+	
 	private IPreference evaluatePreferenceInternal(IPreference ptn){
-		if(this.logging.isDebugEnabled()){
-			logging.debug("evaluating preference");
-		}
-		//a non-context aware preference
-		if (ptn.isLeaf()){
-			if(this.logging.isDebugEnabled()){
-				logging.debug("preference is not context-dependent. returning IAction object"+ptn.getOutcome().toString());
-			}
-			return ptn;
-		}
-		//if the root object is null then the tree is split so we have to evaluate more than one tree
-		if (ptn.getUserObject()==null){
-			if(this.logging.isDebugEnabled()){
-				logging.debug("preference tree is split. we might have a conflict");
-			}
-			Enumeration<IPreference> e = ptn.children();
-			ArrayList<IPreference> prefList = new ArrayList<IPreference>(); 
-			while (e.hasMoreElements()){
-				IPreference p = e.nextElement();
-				IPreference outcomePreference = this.evaluatePreferenceInternal(p);
-				if (outcomePreference!=null){
-					prefList.add(outcomePreference);
+		System.out.println("Evaluating node: "+ptn.getUserObject());
+		if (ptn.isBranch()){
+			if (ptn.getUserObject()!=null){
+				if (!evaluatesToTrue(ptn.getCondition())){
+					System.out.println("Returning null, Condition evaluates to false: "+ptn.getCondition().toString());
+					return null;
+				}else{
+					System.out.println("Condition evaluates to true, continuing "+ptn.getCondition());
 				}
-
 			}
-			//if only one IOutcome is applicable with the current context return that
-			if (prefList.size()==1){
-				if(this.logging.isDebugEnabled()){
-					logging.debug("PrefEvaluator> Returning: "+ prefList.get(0).toString());
+			
+			List<IPreference> preferenceList = new ArrayList<IPreference>();
+			IPreference defaultOutcome = null;
+			
+			Enumeration children = ptn.children();
+			if (ptn.getChildCount()==1){
+				IPreference childAt0 = (IPreference) ptn.getChildAt(0);
+				if (childAt0.isLeaf()){
+					System.out.println("Returning only leaf outcome. "+childAt0.getOutcome());
+					return childAt0;
 				}
-				return prefList.get(0);
 			}
-			//if no IOutcome is applicable, return a null object
-			else if (prefList.size()==0){
-				if(this.logging.isDebugEnabled()){
-					logging.debug("PrefEvaluator> No preference applicable");
-				}
-				return null;
-			}
-			//if more than one IOutcome objs is applicable, use conflict resolution and return the most applicable
-			else{
-				ConflictResolver cr = new ConflictResolver();
-				IPreference io = cr.resolveConflicts(prefList);
-				if(this.logging.isDebugEnabled()){
-					logging.debug("PrefEvaluator> Returning: "+io.toString());
-				}
-				return io;
-			}
-		}
-		//if the root node is not empty
-		else{
-			if(this.logging.isDebugEnabled()){
-				logging.debug("preference tree is not split. no conflicts here");
-			}
-			//and it's a condition
-			if (ptn.isBranch()){
-				//evaluate the condition
-				IPreferenceCondition con = ptn.getCondition();
-				try {
-					if (evaluatesToTrue(con)){
-						if(this.logging.isDebugEnabled()){
-							logging.debug(con.toString()+" is true - descending tree levels");
-						}
-						//traverse the tree in preorder traversal to evaluate all the conditions under this branch and find an Action 
-						Enumeration<IPreference> e = ptn.children();
-						while (e.hasMoreElements()){
-							IPreference p = e.nextElement();
-							IPreference outcomePreference = this.evaluatePreferenceInternal(p);
-							if(null != outcomePreference){
-								return outcomePreference;
-							}
-						}		
-					}else{
-						if(this.logging.isDebugEnabled()){
-							logging.debug(con.toString()+" is false - returning");
-						}
+			while (children.hasMoreElements()){
+				IPreference childNode = (IPreference) children.nextElement();
+				if (childNode.isLeaf()){
+					
+					defaultOutcome = childNode;
+				}else{
+					IPreference outcomeNode = evaluatePreferenceInternal(childNode);
+					if (outcomeNode!=null)
+					{
+						preferenceList.add(outcomeNode);
 					}
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}//and it's not a condition but an Outcome (i.e. not a branch but a leaf)
-			else{
-				if(this.logging.isDebugEnabled()){
-					logging.debug("PrefEvaluator> Returning: "+ptn.getOutcome());
-				}
-				return ptn;
+				}				
+			}			
+			if (preferenceList.size()==1){
+				System.out.println("Returning 1 outcome: "+preferenceList.get(0));
+				return preferenceList.get(0);
 			}
+			
+			if (preferenceList.size()==0){
+				if (defaultOutcome==null){
+					System.out.println("Not found anything, returning null");
+				}else{
+					System.out.println("Returning default outcome "+defaultOutcome.toString());
+				}
+				return defaultOutcome;
+			}
+			
+			ConflictResolver cr = new ConflictResolver();
+			IPreference io = cr.resolveConflicts(preferenceList);
+			if(this.logging.isDebugEnabled()){
+				logging.debug("PrefEvaluator> Returning: "+io.toString());
+			}
+			System.out.println("Resolved conflict, returning: "+io.toString());
+			return io;
 		}
-
-
-		return null;
+		
+		return ptn;
 	}
-
 
 
 
@@ -255,7 +224,7 @@ public class PreferenceEvaluator {
 			break;
 		default: if(this.logging.isDebugEnabled()){
 			logging.debug("Invalid Operator");
-			}
+		}
 		}
 
 		return result;

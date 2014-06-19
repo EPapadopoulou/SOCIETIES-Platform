@@ -111,7 +111,18 @@ public class PrivatePreferenceCache {
 				this.logging.debug("Could not find preference for :\n"+details.toString()+" in mappings. Looking directy in DB");
 			}
 			try {
-				IndividualCtxEntity individualCtxEntity = this.broker.retrieveIndividualEntity(this.commManager.getIdManager().getThisNetworkNode()).get();
+				if (this.broker==null){
+					System.out.println("broker is null");
+				}
+				if (this.commManager == null){
+					System.out.println("comm is null");
+				}
+				if (this.commManager.getIdManager() == null){
+					System.out.println("idmgr is null");
+				}
+				IIdentity userId = this.commManager.getIdManager().getThisNetworkNode();
+				System.out.println("**********************************userId: "+userId.getBareJid());
+				IndividualCtxEntity individualCtxEntity = this.broker.retrieveIndividualEntity(userId).get();
 				Set<CtxAttribute> attributes = individualCtxEntity.getAttributes();
 				for (CtxAttribute attribute : attributes){
 					String attrType = attribute.getType();
