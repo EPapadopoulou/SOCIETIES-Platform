@@ -93,13 +93,7 @@ public class PrivacyDataManagerCommClient implements IPrivacyDataManagerRemote {
 			throw new PrivacyException("CommunicationException: "+MethodType.CHECK_PERMISSION, e);
 		}
 	}
-	@Override
-	@Deprecated
-	public void checkPermission(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions, IPrivacyDataManagerListener listener) throws PrivacyException {
-		List<DataIdentifier> dataIds = new ArrayList<DataIdentifier>();
-		dataIds.add(dataId);
-		checkPermission(RequestorUtils.toRequestorBean(requestor), dataIds, ActionUtils.toActionBeans(actions), listener);
-	}
+
 
 	/*
 	 * (non-Javadoc)

@@ -31,8 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ActionConstants;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
 
 /**
  * Tool class to manage conversion between Java type and Bean XMLschema generated type
@@ -47,19 +47,19 @@ public class ActionUtils {
 	 * @param actionConstant
 	 * @return
 	 */
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action create(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants actionConstant) {
+	public static Action create(ActionConstants actionConstant) {
 		return create(actionConstant, false);
 	}
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action create(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants actionConstant, boolean optional) {
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action action = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action();
+	public static Action create(ActionConstants actionConstant, boolean optional) {
+		Action action = new Action();
 		action.setActionConstant(actionConstant);
 		action.setOptional(optional);
 		return action;
 	}
 	
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action create(String actionConstantValue, boolean optional) {
-		return create(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.fromValue(actionConstantValue), optional);
+	public static Action create(String actionConstantValue, boolean optional) {
+		return create(ActionConstants.fromValue(actionConstantValue), optional);
 	}
 
 	/**
@@ -68,9 +68,9 @@ public class ActionUtils {
 	 * @param actionConstants Array of actions
 	 * @return List of mandatory actions
 	 */
-	public static List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> createList(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants... actionConstants) {
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actions = new ArrayList<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action>();
-		for (org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants actionConstant : actionConstants) {
+	public static List<Action> createList(ActionConstants... actionConstants) {
+		List<Action> actions = new ArrayList<Action>();
+		for (ActionConstants actionConstant : actionConstants) {
 			actions.add(create(actionConstant));
 		}
 		return actions;
@@ -81,16 +81,16 @@ public class ActionUtils {
 	 * @param entry Action
 	 * @return Action friendly name
 	 */
-	public static String getFriendlyName(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action entry) {
+	public static String getFriendlyName(Action entry) {
 		if (null == entry || null == entry.getActionConstant()) {
 			return "";
 		}
 		if (null == map2FriendlyName || map2FriendlyName.size() <= 0) {
 			map2FriendlyName = new HashMap<String, String>();
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.READ.name(), "access");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.WRITE.name(), "update");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.CREATE.name(), "create");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.DELETE.name(), "delete");
+			map2FriendlyName.put(ActionConstants.READ.name(), "access");
+			map2FriendlyName.put(ActionConstants.WRITE.name(), "update");
+			map2FriendlyName.put(ActionConstants.CREATE.name(), "create");
+			map2FriendlyName.put(ActionConstants.DELETE.name(), "delete");
 		}
 		if (map2FriendlyName.containsKey(entry.getActionConstant().name())) {
 			return map2FriendlyName.get(entry.getActionConstant().name());
@@ -103,13 +103,13 @@ public class ActionUtils {
 	 * @param haystack List of actions
 	 * @return List of action friendly names
 	 */
-	public static List<String> getFriendlyName(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> haystack) {
+	public static List<String> getFriendlyName(List<Action> haystack) {
 		List<String> friendlyNameList = new ArrayList<String>();
 		if (null != haystack && haystack.size() > 0) {
 			// Sort
 			Collections.sort(haystack, new ActionComparator());
 			// Retrieve friendly names
-			for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action entry : haystack) {
+			for(Action entry : haystack) {
 				friendlyNameList.add(getFriendlyName(entry));
 			}
 		}
@@ -121,7 +121,7 @@ public class ActionUtils {
 	 * @param haystack
 	 * @return "action1, action2 and action3"
 	 */
-	public static String getFriendlyDescription(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> haystack) {
+	public static String getFriendlyDescription(List<Action> haystack) {
 		return getFriendlyDescription(haystack, false);
 	}
 	/**
@@ -130,7 +130,7 @@ public class ActionUtils {
 	 * @param displayOptionString To display " (optional)" after an option action
 	 * @return "action1, action2 and action3"
 	 */
-	public static String getFriendlyDescription(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> haystack, boolean displayOptionalString) {
+	public static String getFriendlyDescription(List<Action> haystack, boolean displayOptionalString) {
 		if (null == haystack || haystack.size() <= 0) {
 			return "";
 		}
@@ -140,7 +140,7 @@ public class ActionUtils {
 		// Sort
 		Collections.sort(haystack, new ActionComparator());
 		// Retrieve friendly names
-		for (org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action entry : haystack) {
+		for (Action entry : haystack) {
 			sb.append(getFriendlyName(entry));
 			if (displayOptionalString && entry.isOptional()) {
 				sb.append(" (optional)");
@@ -160,7 +160,7 @@ public class ActionUtils {
 
 
 
-	public static String toXmlString(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action action){
+	public static String toXmlString(Action action){
 		StringBuilder sb = new StringBuilder();
 		if (null != action) {
 			sb.append("\n<Action>\n");
@@ -173,36 +173,39 @@ public class ActionUtils {
 		return sb.toString();
 	}
 
-	public static String toXmlString(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actions){
+	public static String toXmlString(List<Action> actions){
 		StringBuilder sb = new StringBuilder();
 		if (null != actions) {
-			for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action action : actions) {
+			for(Action action : actions) {
 				sb.append(toXmlString(action));
 			}
 		}
 		return sb.toString();
 	}
 
-	public static String toString(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action action){
+	public static String toString(Action action){
 		StringBuilder builder = new StringBuilder();
-		builder.append("Action [");
+		
 		if (null != action) {
-			builder.append("getActionConstant()=");
+			builder.append("Action: ");
 			builder.append(action.getActionConstant());
-			builder.append(", isOptional()=");
-			builder.append(action.isOptional());
+			builder.append(" optional: ");
+			builder.append(action.isOptional()+" ");
 		}
-		builder.append("]");
+		
 		return builder.toString();
 	}
 
-	public static String toString(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actions){
+	public static String toString(List<Action> actions){
 		StringBuilder sb = new StringBuilder();
+		sb.append("Actions: \n");
 		if (null != actions) {
-			for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action action : actions) {
+			for(Action action : actions) {
 				sb.append(toString(action));
+				
 			}
 		}
+		sb.append("\n");
 		return sb.toString();
 	}
 	
@@ -212,9 +215,9 @@ public class ActionUtils {
 	 * @param actions List of action
 	 * @return True if the list is ok
 	 */
-	public static boolean atLeast1MandatoryAction(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actions) {
+	public static boolean atLeast1MandatoryAction(List<Action> actions) {
 		boolean oneMandatory = false;
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action action : actions) {
+		for(Action action : actions) {
 			if (!action.isOptional()) {
 				oneMandatory = true;
 				break;
@@ -230,19 +233,19 @@ public class ActionUtils {
 	 * @param dontCheckOptional At true, the optional field won't be checked
 	 * @return
 	 */
-	public static boolean equal(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action o1, Object o2, boolean dontCheckOptional) {
+	public static boolean equal(Action o1, Object o2, boolean dontCheckOptional) {
 		// -- Verify reference equality
 		if (o1 == o2) { return true; }
 		if (o2 == null) { return false; }
 		if (o1 == null) { return false; }
 		if (o1.getClass() != o2.getClass()) { return false; }
 		// -- Verify obj type
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action ro2 = (org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action) o2;
+		Action ro2 = (Action) o2;
 		return (ActionConstantsUtils.equal(o1.getActionConstant(), ro2.getActionConstant()))
 				&& (dontCheckOptional || o1.isOptional() == ro2.isOptional());
 	}
 	@Deprecated
-	public static boolean equals(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action o1, Object o2) {
+	public static boolean equals(Action o1, Object o2) {
 		return equal(o1, o2);
 	}
 	/**
@@ -251,42 +254,42 @@ public class ActionUtils {
 	 * @param o2
 	 * @return
 	 */
-	public static boolean equal(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action o1, Object o2) {
+	public static boolean equal(Action o1, Object o2) {
 		return equal(o1, o2, false);
 	}
 
-	public static boolean equal(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> o1, Object o2) {
+	public static boolean equal(List<Action> o1, Object o2) {
 		// -- Verify reference equality
 		if (o1 == o2) { return true; }
 		if (o2 == null) { return false; }
 		if (o1 == null) { return false; }
 		if (!(o2 instanceof List)) { return false; }
 		// -- Verify obj type
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> ro2 = (List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action>) o2;
+		List<Action> ro2 = (List<Action>) o2;
 		if (o1.size() != ro2.size()) {
 			return false;
 		}
 		boolean result = true;
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action o1Entry : o1) {
+		for(Action o1Entry : o1) {
 			result &= contain(o1Entry, ro2);
 		}
 		return result;
 	}
 	@Deprecated
-	public static boolean equals(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> o1, Object o2) {
+	public static boolean equals(List<Action> o1, Object o2) {
 		return equal(o1, o2);
 	}
 
-	public static class ActionComparator implements Comparator<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> { 
-		private Map<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants, Integer> map2Order = null;
+	public static class ActionComparator implements Comparator<Action> { 
+		private Map<ActionConstants, Integer> map2Order = null;
 
 		/**
 		 * Order: READ, WRITE, CREATE, DELETE
 		 */
 		@Override
 		public int compare(
-				org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action o1,
-				org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action o2) {
+				Action o1,
+				Action o2) {
 			if (equal(o1, o2)) {
 				return 0;
 			}
@@ -298,11 +301,11 @@ public class ActionUtils {
 			}
 			// Create order
 			if (null == map2Order || map2Order.size() <= 0) {
-				map2Order = new HashMap<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants, Integer>();
-				map2Order.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.READ, 1);
-				map2Order.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.WRITE, 2);
-				map2Order.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.CREATE, 3);
-				map2Order.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.DELETE, 4);
+				map2Order = new HashMap<ActionConstants, Integer>();
+				map2Order.put(ActionConstants.READ, 1);
+				map2Order.put(ActionConstants.WRITE, 2);
+				map2Order.put(ActionConstants.CREATE, 3);
+				map2Order.put(ActionConstants.DELETE, 4);
 			}
 			int o1Value = map2Order.get(o1.getActionConstant());
 			int o2Value = map2Order.get(o2.getActionConstant());
@@ -314,18 +317,18 @@ public class ActionUtils {
 	}
 
 
-	public static boolean contain(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action needle, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> haystack) {
+	public static boolean contain(Action needle, List<Action> haystack) {
 		if (null == haystack || haystack.size() <= 0 || null == needle) {
 			return false;
 		}
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action entry : haystack) {
+		for(Action entry : haystack) {
 			if (equal(needle, entry)) {
 				return true;
 			}
 		}
 		return false;
 	}
-	public static boolean contains(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action needle, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> haystack){
+	public static boolean contains(Action needle, List<Action> haystack){
 		return contain(needle, haystack);
 	}
 
@@ -336,11 +339,11 @@ public class ActionUtils {
 	 * @param haystack
 	 * @return
 	 */
-	public static boolean containAllMandotory(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> needles, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> haystack) {
+	public static boolean containAllMandotory(List<Action> needles, List<Action> haystack) {
 		if (null == haystack || haystack.size() <= 0) {
 			return true;
 		}
-		for (org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action entry : haystack){
+		for (Action entry : haystack){
 			if (entry.isOptional()) {
 				continue;
 			}
@@ -352,7 +355,7 @@ public class ActionUtils {
 	}
 
 
-	public static boolean contains(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actionsToCheck, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actions) {
+	public static boolean contains(List<Action> actionsToCheck, List<Action> actions) {
 		return contains(actionsToCheck, actions, null);
 	}
 	/**
@@ -362,11 +365,11 @@ public class ActionUtils {
 	 * @param intersection Will be filled with the intersection of the two list. It will works only if actions contains actionsToCheck
 	 * @return
 	 */
-	public static boolean contains(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actionsToCheck, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actions, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> intersection) {
+	public static boolean contains(List<Action> actionsToCheck, List<Action> actions, List<Action> intersection) {
 		if (null == actions || actions.size() <= 0 || null == actionsToCheck || actionsToCheck.size() <= 0 || actions.size() < actionsToCheck.size()) {
 			return false;
 		}
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action actionToCheck : actionsToCheck) {
+		for(Action actionToCheck : actionsToCheck) {
 			if (!contains(actionToCheck, actions)) {
 				return false;
 			}
@@ -381,9 +384,9 @@ public class ActionUtils {
 		if (null == actions || actions.size() <= 0 || null == actionsToCheck || actionsToCheck.size() <= 0 || actions.size() < actionsToCheck.size()) {
 			return false;
 		}
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actionBeans = toActionBeans(actions);
+		
 		for(Action actionToCheck : actionsToCheck) {
-			if (!contains(toActionBean(actionToCheck), actionBeans)) {
+			if (!contains(actionToCheck, actions)) {
 				return true;
 			}
 		}
@@ -395,69 +398,44 @@ public class ActionUtils {
 			return null;
 		}
 		List<Action> result = new ArrayList<Action>();
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actionBeans = toActionBeans(actions);
+		
 		for(Action actionToCheck : actionsToCheck) {
-			if (!contains(toActionBean(actionToCheck), actionBeans)) {
+			if (!contains(actionToCheck, actions)) {
 				result.add(actionToCheck);
 			}
 		}
 		return result;
 	}
 
-	public static Action toAction(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action actionBean)
-	{
-		if (null == actionBean) {
-			return null;
-		}
-		ActionConstants actionConstant = ActionConstants.valueOf(actionBean.getActionConstant().name());
-		return new Action(actionConstant, actionBean.isOptional());
+	public static Action copyOf(Action action1){
+		Action action = new Action();
+		action.setActionConstant(action1.getActionConstant());
+		action.setOptional(action1.isOptional());
+		action.setActionId(action1.getActionId());
+		return action;
 	}
-	public static List<Action> toActions(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actionBeans)
-	{
-		if (null == actionBeans) {
-			return null;
-		}
+	
+	public static List<Action> copyOf(List<Action> actions1){
 		List<Action> actions = new ArrayList<Action>();
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action actionBean : actionBeans) {
-			actions.add(ActionUtils.toAction(actionBean));
+		for (Action action: actions1){
+			actions.add(copyOf(action));
 		}
+		
 		return actions;
 	}
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action toActionBean(Action action)
-	{
-		if (null == action) {
-			return null;
-		}
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action actionBean = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action();
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants actionConstant = org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.valueOf(action.getActionType().name());
-		actionBean.setActionConstant(actionConstant);
-		actionBean.setOptional(action.isOptional());
-		return actionBean;
-	}
-	public static List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> toActionBeans(List<Action> actions)
-	{
-		if (null == actions) {
-			return null;
-		}
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actionBeans = new ArrayList<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action>();
-		for(Action action : actions) {
-			actionBeans.add(ActionUtils.toActionBean(action));
-		}
-		return actionBeans;
-	}
 
 	/*	public static void main(String[] args){
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actions = new ArrayList<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action>();
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action> actions1 = new ArrayList<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action>();
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action actionREAD = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action();
-		actionREAD.setActionConstant(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.READ);
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action actionWRITE = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action();
-		actionWRITE.setActionConstant(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.WRITE);
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action actionCREATE = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action();
-		actionCREATE.setActionConstant(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.CREATE);
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action actionDELETE = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action();
-		actionDELETE.setActionConstant(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants.DELETE);
+		List<Action> actions = new ArrayList<Action>();
+		List<Action> actions1 = new ArrayList<Action>();
+		Action actionREAD = new Action();
+		actionREAD.setActionConstant(ActionConstants.READ);
+		Action actionWRITE = new Action();
+		actionWRITE.setActionConstant(ActionConstants.WRITE);
+		Action actionCREATE = new Action();
+		actionCREATE.setActionConstant(ActionConstants.CREATE);
+		Action actionDELETE = new Action();
+		actionDELETE.setActionConstant(ActionConstants.DELETE);
 
 		actions.add(actionREAD);
 		actions.add(actionDELETE);

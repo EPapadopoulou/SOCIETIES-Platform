@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.identity.Requestor;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
+import org.societies.api.internal.privacytrust.trust.model.ExtTrustRelationship;
 import org.societies.api.privacytrust.trust.TrustException;
 import org.societies.api.privacytrust.trust.TrustQuery;
 import org.societies.api.privacytrust.trust.event.ITrustUpdateEventListener;
@@ -42,6 +43,7 @@ import org.societies.privacytrust.trust.api.ITrustNodeMgr;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
 /**
@@ -53,331 +55,180 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Lazy(value = false)
-public class TrustBroker implements org.societies.api.privacytrust.trust.ITrustBroker {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(TrustBroker.class);
-	
-	/** The Trust Node Mgr service reference. */
-	@Autowired(required=true)
-	private ITrustNodeMgr trustNodeMgr;
-	
-	/** The internal Trust Broker service reference. */
-	@Autowired(required=true)
-	private ITrustBroker internalTrustBroker;
+public class TrustBroker implements org.societies.api.privacytrust.trust.ITrustBroker, ITrustBroker {
+
+	@Override
+	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
+			TrustQuery query) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Set<ExtTrustRelationship>> retrieveExtTrustRelationships(
+			TrustQuery query) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<TrustRelationship> retrieveTrustRelationship(TrustQuery query)
+			throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<ExtTrustRelationship> retrieveExtTrustRelationship(
+			TrustQuery query) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Double> retrieveTrustValue(TrustQuery query)
+			throws TrustException {
+		TrustedEntityId trusteeId = query.getTrusteeId();
+		if (trusteeId.getEntityType().equals(TrustedEntityType.SVC)){
 			
-	TrustBroker() {
-		
-		LOG.info("{} instantiated", this.getClass());
-	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustRelationships(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.TrustQuery)
-	 */
-	@Async
-	@Override
-	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
-			final Requestor requestor, final TrustQuery query)
-					throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (query == null)
-			throw new NullPointerException("query can't be null");
-		
-		LOG.debug("Retrieving trust relationships matching query '{}'"	
-				+ " on behalf of requestor '{}'", query, requestor);
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustRelationships(
-				requestor, query);
-	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustRelationship(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.TrustQuery)
-	 */
-	@Async
-	@Override
-	public Future<TrustRelationship> retrieveTrustRelationship(
-			final Requestor requestor, final TrustQuery query) 
-					throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (query == null)
-			throw new NullPointerException("query can't be null");
-		
-		LOG.debug("Retrieving trust relationship matching query '{}'"	
-				+ " on behalf of requestor '{}'", query, requestor);
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustRelationship(
-				requestor, query);
-	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustValue(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.TrustQuery)
-	 */
-	@Async
-	@Override
-	public Future<Double> retrieveTrustValue(final Requestor requestor,
-			final TrustQuery query) throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (query == null)
-			throw new NullPointerException("query can't be null");
-		
-		LOG.debug("Retrieving trust value matching query '{}'"
-				+ " on behalf of requestor '{}'", query, requestor);
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustValue(requestor, query);
-	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#registerTrustUpdateListener(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.event.ITrustUpdateEventListener, org.societies.api.privacytrust.trust.TrustQuery)
-	 */
-	@Override
-	public void registerTrustUpdateListener(final Requestor requestor,
-			final ITrustUpdateEventListener listener, 
-			final TrustQuery query) throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (listener == null)
-			throw new NullPointerException("listener can't be null");
-		if (query == null)
-			throw new NullPointerException("query can't be null");
-		
-		LOG.debug("Registering for trust update events matching query '{}'"
-				+ " on behalf of requestor '{}'", query, requestor);
-		
-		// TODO access control
-		
-		this.internalTrustBroker.registerTrustUpdateListener(
-				requestor, listener, query);
+			String entityId = trusteeId.getEntityId();
+			if (entityId==null){
+				return new AsyncResult<Double>(0.0);
+			}
+			if (entityId.contains("google")){
+				return new AsyncResult<Double>(70.0);
+			}else if (entityId.contains("hwu")){
+				return new AsyncResult<Double>(80.0);
+			}else{
+				return new AsyncResult<Double>(50.0);
+			}
+		}else{
+			throw new TrustInvalidArgumentException("Trust entity type : "+trusteeId.getEntityType()+" is not allowed");
+		}
 	}
 
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#unregisterTrustUpdateListener(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.event.ITrustUpdateEventListener, org.societies.api.privacytrust.trust.TrustQuery)
-	 */
 	@Override
-	public void unregisterTrustUpdateListener(final Requestor requestor,
-			final ITrustUpdateEventListener listener, final TrustQuery query)
-					throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (listener == null)
-			throw new NullPointerException("listener can't be null");
-		if (query == null)
-			throw new NullPointerException("query can't be null");
-		
-		LOG.debug("Unregistering from trust update events matching query '{}'"
-				+ " on behalf of requestor '{}'", query, requestor);
-		
-		// TODO access control
-		
-		this.internalTrustBroker.unregisterTrustUpdateListener(
-				requestor, listener, query);
-	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustRelationships(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.model.TrustedEntityId)
-	 */
-	@Async
-	@Override
-	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
-			final Requestor requestor, final TrustedEntityId trustorId)
-					throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (trustorId == null)
-			throw new NullPointerException("trustorId can't be null");
-		
-		LOG.debug("Retrieving all trust relationships of trustor '{}'"
-				+ " on behalf of requestor '{}'", trustorId, requestor);
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustRelationships(
-				requestor, new TrustQuery(trustorId));
-	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustRelationships(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.model.TrustedEntityId, org.societies.api.privacytrust.trust.model.TrustedEntityId)
-	 */
-	@Async
-	@Override
-	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
-			final Requestor requestor, final TrustedEntityId trustorId, 
-			final TrustedEntityId trusteeId) throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (trustorId == null)
-			throw new NullPointerException("trustorId can't be null");
-		if (trusteeId == null)
-			throw new NullPointerException("trusteeId can't be null");
-		
-		LOG.debug("Retrieving all trust relationships between trustor '{}'" 
-				+ " and trustee '{}' on behalf of requestor '{}'",
-				new Object[] { trustorId, trusteeId, requestor});
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustRelationships(
-				requestor, new TrustQuery(trustorId).setTrusteeId(trusteeId));
-	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustRelationship(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.model.TrustedEntityId, org.societies.api.privacytrust.trust.model.TrustedEntityId, org.societies.api.privacytrust.trust.model.TrustValueType)
-	 */
-	@Async
-	@Override
-	public Future<TrustRelationship> retrieveTrustRelationship(
-			final Requestor requestor,
-			final TrustedEntityId trustorId, final TrustedEntityId trusteeId, 
-			final TrustValueType trustValueType) throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (trustorId == null)
-			throw new NullPointerException("trustorId can't be null");
-		if (trusteeId == null)
-			throw new NullPointerException("trusteeId can't be null");
-		if (trustValueType == null)
-			throw new NullPointerException("trustValueType can't be null");
-		
-		LOG.debug("Retrieving trust relationship of type '{}'" 
-					+ " between trustor '{}' and trustee '{}'" 
-					+ " on behalf of requestor '{}'",
-					new Object[] { trustValueType, trustorId, trusteeId, requestor });
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustRelationship(
-				requestor, new TrustQuery(trustorId).setTrusteeId(trusteeId)
-				.setTrustValueType(trustValueType));
+	public Future<Boolean> removeTrustRelationships(TrustQuery query)
+			throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustValue(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.model.TrustedEntityId, org.societies.api.privacytrust.trust.model.TrustedEntityId, org.societies.api.privacytrust.trust.model.TrustValueType)
-	 */
-	@Async
 	@Override
-	public Future<Double> retrieveTrustValue(final Requestor requestor,
-			final TrustedEntityId trustorId, final TrustedEntityId trusteeId, 
-			final TrustValueType trustValueType) throws TrustException {
+	public void registerTrustUpdateListener(ITrustUpdateEventListener listener,
+			TrustQuery query) throws TrustException {
+		// TODO Auto-generated method stub
 		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (trustorId == null)
-			throw new NullPointerException("trustorId can't be null");
-		if (trusteeId == null)
-			throw new NullPointerException("trusteeId can't be null");
-		if (trustValueType == null)
-			throw new NullPointerException("trustValueType can't be null");
-		
-		LOG.debug("Retrieving trust value of type '{}'" 
-				+ " between trustor '{}' and trustee '{}'" 
-				+ " on behalf of requestor '{}'",
-				new Object[] { trustValueType, trustorId, trusteeId, requestor });
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustValue(
-				requestor, new TrustQuery(trustorId).setTrusteeId(trusteeId)
-				.setTrustValueType(trustValueType));
 	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustRelationships(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.model.TrustedEntityId, org.societies.api.privacytrust.trust.model.TrustedEntityType)
-	 */
-	@Async
+
+	@Override
+	public void unregisterTrustUpdateListener(
+			ITrustUpdateEventListener listener, TrustQuery query)
+			throws TrustException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Future<Double> retrieveTrust(TrustedEntityId trusteeId)
+			throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	@Override
 	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
-			final Requestor requestor, final TrustedEntityId trustorId,
-			final TrustedEntityType trusteeType) throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (trustorId == null)
-			throw new NullPointerException("trustorId can't be null");
-		if (trusteeType == null)
-			throw new NullPointerException("trusteeType can't be null");
-		
-		LOG.debug("Retrieving trust relationships of trustor '{}'" 
-				+ " with entities of type '{}'"
-				+ " on behalf of requestor '{}'",
-				new Object[] { trustorId, trusteeType, requestor });
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustRelationships(
-				requestor, new TrustQuery(trustorId).setTrusteeType(trusteeType));
+			Requestor requestor, TrustQuery query) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
 	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustRelationships(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.model.TrustedEntityId, org.societies.api.privacytrust.trust.model.TrustValueType)
-	 */
-	@Async
+
+	@Override
+	public Future<TrustRelationship> retrieveTrustRelationship(
+			Requestor requestor, TrustQuery query) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Double> retrieveTrustValue(Requestor requestor,
+			TrustQuery query) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void registerTrustUpdateListener(Requestor requestor,
+			ITrustUpdateEventListener listener, TrustQuery query)
+			throws TrustException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void unregisterTrustUpdateListener(Requestor requestor,
+			ITrustUpdateEventListener listener, TrustQuery query)
+			throws TrustException {
+		// TODO Auto-generated method stub
+		
+	}
+
 	@Override
 	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
-			final Requestor requestor, final TrustedEntityId trustorId,
-			final TrustValueType trustValueType) throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (trustorId == null)
-			throw new NullPointerException("trustorId can't be null");
-		if (trustValueType == null)
-			throw new NullPointerException("trustValueType can't be null");
-		
-		LOG.debug("Retrieving trust relationships of trustor '{}'" 
-				+ " with trust values of type '{}'"
-				+ " on behalf of requestor '{}'",
-				new Object[] {trustorId, trustValueType, requestor});
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustRelationships(
-				requestor, new TrustQuery(trustorId).setTrustValueType(trustValueType));
+			Requestor requestor, TrustedEntityId trustorId)
+			throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
 	}
-	
-	/*
-	 * @see org.societies.api.privacytrust.trust.ITrustBroker#retrieveTrustRelationships(org.societies.api.identity.Requestor, org.societies.api.privacytrust.trust.model.TrustedEntityId, org.societies.api.privacytrust.trust.model.TrustedEntityType, org.societies.api.privacytrust.trust.model.TrustValueType)
-	 */
-	@Async
+
 	@Override
 	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
-			final Requestor requestor, final TrustedEntityId trustorId,
-			final TrustedEntityType trusteeType, 
-			final TrustValueType trustValueType) throws TrustException {
-		
-		if (requestor == null)
-			throw new NullPointerException("requestor can't be null");
-		if (trustorId == null)
-			throw new NullPointerException("trustorId can't be null");
-		if (trusteeType == null)
-			throw new NullPointerException("trusteeType can't be null");
-		if (trustValueType == null)
-			throw new NullPointerException("trustValueType can't be null");
-		
-		LOG.debug("Retrieving trust relationships of trustor '{}'" 
-					+ " with entities of type '{}'" 
-					+ " and trust values of type '{}'"
-					+ " on behalf of requestor '{}'",
-					new Object[] { trustorId, trusteeType, trustValueType, requestor });
-		
-		// TODO access control
-		
-		return this.internalTrustBroker.retrieveTrustRelationships(
-				requestor, new TrustQuery(trustorId).setTrusteeType(trusteeType)
-				.setTrustValueType(trustValueType));
+			Requestor requestor, TrustedEntityId trustorId,
+			TrustedEntityId trusteeId) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
 	}
+
+	@Override
+	public Future<TrustRelationship> retrieveTrustRelationship(
+			Requestor requestor, TrustedEntityId trustorId,
+			TrustedEntityId trusteeId, TrustValueType trustValueType)
+			throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Double> retrieveTrustValue(Requestor requestor,
+			TrustedEntityId trustorId, TrustedEntityId trusteeId,
+			TrustValueType trustValueType) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
+			Requestor requestor, TrustedEntityId trustorId,
+			TrustedEntityType trusteeType) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
+			Requestor requestor, TrustedEntityId trustorId,
+			TrustValueType trustValueType) throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
+			Requestor requestor, TrustedEntityId trustorId,
+			TrustedEntityType trusteeType, TrustValueType trustValueType)
+			throws TrustException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 }

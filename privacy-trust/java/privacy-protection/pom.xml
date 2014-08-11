@@ -61,6 +61,7 @@
 		<module>privacy-preference-management</module>
 		<module>privacy-negotiation-management</module>
 		<module>privacy-comm-manager</module>
+		<module>persoNis</module>
 		<module>privacy-protection-bundle</module>
 		<!-- <module>privacy-preference-GUI</module> -->
 	</modules>

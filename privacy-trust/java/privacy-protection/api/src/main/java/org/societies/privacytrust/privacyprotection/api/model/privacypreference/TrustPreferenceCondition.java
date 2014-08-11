@@ -37,82 +37,17 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 public class TrustPreferenceCondition implements IPrivacyPreferenceCondition, Serializable {
 
 	
-	private TrustedEntityId trustId;
 	private PrivacyConditionConstants myType;
 	private final double trustThreshold;
 	
-	public TrustPreferenceCondition(TrustedEntityId trustId, double value){
+	public TrustPreferenceCondition(double value){
 		this.trustThreshold = value;
-		this.setTrustId(trustId);
 		this.myType = PrivacyConditionConstants.TRUST;
 	}
 	
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((myType == null) ? 0 : myType.hashCode());
-		result = prime * result + ((trustId == null) ? 0 : trustId.hashCode());
-		long temp;
-		temp = Double.doubleToLongBits(getTrustThreshold());
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		return result;
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("TrustPreferenceCondition [trustId=");
-		builder.append(trustId);
-		builder.append(", myType=");
-		builder.append(myType);
-		builder.append(", trustThreshold=");
-		builder.append(trustThreshold);
-		builder.append("]");
-		return builder.toString();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		TrustPreferenceCondition other = (TrustPreferenceCondition) obj;
-		if (myType != other.myType)
-			return false;
-		if (trustId == null) {
-			if (other.trustId != null)
-				return false;
-		} else if (!trustId.equals(other.trustId))
-			return false;
-		if (Double.doubleToLongBits(getTrustThreshold()) != Double
-				.doubleToLongBits(other.getTrustThreshold()))
-			return false;
-		return true;
-	}
-
-	@Override
 	public PrivacyConditionConstants getType() {
 		return PrivacyConditionConstants.TRUST; 
-	}
-
-
-	/**
-	 * @return the trustId
-	 */
-	public TrustedEntityId getTrustId() {
-		return trustId;
-	}
-
-
-	/**
-	 * @param trustId the trustId to set
-	 */
-	public void setTrustId(TrustedEntityId trustId) {
-		this.trustId = trustId;
 	}
 
 	/**

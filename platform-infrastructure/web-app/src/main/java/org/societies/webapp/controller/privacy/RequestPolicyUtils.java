@@ -7,10 +7,12 @@ import java.util.List;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.util.RequestorUtils;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.api.schema.identity.DataIdentifierScheme;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.PrivacyPolicyTypeConstants;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
+
 
 /**
  * Utility class to manage RequestPolicy bean
@@ -21,24 +23,24 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Privacy
  */
 public class RequestPolicyUtils {
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy create(PrivacyPolicyTypeConstants privacyPolicyType, RequestorBean requestor, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem> requestItems) {
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy requestPolicy = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy();
+	public static RequestPolicy create(PrivacyPolicyTypeConstants privacyPolicyType, RequestorBean requestor, List<RequestItem> requestItems) {
+		RequestPolicy requestPolicy = new RequestPolicy();
 		requestPolicy.setPrivacyPolicyType(privacyPolicyType);
 		requestPolicy.setRequestor(requestor);
 		requestPolicy.setRequestItems(requestItems);
 		return requestPolicy;
 	}
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy create(RequestorBean requestor, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem> requestItems) {
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy requestPolicy = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy();
+	public static RequestPolicy create(RequestorBean requestor, List<RequestItem> requestItems) {
+		RequestPolicy requestPolicy = new RequestPolicy();
 		requestPolicy.setPrivacyPolicyType(PrivacyPolicyTypeConstants.OTHER);
 		requestPolicy.setRequestor(requestor);
 		requestPolicy.setRequestItems(requestItems);
 		return requestPolicy;
 	}
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy createList(RequestorBean requestor, org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem... requestItems) {
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy requestPolicy = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy();
+	public static RequestPolicy createList(RequestorBean requestor, RequestItem... requestItems) {
+		RequestPolicy requestPolicy = new RequestPolicy();
 		requestPolicy.setPrivacyPolicyType(PrivacyPolicyTypeConstants.OTHER);
 		requestPolicy.setRequestor(requestor);
 		requestPolicy.setRequestItems(Arrays.asList(requestItems));
@@ -51,7 +53,7 @@ public class RequestPolicyUtils {
 	 * @param privacyPolicy Privacy policy as a Java object
 	 * @return A string containing the XACML version the privacy policy
 	 */
-	public static String toXmlString(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy requestPolicy){
+	public static String toXmlString(RequestPolicy requestPolicy){
 		StringBuilder sb = new StringBuilder();
 		if (null != requestPolicy) {
 			sb.append("<RequestPolicy>");
@@ -63,14 +65,14 @@ public class RequestPolicyUtils {
 	}
 
 
-	public static boolean equal(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy o1, Object o2) {
+	public static boolean equal(RequestPolicy o1, Object o2) {
 		// -- Verify reference equality
 		if (o1 == o2) { return true; }
 		if (o2 == null) { return false; }
 		if (o1 == null) { return false; }
 		if (o1.getClass() != o2.getClass()) { return false; }
 		// -- Verify obj type
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy ro2 = (org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy) o2;
+		RequestPolicy ro2 = (RequestPolicy) o2;
 		return (/*PrivacyPolicyTypeConstantsUtils.equal(o1.getPrivacyPolicyType(), ro2.getPrivacyPolicyType())
 				&& */RequestItemUtils.equal(o1.getRequestItems(), ro2.getRequestItems())
 				&& RequestorUtils.equal(o1.getRequestor(), ro2.getRequestor())
@@ -80,33 +82,33 @@ public class RequestPolicyUtils {
 	 * Use equal instead
 	 */
 	@Deprecated
-	public static boolean equals(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy o1, Object o2) {
+	public static boolean equals(RequestPolicy o1, Object o2) {
 		return equal(o1, o2);
 	}
 
-	public static boolean equal(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy> o1, Object o2) {
+	public static boolean equal(List<RequestPolicy> o1, Object o2) {
 		// -- Verify reference equality
 		if (o1 == o2) { return true; }
 		if (o2 == null) { return false; }
 		if (o1 == null) { return false; }
 		if (!(o2 instanceof List)) { return false; }
 		// -- Verify obj type
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy> ro2 = (List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy>) o2;
+		List<RequestPolicy> ro2 = (List<RequestPolicy>) o2;
 		if (o1.size() != ro2.size()) {
 			return false;
 		}
 		boolean result = true;
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy o1Entry : o1) {
+		for(RequestPolicy o1Entry : o1) {
 			result &= contain(o1Entry, ro2);
 		}
 		return result;
 	}
 
-	public static boolean contain(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy needle, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy> haystack) {
+	public static boolean contain(RequestPolicy needle, List<RequestPolicy> haystack) {
 		if (null == haystack || haystack.size() <= 0 || null == needle) {
 			return false;
 		}
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy entry : haystack) {
+		for(RequestPolicy entry : haystack) {
 			if (equal(needle, entry)) {
 				return true;
 			}
@@ -114,7 +116,7 @@ public class RequestPolicyUtils {
 		return false;
 	}
 	//
-	//	public static RequestItem getRequestItem(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy privacyPolicy, Resource resourceTarger) {
+	//	public static RequestItem getRequestItem(RequestPolicy privacyPolicy, Resource resourceTarger) {
 	//		
 	//	}
 
@@ -122,56 +124,16 @@ public class RequestPolicyUtils {
 	 * Use PrivacyPolicyUtils.getDataTypes instead
 	 */
 	@Deprecated
-	public static List<String> getDataTypes(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy privacyPolicy) {
+	public static List<String> getDataTypes(RequestPolicy privacyPolicy) {
 		return PrivacyPolicyUtils.getDataTypes(privacyPolicy);
 	}
 	/**
 	 * Use PrivacyPolicyUtils.getDataTypes instead
 	 */
 	@Deprecated
-	public static List<String> getDataTypes(DataIdentifierScheme schemeFilter, org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy privacyPolicy) {
+	public static List<String> getDataTypes(DataIdentifierScheme schemeFilter, RequestPolicy privacyPolicy) {
 		return PrivacyPolicyUtils.getDataTypes(schemeFilter, privacyPolicy);
 	}
 
 
-	public static RequestPolicy toRequestPolicy(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy requestPolicyBean, IIdentityManager identityManager) throws InvalidFormatException
-	{
-		if (null == requestPolicyBean) {
-			return null;
-		}
-		return new RequestPolicy(RequestorUtils.toRequestor(requestPolicyBean.getRequestor(), identityManager), RequestItemUtils.toRequestItems(requestPolicyBean.getRequestItems()));
-	}
-	public static List<RequestPolicy> toRequestPolicys(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy> requestPolicyBeans, IIdentityManager identityManager) throws InvalidFormatException
-	{
-		if (null == requestPolicyBeans) {
-			return null;
-		}
-		List<RequestPolicy> requestPolicys = new ArrayList<RequestPolicy>();
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy requestPolicyBean : requestPolicyBeans) {
-			requestPolicys.add(RequestPolicyUtils.toRequestPolicy(requestPolicyBean, identityManager));
-		}
-		return requestPolicys;
-	}
-
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy toRequestPolicyBean(RequestPolicy requestPolicy)
-	{
-		if (null == requestPolicy) {
-			return null;
-		}
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy requestPolicyBean = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy();
-		requestPolicyBean.setRequestor(RequestorUtils.toRequestorBean(requestPolicy.getRequestor()));
-		requestPolicyBean.setRequestItems(RequestItemUtils.toRequestItemBeans(requestPolicy.getRequests()));
-		return requestPolicyBean;
-	}
-	public static List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy> toRequestPolicyBeans(List<RequestPolicy> requestPolicys)
-	{
-		if (null == requestPolicys) {
-			return null;
-		}
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy> requestPolicyBeans = new ArrayList<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy>();
-		for(RequestPolicy requestPolicy : requestPolicys) {
-			requestPolicyBeans.add(RequestPolicyUtils.toRequestPolicyBean(requestPolicy));
-		}
-		return requestPolicyBeans;
-	}
 }

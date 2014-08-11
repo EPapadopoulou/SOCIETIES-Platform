@@ -152,4 +152,8 @@ public class EventTypes {
     public static final String UF_PRIVACY_ACCESS_CONTROL_REMOVE_POPUP = "org/societies/useragent/feedback/privacyAccessControlRemovePopup";
     
     
+    public static final String IDENTITY_CREATED = "org/societies/privacytrust/privacyprotection/api/identity/IdentityCreated";
+    
+    public static final String IDENTITY_SELECTED = "org/societies/privacytrust/privacyprotection/api/identity/IdentitySelected";
+    
 }

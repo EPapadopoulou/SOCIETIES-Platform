@@ -56,7 +56,7 @@
 	<modules>
 		<module>Personalisation-API</module>
 		<module>PersonalisationManager</module>
-		<module>CAUITaskManager</module>
+		<!-- <module>CAUITaskManager</module>
 		<module>CAUIDiscovery</module>
 		<module>CAUIPrediction</module>
 		<module>CACIDiscovery</module>
@@ -66,7 +66,8 @@
 		<module>CRISTUserIntentDiscovery</module>
 		<module>CRISTUserIntentPrediction</module>
 		<module>CRISTUserIntentTaskManager</module>
+		<module>CommunityPreferenceManagement</module> -->
 		<module>Personalisation-Bundle</module>
-		<module>CommunityPreferenceManagement</module>
+		
 	</modules>
 </project>

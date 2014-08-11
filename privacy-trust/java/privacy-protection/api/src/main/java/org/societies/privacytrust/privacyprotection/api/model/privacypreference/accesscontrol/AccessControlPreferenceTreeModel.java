@@ -39,6 +39,10 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  */
 public class AccessControlPreferenceTreeModel extends DefaultTreeModel implements IPrivacyPreferenceTreeModel, Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private IPrivacyPreference pref;
 	private final AccessControlPreferenceDetailsBean details;
 	

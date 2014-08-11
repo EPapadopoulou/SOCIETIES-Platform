@@ -28,20 +28,16 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import javax.swing.JOptionPane;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.societies.api.comm.xmpp.interfaces.ICommManager;
-import org.societies.api.context.CtxException;
 import org.societies.api.context.event.CtxChangeEvent;
-import org.societies.api.context.event.CtxChangeEventListener;
 import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
-import org.societies.api.identity.util.DataIdentifierUtils;
 import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyAgreementManager;
@@ -55,28 +51,22 @@ import org.societies.api.osgi.event.EventTypes;
 import org.societies.api.osgi.event.IEventMgr;
 import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.DecisionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
 import org.societies.api.schema.identity.DataIdentifier;
 import org.societies.api.schema.identity.RequestorBean;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlPreferenceTreeModel;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyOutcomeConstants;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.AccessControlPreferenceManager;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.monitoring.IMonitor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * @author Eliza
  *
@@ -169,24 +159,26 @@ public class AccCtrlMonitor  extends EventListener implements IMonitor{
 			}
 			AccessControlPreferenceTreeModel privPrefModel = this.accCtrlManager.getAccCtrlPreference(detail);
 			//ResponseItem evaluateAccCtrlPreference = this.accCtrlManager.evaluateAccCtrlPreference(detail, conditions);
-			IPrivacyOutcome evaluateAccCtrlPreference = this.accCtrlManager.evaluatePreference(privPrefModel.getPref(), conditions);
+			IPrivacyOutcome evaluateAccCtrlPreference = this.accCtrlManager.evaluatePreference(privPrefModel.getPref(), conditions, detail.getRequestor());
 			AccessControlOutcome outcome = (AccessControlOutcome) evaluateAccCtrlPreference;
 			if (evaluateAccCtrlPreference==null){
 				List<Action> actions = new ArrayList<Action>();
-				actions.add(ActionUtils.toAction(detail.getAction()));
-				boolean deletePermission = this.privDataManager.deletePermission(RequestorUtils.toRequestor(detail.getRequestor(), idMgr), ResourceUtils.getDataIdentifier(detail.getResource()), actions);
+				actions.add(detail.getAction());
+				
+				boolean deletePermission = this.privDataManager.deletePermissions(detail.getRequestor(), ResourceUtils.getDataIdentifier(detail.getResource()), actions);
 				//JOptionPane.showMessageDialog(null, "Deleted permission on privDataManager");
 
 				this.logging.debug("Deleted permission on privDataManager for dataUri: "+detail.getResource().getDataIdUri()+" and action: "+detail.getAction()+"requestor: "+detail.getRequestor().getRequestorId());
 			}else{
 				List<Action> actions = new ArrayList<Action>();
-				actions.add(ActionUtils.toAction(detail.getAction()));
+				actions.add(detail.getAction());
 				if(outcome.getEffect().equals(PrivacyOutcomeConstantsBean.ALLOW)){
-					boolean updatePermission = this.privDataManager.updatePermission(RequestorUtils.toRequestor(detail.getRequestor(), idMgr), ResourceUtils.getDataIdentifier(detail.getResource()), actions, Decision.PERMIT);
+					
+					this.privDataManager.updatePermission(detail.getRequestor(), ResourceUtils.getDataIdentifier(detail.getResource()), actions, Decision.PERMIT);
 					//JOptionPane.showMessageDialog(null, "Updated permission on privDataManager");
 					this.logging.debug("Updated permission on privDataManager for dataUri: "+detail.getResource().getDataIdUri()+" and action: "+detail.getAction()+"requestor: "+detail.getRequestor().getRequestorId()+" with decision: "+Decision.PERMIT);	
 				}else{
-					boolean updatePermission = this.privDataManager.updatePermission(RequestorUtils.toRequestor(detail.getRequestor(), idMgr), ResourceUtils.getDataIdentifier(detail.getResource()), actions, Decision.DENY);
+					this.privDataManager.updatePermission(detail.getRequestor(), ResourceUtils.getDataIdentifier(detail.getResource()), actions, Decision.DENY);
 					//JOptionPane.showMessageDialog(null, "Updated permission on privDataManager");
 					this.logging.debug("Updated permission on privDataManager for dataUri: "+detail.getResource().getDataIdUri()+" and action: "+detail.getAction()+"requestor: "+detail.getRequestor().getRequestorId()+" with decision: "+Decision.DENY);
 				}
@@ -203,7 +195,7 @@ public class AccCtrlMonitor  extends EventListener implements IMonitor{
 	@Override
 	public void handleInternalEvent(InternalEvent event) {
 		
-		PPNegotiationEvent ppnEvent = (PPNegotiationEvent) event.geteventInfo();
+/*		PPNegotiationEvent ppnEvent = (PPNegotiationEvent) event.geteventInfo();
 
 		List<ResponseItem> requestedItems = ppnEvent.getAgreement().getRequestedItems();
 		List<DataIdentifier> resources = this.getDataIdentifiers(requestedItems);
@@ -215,7 +207,7 @@ public class AccCtrlMonitor  extends EventListener implements IMonitor{
 		} catch (InvalidFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 
 	}
 

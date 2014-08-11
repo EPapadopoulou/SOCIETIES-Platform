@@ -1,27 +1,3 @@
-/**
- * Copyright (c) 2011, SOCIETIES Consortium (WATERFORD INSTITUTE OF TECHNOLOGY (TSSG), HERIOT-WATT UNIVERSITY (HWU), SOLUTA.NET 
- * (SN), GERMAN AEROSPACE CENTRE (Deutsches Zentrum fuer Luft- und Raumfahrt e.V.) (DLR), Zavod za varnostne tehnologije
- * informacijske družbe in elektronsko poslovanje (SETCCE), INSTITUTE OF COMMUNICATION AND COMPUTER SYSTEMS (ICCS), LAKE
- * COMMUNICATIONS (LAKE), INTEL PERFORMANCE LEARNING SOLUTIONS LTD (INTEL), PORTUGAL TELECOM INOVAÇÃO, SA (PTIN), IBM Corp., 
- * INSTITUT TELECOM (ITSUD), AMITEC DIACHYTI EFYIA PLIROFORIKI KAI EPIKINONIES ETERIA PERIORISMENIS EFTHINIS (AMITEC), TELECOM 
- * ITALIA S.p.a.(TI),  TRIALOG (TRIALOG), Stiftelsen SINTEF (SINTEF), NEC EUROPE LTD (NEC))
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following
- * conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
- * BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT 
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 package org.societies.api.privacytrust.privacy.util.privacypolicy;
 
 import java.io.ByteArrayInputStream;
@@ -47,6 +23,12 @@ import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.util.DataIdentifierFactory;
 import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
+import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
+//import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
+//import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
+//import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
+//import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestPolicyUtils;
+//import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
 import org.societies.api.schema.cis.community.MembershipCrit;
 import org.societies.api.schema.identity.DataIdentifier;
 import org.societies.api.schema.identity.DataIdentifierScheme;
@@ -151,7 +133,7 @@ public class PrivacyPolicyUtils {
 		// -- Conditions
 		List<Condition> conditions = new ArrayList<Condition>();
 		// - Common
-		conditions.add(ConditionUtils.create(ConditionConstants.STORE_IN_SECURE_STORAGE, "1"));
+		conditions.add(ConditionUtils.create(ConditionConstants.STORE_IN_SECURE_STORAGE, PrivacyConditionsConstantValues.getValues(ConditionConstants.STORE_IN_SECURE_STORAGE)[0]));
 		// - Visibility
 		// Public
 		if (PrivacyPolicyBehaviourConstants.PUBLIC.name().equals(globalBehaviour.name())) {
@@ -166,6 +148,12 @@ public class PrivacyPolicyUtils {
 			conditions.add(ConditionUtils.createPrivate());
 		}
 
+		conditions.add(ConditionUtils.create(ConditionConstants.MAY_BE_INFERRED, PrivacyConditionsConstantValues.getValues(ConditionConstants.MAY_BE_INFERRED)[1]));
+		conditions.add(ConditionUtils.create(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA, PrivacyConditionsConstantValues.getValues(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA)[0]));
+		conditions.add(ConditionUtils.create(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA, PrivacyConditionsConstantValues.getValues(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA)[0]));
+		conditions.add(ConditionUtils.create(ConditionConstants.RIGHT_TO_OPTOUT, PrivacyConditionsConstantValues.getValues(ConditionConstants.RIGHT_TO_OPTOUT)[0]));
+		conditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION, PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION).length-1]));
+		
 		// --- Prepare request item list
 		List<RequestItem> requestItems = new ArrayList<RequestItem>();
 		boolean optional = false;
@@ -173,17 +161,20 @@ public class PrivacyPolicyUtils {
 		{
 			Resource resource = ResourceUtils.create(DataIdentifierScheme.CIS, CisAttributeTypes.MEMBER_LIST);
 			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
 			requestItems.add(requestItem);
 		}
 		{
 			Resource resource = ResourceUtils.create(DataIdentifierScheme.CONTEXT, CtxAssociationTypes.HAS_MEMBERS);
 			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
 			requestItems.add(requestItem);
 		}
 		// - Location symbolic
 		{
 			Resource resource = ResourceUtils.create(DataIdentifierScheme.CONTEXT, CtxAttributeTypes.LOCATION_SYMBOLIC);
 			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
 			requestItems.add(requestItem);
 		}
 		optional = true;
@@ -191,39 +182,51 @@ public class PrivacyPolicyUtils {
 		{
 			Resource resource = ResourceUtils.create(DataIdentifierScheme.CONTEXT, CtxAttributeTypes.LOCATION_COORDINATES);
 			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
 			requestItems.add(requestItem);
 		}
 		// - Interests
 		{
 			Resource resource = ResourceUtils.create(DataIdentifierScheme.CONTEXT, CtxAttributeTypes.INTERESTS);
 			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
 			requestItems.add(requestItem);
 		}
 		// - Email
 		{
 			Resource resource = ResourceUtils.create(DataIdentifierScheme.CONTEXT, CtxAttributeTypes.EMAIL);
 			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
 			requestItems.add(requestItem);
 		}
 		// - Occupation
 		{
 			Resource resource = ResourceUtils.create(DataIdentifierScheme.CONTEXT, CtxAttributeTypes.OCCUPATION);
 			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
+			requestItems.add(requestItem);
+		}
+		// - Occupation
+		{
+			Resource resource = ResourceUtils.create(DataIdentifierScheme.CONTEXT, CtxAttributeTypes.WORK_POSITION);
+			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
 			requestItems.add(requestItem);
 		}
 		// - Languages
 		{
 			Resource resource = ResourceUtils.create(DataIdentifierScheme.CONTEXT, CtxAttributeTypes.LANGUAGES);
 			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
 			requestItems.add(requestItem);
 		}
 		// - CACI Model
 		{
 			Resource resource = ResourceUtils.create(DataIdentifierScheme.CONTEXT, "caci_model");
 			RequestItem requestItem = RequestItemUtils.create(resource, actions, conditions, optional);
+			requestItem.setPurpose("Remember to write purpose in PrivacyPolicyUtils class");
 			requestItems.add(requestItem);
 		}
-		
 
 		// --- Prepare parameters
 		Map<String, Object> parameters = new HashMap<String, Object>();
@@ -714,4 +717,5 @@ public class PrivacyPolicyUtils {
 	private static void log(String message){
 		//logging.info(message);
 	}
+
 }

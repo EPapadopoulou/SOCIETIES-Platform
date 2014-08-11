@@ -76,7 +76,7 @@ public class PrivacyPolicyManagerCommClientCallback {
 	private boolean retrievePrivacyPolicy(Stanza stanza, PrivacyPolicyManagerBeanResult bean, IPrivacyPolicyManagerListener listener) {
 		try {
 			listener.onPrivacyPolicyRetrieved(bean.getPrivacyPolicy());
-			listener.onPrivacyPolicyRetrieved(RequestPolicyUtils.toRequestPolicy(bean.getPrivacyPolicy(), commManager.getIdManager()));
+			listener.onPrivacyPolicyRetrieved(bean.getPrivacyPolicy());
 			return true;
 		} catch (Exception e) {
 			listener.onOperationAborted(e.getMessage(), e);

@@ -29,6 +29,8 @@ import java.util.List;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
@@ -46,7 +48,26 @@ import org.societies.api.services.ServiceUtils;
  * @author Olivier Maridat (Trialog)
  */
 public class RequestorUtils {
+	private static Logger logging = LoggerFactory.getLogger(RequestorUtils.class);
 
+
+	public static RequestorBean copyOf(RequestorBean bean){
+		if (bean instanceof RequestorServiceBean){
+			RequestorServiceBean requestor = new RequestorServiceBean();
+			requestor.setRequestorId(bean.getRequestorId());
+			requestor.setRequestorServiceId(((RequestorServiceBean) bean).getRequestorServiceId());
+			return requestor;
+		}else if (bean instanceof RequestorCisBean){
+			RequestorCisBean requestor = new RequestorCisBean();
+			requestor.setRequestorId(bean.getRequestorId());
+			requestor.setCisRequestorId(((RequestorCisBean) bean).getCisRequestorId());
+			return requestor;
+		}
+		
+		RequestorBean requestor  = new RequestorBean();
+		requestor.setRequestorId(bean.getRequestorId());
+		return requestor;
+	}
 	public static RequestorBean create(String requestorId) {
 		RequestorBean requestor = new RequestorBean();
 		requestor.setRequestorId(requestorId);
@@ -113,21 +134,22 @@ public class RequestorUtils {
 		if (null != bean) {
 			if (bean instanceof RequestorCisBean){
 				builder.append("RequestorCisBean [");
-				builder.append("getRequestorId()=");
+				builder.append("ownerID=");
 				builder.append(bean.getRequestorId());
-				builder.append(", getCisRequestorId()=");
+				builder.append(", CISID=");
 				builder.append(((RequestorCisBean) bean).getCisRequestorId());
 			}
 			else if (bean instanceof RequestorServiceBean){
 				builder.append("RequestorServiceBean [");
-				builder.append("getRequestorId()=");
+				builder.append("ownerID=");
 				builder.append(bean.getRequestorId());
-				builder.append(", getRequestorServiceId()=");
-				builder.append(((RequestorServiceBean) bean).getRequestorServiceId());
+				builder.append(", ServiceID=");
+				builder.append(ServiceUtils.serviceResourceIdentifierToString(((RequestorServiceBean) bean).getRequestorServiceId()));
+				
 			}
 			else{
 				builder.append("RequestorBean [");
-				builder.append("getRequestorId()=");
+				builder.append("cssID=");
 				builder.append(bean.getRequestorId());
 			}
 		}
@@ -157,49 +179,100 @@ public class RequestorUtils {
 	}
 
 
-	public static boolean equal(RequestorBean o1, Object o2) {
-		// -- Verify reference equality
-		if (o1 == o2) { return true; }
-		if (o2 == null) { return false; }
-		if (o1 == null) { return false; }
-		if (!(o2 instanceof RequestorBean)) { return false; }
-		// -- Verify obj type
-		RequestorBean ro2 = (RequestorBean) o2;
-		if (!StringUtils.equals(o1.getRequestorId(), ro2.getRequestorId())) {
+	public static boolean equals(RequestorBean o1, Object o2) {
+		
+		if (o1==o2){
+			logging.debug("requestor1 is equal to requestor2, true");
+			return true;
+		}
+
+		if (o2==null){
+			logging.debug("requestor2 is null, false");
 			return false;
 		}
-		if (o1 instanceof RequestorCisBean) {
-			if (!(o2 instanceof RequestorCisBean)) {
-				return false;
-			}
-			if (!StringUtils.equals(((RequestorCisBean)o1).getCisRequestorId(), ((RequestorCisBean)ro2).getCisRequestorId())) {
-				return false;
+
+		if (o1==null){
+			logging.debug("requestor1 is null, false");
+			return false;
+		}
+		if (o1 instanceof RequestorServiceBean && (!(o2 instanceof RequestorServiceBean))){
+			logging.debug("requestor 1 instanceof service, o2 not, false");
+			return false;
+		}
+
+		if (o1 instanceof RequestorCisBean && (!(o2 instanceof RequestorCisBean))){
+			logging.debug("requestor1 instance of cis, o2 not, false");
+			return false;
+		}
+
+		if (((o1 instanceof RequestorCisBean) || (o1 instanceof RequestorServiceBean)) &&
+				(!((o2 instanceof RequestorCisBean) || (o2 instanceof RequestorServiceBean)))){
+			logging.debug("requestor2 not service or cis, false");
+			return false;
+		}
+
+		if (o1 instanceof RequestorCisBean && o2 instanceof RequestorCisBean){
+
+			if (o1.getRequestorId().equalsIgnoreCase(((RequestorCisBean)o2).getRequestorId())){
+				
+				boolean eq = ((RequestorCisBean) o1).getCisRequestorId().equalsIgnoreCase(((RequestorCisBean) o2).getCisRequestorId());
+				logging.debug("requestor1 cis id == requestor2 cis id, "+(eq));
+				return eq; 
 			}
 		}
-		else if (o1 instanceof RequestorServiceBean) {
-			if (!(o2 instanceof RequestorServiceBean)) {
-				return false;
-			}
-			if (!ServiceUtils.compare(((RequestorServiceBean)o1).getRequestorServiceId(), ((RequestorServiceBean)ro2).getRequestorServiceId())) {
-				return false;
-			}
-		}
-		else {
-			if (o2 instanceof RequestorCisBean
-					|| o2 instanceof RequestorServiceBean) {
-				return false;
+
+		if (o1 instanceof RequestorServiceBean && o2 instanceof RequestorServiceBean){
+
+			if (o1.getRequestorId().equalsIgnoreCase(((RequestorServiceBean)o2).getRequestorId())){
+				
+				 boolean eq = ServiceUtils.compare(((RequestorServiceBean) o1).getRequestorServiceId(),((RequestorServiceBean) o2).getRequestorServiceId());
+				 logging.debug("requestor1 service id == requestor2 service id, "+(eq));
+				 return eq;
 			}
 		}
-		return true;
-	}
-	/**
-	 * Use equal instead
-	 */
-	@Deprecated
-	public static boolean equals(RequestorBean o1, Object o2) {
-		return equal(o1, o2);
+		
+		
+		if (!((o1 instanceof RequestorCisBean) || (o1 instanceof RequestorServiceBean)) &&
+				(!(o2 instanceof RequestorCisBean) || (o2 instanceof RequestorServiceBean))){
+			boolean eq = o1.getRequestorId().equalsIgnoreCase(((RequestorBean)o2).getRequestorId());
+			logging.debug("both beans instance of RequestorBean, are their ids equal: "+(eq));
+			return eq;
+		}
+		
+		logging.debug("returning false, none of the above if/then statements caught it");
+		return false;
+
 	}
 
+	public static void main(String[] args){
+		RequestorBean bean = new RequestorBean();
+		bean.setRequestorId("bla1");
+		
+		RequestorBean bean1 = new RequestorBean();
+		bean1.setRequestorId("bla1");
+		System.out.println("1 expected: [true] found: [" + RequestorUtils.equals(bean, bean1)+"]");
+		bean1.setRequestorId("bla2");
+		System.out.println("2 expected: [false] found: [" + RequestorUtils.equals(bean, bean1)+"]");
+		
+		bean = new RequestorServiceBean();
+		bean.setRequestorId("bla1");
+		((RequestorServiceBean) bean).setRequestorServiceId(ServiceUtils.generateServiceResourceIdentifierFromString("a a.b.com"));
+		System.out.println("3 expected: [false] found: [" + RequestorUtils.equals(bean, bean1)+"]");
+		
+		bean1 = new RequestorServiceBean();
+		bean1.setRequestorId("bla1");
+		((RequestorServiceBean) bean1).setRequestorServiceId(ServiceUtils.generateServiceResourceIdentifierFromString("a a.b.com"));
+		System.out.println("4 expected: [true] found: [" + RequestorUtils.equals(bean, bean1)+"]");
+		bean1.setRequestorId("bla2");
+		((RequestorServiceBean) bean1).setRequestorServiceId(ServiceUtils.generateServiceResourceIdentifierFromString("c a.c.com"));
+		System.out.println("5 expected: [false] found: [" + RequestorUtils.equals(bean, bean1)+"]");
+		
+		bean =  new RequestorCisBean();
+		bean.setRequestorId("bla1");
+		System.out.println("6 expected: [false] found: [" + RequestorUtils.equals(bean, bean1)+"]");
+		
+		
+	}
 	public static boolean equal(List<RequestorBean> o1, Object o2) {
 		// -- Verify reference equality
 		if (o1 == o2) { return true; }
@@ -223,7 +296,7 @@ public class RequestorUtils {
 			return false;
 		}
 		for(RequestorBean entry : haystack) {
-			if (equal(needle, entry)) {
+			if (equals(needle, entry)) {
 				return true;
 			}
 		}

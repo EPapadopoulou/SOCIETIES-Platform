@@ -57,23 +57,7 @@
 
         <dependency>
             <groupId>org.societies.useragent</groupId>
-            <artifactId>decisionmaking</artifactId>
-            <version>${version.ua}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.societies.useragent</groupId>
-            <artifactId>monitoring</artifactId>
-            <version>${version.ua}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.societies.useragent</groupId>
             <artifactId>feedback</artifactId>
-            <version>${version.ua}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.societies.useragent</groupId>
-            <artifactId>UACommsManager</artifactId>
             <version>${version.ua}</version>
         </dependency>
 

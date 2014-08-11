@@ -83,7 +83,28 @@
 			<scope>provided</scope>
 		</dependency>
 		<!-- Tools -->
-		
+
+		<dependency>
+			<groupId>com.javaswingcomponents</groupId>
+			<artifactId>framework</artifactId>
+			<version>1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.seaglasslookandfeel</groupId>
+			<artifactId>seaglasslookandfeel</artifactId>
+			<version>0.1.7.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.weblookandfeel</groupId>
+			<artifactId>web-look-and-feel</artifactId>
+			<version>1.4.1</version>
+		</dependency>
+<!-- 		<dependency>
+			<groupId>de.sciss</groupId>
+			<artifactId>weblaf</artifactId>
+			<version>1.27</version>
+		</dependency>		 -->
 		<!-- Test -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -96,11 +117,8 @@
 			<version>1.9.0</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- <dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency> -->
+		<!-- <dependency> <groupId>org.slf4j</groupId> <artifactId>slf4j-simple</artifactId> 
+			<version>${slf4j.version}</version> </dependency> -->
 	</dependencies>
 
 	<build>

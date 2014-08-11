@@ -64,19 +64,6 @@ public interface IPrivacyDataManagerInternal {
 	 */
 	public List<ResponseItem> getPermissions(RequestorBean requestor, DataIdentifier dataId) throws PrivacyException;
 
-	/**
-	 * Will be removed in R1.2
-	 * @see IPrivacyDataManagerInternal#getPermissions(RequestorBean, DataIdentifier)
-	 */
-	@Deprecated
-	public List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> getPermissions(Requestor requestor, DataIdentifier dataId) throws PrivacyException;
-
-	/**
-	 * Will be removed in R1.2
-	 * @see IPrivacyDataManagerInternal#getPermissions(RequestorBean, DataIdentifier, List)
-	 */
-	@Deprecated
-	public List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem> getPermissions(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions) throws PrivacyException;
 
 	/**
 	 * Update access control permission over a data
@@ -154,20 +141,6 @@ public interface IPrivacyDataManagerInternal {
 	@Deprecated
 	public boolean updatePermissions(Requestor requestor, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem> permissions) throws PrivacyException;
 
-	/**
-	 * Will be removed in R1.2
-	 * @see IPrivacyDataManagerInternal#updatePermission(RequestorBean, ResponseItem)
-	 */
-	@Deprecated
-	public boolean updatePermission(Requestor requestor, org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem permission) throws PrivacyException;
-
-	/**
-	 * Will be removed in R1.2
-	 * @see IPrivacyDataManagerInternal#updatePermission(RequestorBean, DataIdentifier, List, Decision)
-	 */
-	@Deprecated
-	public boolean updatePermission(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions, org.societies.api.privacytrust.privacy.model.privacypolicy.Decision permission) throws PrivacyException;
-
 
 	/**
 	 * Delete the relevant permissions
@@ -194,12 +167,5 @@ public interface IPrivacyDataManagerInternal {
 	 */
 	@Deprecated
 	public boolean deletePermissions(Requestor requestor, DataIdentifier dataId) throws PrivacyException;
-
-	/**
-	 * Will be removed in R1.2
-	 * @see IPrivacyDataManagerInternal#updatePermissions(RequestorBean, List)
-	 */
-	@Deprecated
-	public boolean deletePermission(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions) throws PrivacyException;
 
 }

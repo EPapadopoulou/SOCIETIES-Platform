@@ -154,7 +154,7 @@ public class NegotiationAgreement implements IAgreement, Serializable {
 			.append(this.getUserIdentity(), rhs.getUserIdentity())
 			.append(this.getUserPublicIdentity(), rhs.getUserPublicIdentity())
 			.isEquals()
-			&& RequestorUtils.equal(this.getRequestor(), rhs.getRequestor())
+			&& RequestorUtils.equals(this.getRequestor(), rhs.getRequestor())
 			&& ResponseItemUtils.equal(this.getRequestedItems(), rhs.getRequestedItems());
 	}
 

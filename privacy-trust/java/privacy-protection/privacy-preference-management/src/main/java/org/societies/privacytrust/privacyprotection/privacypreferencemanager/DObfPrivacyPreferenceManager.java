@@ -29,9 +29,11 @@ import java.util.Hashtable;
 import java.util.List;
 
 import org.societies.api.context.model.CtxIdentifier;
+import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
+import org.societies.api.schema.identity.RequestorBean;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfOutcome;
@@ -51,11 +53,13 @@ public class DObfPrivacyPreferenceManager {
 	private PrivatePreferenceCache prefCache;
 	private final PrivateContextCache contextCache;
 	private ITrustBroker trustBroker;
+	private IIdentity userIdentity;
 	
-	public DObfPrivacyPreferenceManager(PrivatePreferenceCache prefCache, PrivateContextCache contextCache, ITrustBroker trustBroker){
+	public DObfPrivacyPreferenceManager(PrivatePreferenceCache prefCache, PrivateContextCache contextCache, ITrustBroker trustBroker, IIdentity userIdentity){
 		this.prefCache = prefCache;
 		this.contextCache = contextCache;
 		this.trustBroker = trustBroker;
+		this.userIdentity = userIdentity;
 		
 	}
 	/**
@@ -70,7 +74,7 @@ public class DObfPrivacyPreferenceManager {
 	public double evaluateDObfPreference(DObfPreferenceDetailsBean details) {
 		DObfPreferenceTreeModel model = this.prefCache.getDObfPreference(details);
 		if (model!=null){
-			IPrivacyOutcome outcome = evaluatePreference(model.getRootPreference());
+			IPrivacyOutcome outcome = evaluatePreference(model.getRootPreference(), details.getRequestor());
 			if (outcome instanceof DObfOutcome){
 				return ((DObfOutcome) outcome).getObfuscationLevel();
 			}else{
@@ -84,8 +88,8 @@ public class DObfPrivacyPreferenceManager {
 		
 	}
 	
-	private IPrivacyOutcome evaluatePreference(IPrivacyPreference privPref){
-		PreferenceEvaluator ppE = new PreferenceEvaluator(this.contextCache, trustBroker);
+	private IPrivacyOutcome evaluatePreference(IPrivacyPreference privPref, RequestorBean requestor){
+		PreferenceEvaluator ppE = new PreferenceEvaluator(this.contextCache, trustBroker, requestor, this.userIdentity);
 		Hashtable<IPrivacyOutcome, List<CtxIdentifier>> results = ppE.evaluatePreference(privPref);
 		Enumeration<IPrivacyOutcome> outcomes = results.keys();
 		if (outcomes.hasMoreElements()){

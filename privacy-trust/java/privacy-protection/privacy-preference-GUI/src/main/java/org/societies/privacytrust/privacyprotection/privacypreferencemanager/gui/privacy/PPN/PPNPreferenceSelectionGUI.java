@@ -47,8 +47,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PPNPreferenceDetails;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.gui.GUI;
 /**
  * @author  Administrator
@@ -295,7 +295,7 @@ public class PPNPreferenceSelectionGUI extends JFrame implements ActionListener,
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		PPNPreferenceDetails detail;
+		PPNPreferenceDetailsBean detail;
 		if (e.getSource().equals(this.btCreatePreference)){
 			System.out.println("Create new preference");
 			PPNPreferenceSelectionDialog dialog = new PPNPreferenceSelectionDialog(this,this.masterGUI);
@@ -346,7 +346,7 @@ public class PPNPreferenceSelectionGUI extends JFrame implements ActionListener,
 	
 	private void retrievePreferenceDetails(){
 		IPrivacyPreferenceManager privPrefMgr = this.masterGUI.getPrivPrefMgr();
-		List<PPNPreferenceDetails> details = privPrefMgr.getPPNPreferenceDetails();
+		List<PPNPreferenceDetailsBean> details = privPrefMgr.getPPNPreferenceDetails();
 		this.model = new PPNPreferenceDetailsTable(details);
 		
 	}
@@ -359,7 +359,7 @@ public class PPNPreferenceSelectionGUI extends JFrame implements ActionListener,
 			System.out.println("NOT in EventDispatchThread");
 		}
 		IPrivacyPreferenceManager privPrefMgr = this.masterGUI.getPrivPrefMgr();
-		List<PPNPreferenceDetails> details = privPrefMgr.getPPNPreferenceDetails();
+		List<PPNPreferenceDetailsBean> details = privPrefMgr.getPPNPreferenceDetails();
 		if (details.isEmpty()){
 			System.out.println("Refreshed data empty");
 		}else{

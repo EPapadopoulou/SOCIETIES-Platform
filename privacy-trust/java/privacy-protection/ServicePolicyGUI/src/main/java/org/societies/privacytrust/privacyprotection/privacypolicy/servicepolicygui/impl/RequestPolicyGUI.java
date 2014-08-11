@@ -38,6 +38,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -51,6 +52,10 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileFilter;
 
+import org.societies.api.identity.IIdentity;
+import org.societies.api.identity.Requestor;
+import org.societies.api.identity.RequestorService;
+import org.societies.api.internal.servicelifecycle.ServiceModelUtils;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestItem;
@@ -59,6 +64,7 @@ import org.societies.api.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ActionConstants;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ConditionConstants;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
+import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
 
 public class RequestPolicyGUI extends JPanel
 implements ActionListener, WindowListener
@@ -208,7 +214,7 @@ implements ActionListener, WindowListener
 		GridBagConstraints gbcSubjectPanel = new GridBagConstraints();
 		this.subjectPanel.setLayout(gbSubjectPanel);
 
-/*		this.serviceIDLabel = new JLabel("Service Identifier or CIS Identity:");
+		this.serviceIDLabel = new JLabel("Service Identifier or CIS Identity:");
 		gbcSubjectPanel.gridx = 0;
 		gbcSubjectPanel.gridy = 0;
 		gbcSubjectPanel.gridwidth = 1;
@@ -264,7 +270,7 @@ implements ActionListener, WindowListener
 		gbcBackPanel.weighty = 0.0D;
 		gbcBackPanel.anchor = 18;
 		gbBackPanel.setConstraints(this.subjectPanel, gbcBackPanel);
-		add(this.subjectPanel);*/
+		add(this.subjectPanel);
 
 		JScrollPane scpBackPanel = new JScrollPane(this);
 	}
@@ -272,6 +278,7 @@ implements ActionListener, WindowListener
 	public void actionPerformed(ActionEvent e)
 	{
 		if (e.getSource().equals(this.saveBtn)) {
+			
 			if (this.reqEditor != null) {
 				JOptionPane.showMessageDialog(this, "Please finish editing the resource in the Resources editor window");
 				this.reqEditor.toFront();
@@ -279,6 +286,7 @@ implements ActionListener, WindowListener
 			else if (this.requestItems.size() == 0) {
 				JOptionPane.showMessageDialog(this, "Add at least one resource ");
 			} else {
+				
 				JFileChooser fileChooser = new JFileChooser();
 				fileChooser.setSelectedFile(new File("Privacy-policy.xml"));
 				fileChooser.setDialogTitle("Save your privacy folder inside the src/main/resources folder of your 3p service");
@@ -389,7 +397,17 @@ implements ActionListener, WindowListener
 	{
 		try
 		{
+			
+			
+
+			
 			this.policy = new RequestPolicy(this.requestItems);
+
+			IIdentity identity = new MockIdentity(this.dpiTxtField.getText());
+			
+			ServiceResourceIdentifier serviceID = ServiceModelUtils.generateServiceResourceIdentifierFromString(this.serviceIDTxtField.getText()+" "+this.serviceIDTxtField.getText());
+			RequestorService subject = new RequestorService(identity, serviceID);
+			this.policy.setRequestor(subject );
 			try
 			{
 				FileWriter fWriter = new FileWriter(selectedFile);

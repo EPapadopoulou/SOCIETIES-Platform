@@ -29,8 +29,13 @@ import java.util.List;
 
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
+import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.IAgreement;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.NegotiationAgreement;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponseItemUtils;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 
 
 /**
@@ -38,7 +43,23 @@ import org.societies.api.internal.privacytrust.privacyprotection.model.privacypo
  * @author Olivier Maridat (Trialog)
  */
 public class AgreementUtils {
-	public static NegotiationAgreement toAgreement(org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement agreementBean, IIdentityManager identityManager) throws InvalidFormatException
+	
+	public static Agreement copyOf(Agreement agreement){
+		Agreement copy = new Agreement();
+		List<ResponseItem> list = new ArrayList<ResponseItem>();
+		for (ResponseItem item : agreement.getRequestedItems()){
+			list.add(ResponseItemUtils.copyOf(item));
+		}
+		copy.setRequestedItems(list);
+		copy.setRequestor(RequestorUtils.copyOf(agreement.getRequestor()));
+		copy.setUserIdentity(agreement.getUserIdentity());
+		copy.setUserPublicIdentity(agreement.getUserPublicIdentity());
+		return copy;
+		
+	}
+	
+	
+	public static NegotiationAgreement toAgreement(Agreement agreementBean, IIdentityManager identityManager) throws InvalidFormatException
 	{
 		if (null == agreementBean) {
 			return null;
@@ -53,24 +74,24 @@ public class AgreementUtils {
 		}
 		return agreement;
 	}
-	public static List<NegotiationAgreement> toAgreements(List<org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement> agreementBeans, IIdentityManager identityManager) throws InvalidFormatException
+	public static List<NegotiationAgreement> toAgreements(List<Agreement> agreementBeans, IIdentityManager identityManager) throws InvalidFormatException
 	{
 		if (null == agreementBeans) {
 			return null;
 		}
 		List<NegotiationAgreement> agreements = new ArrayList<NegotiationAgreement>();
-		for(org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement agreementBean : agreementBeans) {
+		for(Agreement agreementBean : agreementBeans) {
 			agreements.add(AgreementUtils.toAgreement(agreementBean, identityManager));
 		}
 		return agreements;
 	}
 
-	public static org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement toAgreementBean(IAgreement iAgreement)
+	public static Agreement toAgreementBean(IAgreement iAgreement)
 	{
 		if (null == iAgreement) {
 			return null;
 		}
-		org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement agreementBean = new org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement();
+		Agreement agreementBean = new Agreement();
 		agreementBean.setRequestor(iAgreement.getRequestor());
 		if (null != iAgreement.getUserIdentity()) {
 			agreementBean.setUserIdentity(iAgreement.getUserIdentity().getJid());
@@ -81,12 +102,12 @@ public class AgreementUtils {
 		agreementBean.setRequestedItems(iAgreement.getRequestedItems());
 		return agreementBean;
 	}
-	public static List<org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement> toAgreementBeans(List<NegotiationAgreement> agreements)
+	public static List<Agreement> toAgreementBeans(List<NegotiationAgreement> agreements)
 	{
 		if (null == agreements) {
 			return null;
 		}
-		List<org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement> agreementBeans = new ArrayList<org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement>();
+		List<Agreement> agreementBeans = new ArrayList<Agreement>();
 		for(NegotiationAgreement agreement : agreements) {
 			agreementBeans.add(AgreementUtils.toAgreementBean(agreement));
 		}

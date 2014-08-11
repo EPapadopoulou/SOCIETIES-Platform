@@ -27,6 +27,7 @@ package org.societies.api.internal.privacytrust.privacyprotection.negotiation;
 import java.io.Serializable;
 
 import org.societies.api.identity.Requestor;
+import org.societies.api.internal.schema.useragent.feedback.NegotiationDetailsBean;
 import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
 
 
@@ -36,14 +37,14 @@ public class FailedNegotiationEvent implements Serializable{
 
 
 	
-	private final NegotiationDetails details;
+	private final NegotiationDetailsBean details;
 
-	public FailedNegotiationEvent(NegotiationDetails details){
+	public FailedNegotiationEvent(NegotiationDetailsBean details){
 		this.details = details;
 		
 	}
 
-	public NegotiationDetails getDetails() {
+	public NegotiationDetailsBean getDetails() {
 		return details;
 	}
 

@@ -2,9 +2,10 @@ package org.societies.privacytrust.privacyprotection.api.identity;
 
 import java.util.List;
 
+import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.identity.IIdentity;
-import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.IAgreement;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Resource;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 
 public interface IIdentitySelection {
 	
@@ -16,7 +17,7 @@ public interface IIdentitySelection {
 	 * @return
 	 */
 	
-	List<IIdentityOption> processIdentityContext(IAgreement ppna);
+	public List<IIdentityOption> processIdentityContext(Agreement ppna);
 	
 	/**
 	 * 
@@ -27,5 +28,10 @@ public interface IIdentitySelection {
 	 * @param dataToBeReleased
 	 * @return
 	 */
-	IIdentityOption evaluateLinkability(IIdentity remoteEntity, IIdentity userOwnedEntity, Resource dataToBeReleased);
+	public IIdentityOption evaluateLinkability(IIdentity remoteEntity, IIdentity userOwnedEntity, Resource dataToBeReleased);
+	
+	
+	public IIdentity createIdentity(String name, List<CtxIdentifier> ctxIDs);
+	
+	public List<CtxIdentifier> getLinkedAttributes(IIdentity identity);
 }

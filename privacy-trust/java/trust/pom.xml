@@ -9,7 +9,7 @@
 	
 	<modules>
 		<module>trust-api</module>
-		<module>trust-comms</module>
+		<!-- <module>trust-comms</module> -->
 		<module>trust-cloud-bundle</module>
 	</modules>
 

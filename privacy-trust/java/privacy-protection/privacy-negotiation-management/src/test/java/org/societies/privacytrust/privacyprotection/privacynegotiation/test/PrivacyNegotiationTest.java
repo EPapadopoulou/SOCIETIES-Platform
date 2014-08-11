@@ -57,7 +57,6 @@ import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyM
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.IAgreement;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.PPNegotiationEvent;
 import org.societies.api.internal.privacytrust.privacyprotection.negotiation.FailedNegotiationEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.negotiation.NegotiationDetails;
 import org.societies.api.internal.privacytrust.privacyprotection.remote.INegotiationAgentRemote;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.AgreementEnvelope;
@@ -105,7 +104,7 @@ import org.springframework.scheduling.annotation.AsyncResult;
  */
 public class PrivacyNegotiationTest {
 
-	private IUserPreferenceManagement prefMgr = Mockito.mock(IUserPreferenceManagement.class);
+/*	private IUserPreferenceManagement prefMgr = Mockito.mock(IUserPreferenceManagement.class);
 	private ICtxBroker ctxBroker = Mockito.mock(ICtxBroker.class);
 	private IEventMgr eventMgr = Mockito.mock(IEventMgr.class);
 	private IIdentityManager idm = Mockito.mock(IIdentityManager.class);
@@ -224,7 +223,7 @@ public class PrivacyNegotiationTest {
 	private void setupConditions() {
 
 		Condition conditionDataRetention = new Condition();
-		conditionDataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION_IN_HOURS);
+		conditionDataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION);
 		conditionDataRetention.setValue("48");
 
 		Condition conditionShare3p  = new Condition();
@@ -337,8 +336,12 @@ public class PrivacyNegotiationTest {
 	@Test
 	public void TestStartNegotiation(){
 
-		NegotiationDetails serviceDetails = new NegotiationDetails(this.requestorService, 0);
-		NegotiationDetails cisDetails = new NegotiationDetails(requestorCis, 0);		
+		NegotiationDetailsBean serviceDetails = new NegotiationDetailsBean();
+		serviceDetails.setRequestor(this.requestorServiceBean);
+		serviceDetails.setNegotiationID(0);
+		NegotiationDetailsBean cisDetails = new NegotiationDetailsBean();
+		cisDetails.setRequestor(requestorCisBean);
+		cisDetails.setNegotiationID(0);
 		try {
 			this.negotiationMgr.negotiateServicePolicy(serviceDetails);
 		} catch (PrivacyException e) {
@@ -356,7 +359,7 @@ public class PrivacyNegotiationTest {
 	}
 
 
-	/*	@Test
+		@Test
 	public void TestGetProviderPolicy(){
 
 	}
@@ -368,7 +371,7 @@ public class PrivacyNegotiationTest {
 	@Test
 	public void TestAcknowledgeAgreement(){
 
-	}*/
+	}
 
 
 	private void setupRequestorServiceBean(){
@@ -433,9 +436,9 @@ public class PrivacyNegotiationTest {
 		return policy;
 	}
 	private RequestPolicy getPolicyWithoutRequestor(){
-		/*
+		
 		 * location requestItem
-		 */
+		 
 		Resource rLocation = new Resource();
 		rLocation.setScheme(DataIdentifierScheme.CONTEXT);
 		rLocation.setDataType(CtxAttributeTypes.LOCATION_SYMBOLIC);
@@ -445,9 +448,9 @@ public class PrivacyNegotiationTest {
 		itemLocation.setConditions(conditions);
 
 
-		/*
+		
 		 * status requestItem
-		 */
+		 
 
 		Resource rStatus = new Resource();
 		rStatus.setScheme(DataIdentifierScheme.CONTEXT);
@@ -458,7 +461,7 @@ public class PrivacyNegotiationTest {
 		itemStatus.setActions(actions);
 		itemStatus.setConditions(conditions);
 
-		/* ----------------------------------------------------*/
+		 ----------------------------------------------------
 
 
 		List<RequestItem> requests = new ArrayList<RequestItem>();
@@ -491,5 +494,5 @@ public class PrivacyNegotiationTest {
 		userCtxEntity.addAttribute(locationAttribute);
 		userCtxEntity.addAttribute(statusAttribute);
 
-	}
+	}*/
 }

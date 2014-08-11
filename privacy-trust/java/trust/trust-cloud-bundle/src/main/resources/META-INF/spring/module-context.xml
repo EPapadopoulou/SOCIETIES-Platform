@@ -22,67 +22,6 @@
 	
 	<context:component-scan base-package="org.societies.privacytrust.trust.impl" />
 	
-	<task:annotation-driven />
-	
-	<bean
-		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-		<property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />		
-		<property name="ignoreResourceNotFound" value="true" />
-		<property name="locations">
-			<list>
-				<value>file:${CONFIG_DIR}/org.societies.platform.properties</value>
-			</list>
-		</property>
-	</bean>
-	
-	<bean id="sessionFactory"
-		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
-		<property name="dataSource" ref="dataSource" />
 
-		<property name="annotatedClasses">
-			<list>
-				<value>org.societies.privacytrust.trust.impl.repo.model.TrustedCss</value>
-				<value>org.societies.privacytrust.trust.impl.repo.model.TrustedCis</value>
-				<value>org.societies.privacytrust.trust.impl.repo.model.TrustedService</value>
-				<value>org.societies.privacytrust.trust.impl.evidence.repo.model.TrustEvidence</value>
-			</list>
-		</property>
-
-		<property name="annotatedPackages">
-			<list>
-				<value>org.societies.privacytrust.trust.impl.repo.model</value>
-				<value>org.societies.privacytrust.trust.impl.evidence.repo.model</value>
-			</list>
-		</property>
-		
-		<property name="eventListeners">
-			<map>
-				<entry key="post-insert">
-					<bean class="org.societies.privacytrust.trust.impl.common.hibernate.event.PostInsertEventUserListener" />
-				</entry>
-				<entry key="post-update">
-					<bean class="org.societies.privacytrust.trust.impl.common.hibernate.event.PostUpdateEventUserListener" />
-				</entry>
-  			</map>
- 		</property>
-
-		<property name="hibernateProperties">
-			<props>
-				<prop key="hibernate.hbm2ddl.auto">${hbm2ddl.auto}</prop>
-				<prop key="hibernate.show_ddl">true</prop>
-				<prop key="hibernate.show_sql">${show_sql}</prop>
-				<prop key="hibernate.format_sql">${format_sql}</prop>
-				<prop key="hibernate.cache.use_second_level_cache">${cache.use_second_level_cache}</prop>
-			</props>
-		</property>
-	</bean>
-
-	<!-- enable the configuration of transactional behavior based on annotations -->
-	<tx:annotation-driven transaction-manager="transactionManager" />
-
-	<bean id="transactionManager"
-		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
-		<property name="sessionFactory" ref="sessionFactory" />
-	</bean>
 	
 </beans>

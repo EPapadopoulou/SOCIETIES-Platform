@@ -24,9 +24,12 @@
  */
 package org.societies.privacytrust.privacyprotection.api;
 
+import java.util.Hashtable;
+
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
+import org.societies.privacytrust.privacyprotection.api.policy.ConditionRanges;
 
 /**
  * @author Olivier Maridat (Trialog)
@@ -40,6 +43,9 @@ public interface IPrivacyPolicyRegistryManager {
 	 */
 	public RequestPolicy getPrivacyPolicy(RequestorBean owner) throws PrivacyException;
 
+	public Hashtable<String,ConditionRanges> getConditionRanges(RequestorBean owner) throws PrivacyException;
+	
+	public ConditionRanges getConditionRanges(RequestorBean owner, String dataType) throws PrivacyException;
 	/**
 	 * Update a privacy policy to the registry
 	 * @param owner	CIS or 3P service id of the privacy policy owner
@@ -47,7 +53,7 @@ public interface IPrivacyPolicyRegistryManager {
 	 * @return success of the operation 
 	 * @throws PrivacyException 
 	 */
-	public boolean updatePrivacyPolicy(RequestorBean owner, RequestPolicy privacyPolicy) throws PrivacyException;
+	public boolean updatePrivacyPolicy(RequestorBean owner, RequestPolicy privacyPolicy, Hashtable<String,ConditionRanges> conditionRanges) throws PrivacyException;
 
 	/**
 	 * Delete a privacy policy in the registry

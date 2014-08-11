@@ -95,20 +95,6 @@ public interface IPrivacyDataManager {
 	public List<ResponseItem> checkPermission(RequestorBean requestor, List<DataIdentifier> dataIds, Action actions) throws PrivacyException;
 
 	/**
-	 * Will be removed in 1.2
-	 * @see #checkPermission(RequestorBean, DataIdentifier, List)
-	 */
-	@Deprecated
-	public List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> checkPermission(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions) throws PrivacyException;
-	/**
-	 * Will be removed in 1.2
-	 * @see #checkPermission(RequestorBean, DataIdentifier, Action)
-	 */
-	@Deprecated
-	public List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> checkPermission(Requestor requestor, DataIdentifier dataId, org.societies.api.privacytrust.privacy.model.privacypolicy.Action action) throws PrivacyException;
-
-	
-	/**
 	 * Protect a data following the user preferences by obfuscating it to a correct
 	 * obfuscation level. The data information are wrapped into a relevant data
 	 * wrapper in order to execute the best obfuscation algorithm

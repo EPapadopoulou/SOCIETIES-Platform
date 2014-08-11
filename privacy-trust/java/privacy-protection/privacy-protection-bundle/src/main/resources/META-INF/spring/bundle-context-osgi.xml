@@ -15,8 +15,14 @@
 
 	<!-- Privacy Policy Manager Configuration -->
 
-	<osgi:service ref="privacyPolicyManager"
-		interface="org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyManager" />
+	<osgi:service ref="privacyPolicyManager">
+		<osgi:interfaces>
+			<value>org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyManager</value>
+			<value>org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyManagerInternal</value>
+		</osgi:interfaces>
+	</osgi:service>
+
+
 
 	<osgi:service ref="privacyPolicyManagerRemote"
 		interface="org.societies.api.internal.privacytrust.privacyprotection.remote.IPrivacyPolicyManagerRemote" />

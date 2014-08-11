@@ -34,9 +34,9 @@ import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IdentityType;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.IAgreement;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestorUtils;
 import org.societies.api.schema.identity.RequestorServiceBean;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.identity.RequestorCisBean;
@@ -58,15 +58,17 @@ public class IDSPreferenceManager {
 	private final PrivatePreferenceCache prefCache;
 	private final PrivateContextCache contextCache;
 	private ITrustBroker trustBroker;
+	private IIdentity userIdentity;
 
 
-	public IDSPreferenceManager(PrivatePreferenceCache prefCache, PrivateContextCache contextCache, ITrustBroker trustBroker){
+	public IDSPreferenceManager(PrivatePreferenceCache prefCache, PrivateContextCache contextCache, ITrustBroker trustBroker, IIdentity userIdentity){
 		this.prefCache = prefCache;
 		this.contextCache = contextCache;
 		this.trustBroker = trustBroker;
+		this.userIdentity = userIdentity;
 		
 	}
-	private IIdentity evaluateIDSPreferenceIrrespectiveOfRequestor(IAgreement agreement, List<IIdentity> identities){
+	private IIdentity evaluateIDSPreferenceIrrespectiveOfRequestor(Agreement agreement, List<IIdentity> identities){
 		ArrayList<IdentitySelectionPreferenceOutcome> outcomes = new ArrayList<IdentitySelectionPreferenceOutcome>();
 		for (int i=0; i<identities.size(); i++){
 			IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
@@ -74,7 +76,7 @@ public class IDSPreferenceManager {
 			IPrivacyPreferenceTreeModel model = prefCache.getIDSPreference(details);
 
 			if (model!=null){
-				IdentitySelectionPreferenceOutcome outcome = (IdentitySelectionPreferenceOutcome) this.evaluatePreference(model.getRootPreference());
+				IdentitySelectionPreferenceOutcome outcome = (IdentitySelectionPreferenceOutcome) this.evaluatePreference(model.getRootPreference(), agreement.getRequestor());
 				if (null!=outcome){
 					outcomes.add(outcome);
 				}
@@ -99,7 +101,7 @@ public class IDSPreferenceManager {
 		return null;
 	}
 
-	private IIdentity askUserToSelectIIdentity(IAgreement agreement, List<IIdentity> candidateIdentities){
+	private IIdentity askUserToSelectIIdentity(Agreement agreement, List<IIdentity> candidateIdentities){
 
 
 		List<String> strCandidateIDs = new ArrayList<String>();
@@ -156,7 +158,7 @@ public class IDSPreferenceManager {
 						JOptionPane.QUESTION_MESSAGE, 
 						strCandidates.toArray(), strCandidates.get(0));
 */	}
-	private IIdentity evaluateIDSPreferenceBasedOnProviderDPI(IAgreement agreement, List<IIdentity> identities){
+	private IIdentity evaluateIDSPreferenceBasedOnProviderDPI(Agreement agreement, List<IIdentity> identities){
 		ArrayList<IdentitySelectionPreferenceOutcome> outcomes = new ArrayList<IdentitySelectionPreferenceOutcome>();
 		for (int i=0; i<identities.size(); i++){
 			IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
@@ -164,7 +166,7 @@ public class IDSPreferenceManager {
 			details.setRequestor(agreement.getRequestor());
 			IPrivacyPreferenceTreeModel model = prefCache.getIDSPreference(details);
 			if (model!=null){
-				IdentitySelectionPreferenceOutcome outcome = (IdentitySelectionPreferenceOutcome) this.evaluatePreference(model.getRootPreference());
+				IdentitySelectionPreferenceOutcome outcome = (IdentitySelectionPreferenceOutcome) this.evaluatePreference(model.getRootPreference(), agreement.getRequestor());
 				if (null!=outcome){
 					outcomes.add(outcome);
 				}
@@ -189,7 +191,7 @@ public class IDSPreferenceManager {
 		}
 		return null;
 	}
-	private IIdentity evaluateIDSPreferenceBasedOnAllInfo(IAgreement agreement, List<IIdentity> identities){
+	private IIdentity evaluateIDSPreferenceBasedOnAllInfo(Agreement agreement, List<IIdentity> identities){
 		ArrayList<IdentitySelectionPreferenceOutcome> outcomes = new ArrayList<IdentitySelectionPreferenceOutcome>();
 		for (int i=0; i<identities.size(); i++){
 			IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
@@ -202,7 +204,7 @@ public class IDSPreferenceManager {
 			if (model!=null){
 				
 			
-				IdentitySelectionPreferenceOutcome outcome = (IdentitySelectionPreferenceOutcome) this.evaluatePreference(model.getRootPreference());
+				IdentitySelectionPreferenceOutcome outcome = (IdentitySelectionPreferenceOutcome) this.evaluatePreference(model.getRootPreference(), agreement.getRequestor());
 				if (null!=outcome){
 					//JOptionPane.showMessageDialog(null, "Evaluation returned non-null outcome");
 					outcomes.add(outcome);
@@ -231,8 +233,8 @@ public class IDSPreferenceManager {
 		return null;
 	}
 	
-	private IPrivacyOutcome evaluatePreference(IPrivacyPreference privPref){
-		PreferenceEvaluator ppE = new PreferenceEvaluator(this.contextCache, trustBroker);
+	private IPrivacyOutcome evaluatePreference(IPrivacyPreference privPref, RequestorBean requestor){
+		PreferenceEvaluator ppE = new PreferenceEvaluator(this.contextCache, trustBroker, requestor, this.userIdentity);
 		Hashtable<IPrivacyOutcome, List<CtxIdentifier>> results = ppE.evaluatePreference(privPref);
 		Enumeration<IPrivacyOutcome> outcomes = results.keys();
 		if (outcomes.hasMoreElements()){
@@ -247,7 +249,7 @@ public class IDSPreferenceManager {
 
 	public IIdentity evaluateIDSPreference(IDSPreferenceDetailsBean details) {
 		IDSPrivacyPreferenceTreeModel model = this.prefCache.getIDSPreference(details);
-		IPrivacyOutcome out = this.evaluatePreference(model.getRootPreference());
+		IPrivacyOutcome out = this.evaluatePreference(model.getRootPreference(), details.getRequestor());
 		if (out instanceof IdentitySelectionPreferenceOutcome){
 			return ((IdentitySelectionPreferenceOutcome) out).getIdentity();
 		}
@@ -297,7 +299,7 @@ public class IDSPreferenceManager {
 		return new InvalidIdentity();
 	}
 	
-	public IIdentity evaluateIDSPreferences(IAgreement agreement, List<IIdentity> identities){
+	public IIdentity evaluateIDSPreferences(Agreement agreement, List<IIdentity> identities){
 
 		IIdentity selectedIIdentity = this.evaluateIDSPreferenceBasedOnAllInfo(agreement, identities);
 

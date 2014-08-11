@@ -24,6 +24,7 @@
  */
 package org.societies.privacytrust.privacyprotection.privacypolicy;
 
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
@@ -46,6 +47,7 @@ import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyRegistryManager;
+import org.societies.privacytrust.privacyprotection.api.policy.ConditionRanges;
 import org.societies.privacytrust.privacyprotection.privacypolicy.registry.PrivacyPolicyRegistry;
 
 /**
@@ -102,22 +104,21 @@ public class PrivacyPolicyRegistryManager implements IPrivacyPolicyRegistryManag
 	}
 
 	@Override
-	public boolean updatePrivacyPolicy(RequestorBean owner, RequestPolicy privacyPolicy) throws PrivacyException {
+	public boolean updatePrivacyPolicy(RequestorBean owner, RequestPolicy privacyPolicy, Hashtable<String,ConditionRanges> conditionRanges) throws PrivacyException {
 		if (null == policyRegistry){
 			LOG.debug("Registry empty: loading privacy policies");
 			loadPrivacyPolicyRegistry();
 		}
 
 		// Global store
-		CtxIdentifier id = this.storePrivacyPolicyToCtx(owner, privacyPolicy);
+		CtxIdentifier id = this.storePrivacyPolicyToCtx(owner, privacyPolicy, conditionRanges);
 		if (null == id) {
 			throw new PrivacyException("Can't retrieve the Context ID of the stored privacy policy");
 		}
 		if (null == owner) {
 			owner = privacyPolicy.getRequestor();
 		}
-		this.policyRegistry.addPolicy(owner, id);
-		this.storePrivacyPolicyRegistry();
+
 		return true;
 	}
 
@@ -143,11 +144,12 @@ public class PrivacyPolicyRegistryManager implements IPrivacyPolicyRegistryManag
 		return true;
 	}
 
-	private CtxIdentifier storePrivacyPolicyToCtx(RequestorBean requestor, RequestPolicy policy){
+	private CtxIdentifier storePrivacyPolicyToCtx(RequestorBean requestor, RequestPolicy policy, Hashtable<String,ConditionRanges> conditionRanges){
 		try {
-			String name = "policyOf"+RequestorUtils.toUriString(requestor);
+			String ctxPolicyName = "policyOf"+RequestorUtils.toUriString(requestor);
+			String ctxConditionRangeName = "conditionRangeOf"+RequestorUtils.toUriString(requestor);
 			//TODO: The name might cause an error. We might need to provide different names for storing the policies as attributes in DB
-			List<CtxIdentifier> ctxIDs = ctxBroker.lookup(CtxModelType.ATTRIBUTE, name).get();
+			List<CtxIdentifier> ctxIDs = ctxBroker.lookup(CtxModelType.ATTRIBUTE, ctxPolicyName).get();
 			if (ctxIDs.size()==0){
 				List<CtxIdentifier> entityIDs = ctxBroker.lookup(CtxModelType.ENTITY, CtxEntityTypes.PRIVACY_POLICY).get();
 				if (entityIDs.size()==0){
@@ -169,11 +171,26 @@ public class PrivacyPolicyRegistryManager implements IPrivacyPolicyRegistryManag
 					entityIDs.add(policyEntity.getId());
 
 				}
-				CtxAttribute ctxAttr = ctxBroker.createAttribute((CtxEntityIdentifier) entityIDs.get(0), name).get();
+				//store policy
+				CtxAttribute ctxAttr = ctxBroker.createAttribute((CtxEntityIdentifier) entityIDs.get(0), ctxPolicyName).get();
 				ctxAttr.setBinaryValue(SerialisationHelper.serialise(policy));
 				ctxBroker.update(ctxAttr);
+				
+				//store conditions
+				CtxAttribute ctxConditionAttr = ctxBroker.createAttribute((CtxEntityIdentifier) entityIDs.get(0), ctxConditionRangeName).get();
+				ctxConditionAttr.setBinaryValue(SerialisationHelper.serialise(conditionRanges));
+				ctxBroker.update(ctxConditionAttr);
+				
+				//update registry:
+				
+				this.policyRegistry.addPolicy(requestor, ctxAttr.getId());
+				this.policyRegistry.addConditionRanges(requestor, ctxConditionAttr.getId());
+				this.storePrivacyPolicyRegistry();
+				
+				//return policy attr id
 				return ctxAttr.getId();
 
+				
 
 			}else{
 				CtxAttribute ctxAttr = (CtxAttribute) ctxBroker.retrieve(ctxIDs.get(0)).get();
@@ -228,6 +245,57 @@ public class PrivacyPolicyRegistryManager implements IPrivacyPolicyRegistryManag
 		} catch (Exception e) {
 			LOG.error("Error during storage of the privacy policy identities registry: "+e.getMessage(), e);
 		}	
+	}
+
+
+	@Override
+	public Hashtable<String, ConditionRanges> getConditionRanges(RequestorBean requestor) throws PrivacyException{
+		// -- Loading
+		if (null == policyRegistry) {
+			LOG.debug("Registry empty: loading privacy policies");
+			this.loadPrivacyPolicyRegistry();
+		}
+		
+		// -- Retrieve condition ranges
+		// Retrieve Context Id
+		CtxIdentifier id = this.policyRegistry.getConditionRangeStorageID(requestor);
+		if (null == id){
+			LOG.error("Requestor: "+RequestorUtils.toString(requestor)+" has not provided a condition ranges");
+			return null;
+		}
+		
+		// Retrieve in context
+		try {
+			CtxAttribute ctxAttr = (CtxAttribute) ctxBroker.retrieve(id).get();
+			if (null == ctxAttr) {
+				LOG.error("CtxAttr obj is null");
+				return null;
+			}
+			Hashtable<String, ConditionRanges> conditionRanges = (Hashtable<String, ConditionRanges>) SerialisationHelper.deserialise(ctxAttr.getBinaryValue(), this.getClass().getClassLoader());
+			
+			if (null == conditionRanges) {
+				LOG.error("Can't deserialize the retrieved conditionRanges: {}", ctxAttr.getBinaryValue().toString());
+				return null;
+			}
+			
+			return conditionRanges;
+		} catch (Exception e) {
+			throw new PrivacyException("Can't retrieve the condition ranges", e);
+		}
+	}
+
+
+	@Override
+	public ConditionRanges getConditionRanges(RequestorBean requestor, String dataType)
+			throws PrivacyException {
+		
+		Hashtable<String, ConditionRanges> ranges = this.getConditionRanges(requestor);
+		if (ranges.containsKey(dataType)){
+			return ranges.get(dataType);
+					
+		}else{
+			throw new PrivacyException(dataType+" does not have condition ranges stored.");
+		}
 	}
 }
 

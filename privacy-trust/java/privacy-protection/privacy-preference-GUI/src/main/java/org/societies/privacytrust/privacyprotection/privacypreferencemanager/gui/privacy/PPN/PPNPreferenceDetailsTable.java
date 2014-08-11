@@ -29,19 +29,19 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.societies.api.identity.Requestor;
-import org.societies.api.identity.RequestorCis;
-import org.societies.api.identity.RequestorService;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PPNPreferenceDetails;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
+import org.societies.api.schema.identity.RequestorBean;
+import org.societies.api.schema.identity.RequestorCisBean;
+import org.societies.api.schema.identity.RequestorServiceBean;
 
 public class PPNPreferenceDetailsTable extends AbstractTableModel{
 
-	private List<PPNPreferenceDetails> details = new ArrayList<PPNPreferenceDetails>();
-	private String[] columnNames = {"Context Type", "ICtxIdentifier", "Provider Identity", "CIS ID or ServiceID"};
-	public PPNPreferenceDetailsTable(List<PPNPreferenceDetails> initDetails){
+	private List<PPNPreferenceDetailsBean> details = new ArrayList<PPNPreferenceDetailsBean>();
+	private String[] columnNames = {"Context Type", "Provider Identity", "CIS ID or ServiceID"};
+	public PPNPreferenceDetailsTable(List<PPNPreferenceDetailsBean> initDetails){
 		super();
 		
-		for (PPNPreferenceDetails d: initDetails){
+		for (PPNPreferenceDetailsBean d: initDetails){
 			this.addRow(d);
 		}
 	}
@@ -67,21 +67,14 @@ public class PPNPreferenceDetailsTable extends AbstractTableModel{
 	}
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		PPNPreferenceDetails d = this.details.get(rowIndex);
+		PPNPreferenceDetailsBean d = this.details.get(rowIndex);
 		
 		if (columnIndex==0){
-			return d.getDataType();
+			return d.getResource().getDataType();
 		}
 		
-		if (columnIndex == 1){
-			if (d.getAffectedDataId()!=null){
-				return d.getAffectedDataId();
-			}else{
-				return "";
-			}
-		}
 		
-		if (columnIndex==2){
+		if (columnIndex==1){
 			if (d.getRequestor().getRequestorId()!=null){
 				return d.getRequestor().getRequestorId();
 			}
@@ -90,31 +83,32 @@ public class PPNPreferenceDetailsTable extends AbstractTableModel{
 			}
 		}
 		
-		if (columnIndex==3){
-			Requestor requestor = d.getRequestor();
-			if (requestor instanceof RequestorService){
-				return ((RequestorService) requestor).getRequestorServiceId();
+		if (columnIndex==2){
+			RequestorBean requestor = d.getRequestor();
+			if (requestor instanceof RequestorServiceBean){
+				return ((RequestorServiceBean) requestor).getRequestorServiceId();
 			}
 			
-			if (requestor instanceof RequestorCis){
-				return ((RequestorCis) requestor).getCisRequestorId();
+			if (requestor instanceof RequestorCisBean){
+				return ((RequestorCisBean) requestor).getCisRequestorId();
 			}
 				return "";
 		}
 		return new String("");
 	}
 
-	public void setValueAt(PPNPreferenceDetails value, int row, int col){
-		PPNPreferenceDetails d = this.details.get(row);
+	public void setValueAt(PPNPreferenceDetailsBean value, int row, int col){
+		PPNPreferenceDetailsBean d = this.details.get(row);
 		
 		if (col==0){
-			d.setDataType(value.getDataType());
+			d.getResource().setDataType(value.getResource().getDataType());
 			fireTableCellUpdated(row, col);
 		}
+
 		
 		if (col==1){
-			if (value.getAffectedDataId()!=null){
-				d.setAffectedDataId(value.getAffectedDataId());
+			if (value.getRequestor()!=null){
+				d.setRequestor(value.getRequestor());
 				fireTableCellUpdated(row, col);
 			}
 		}
@@ -125,15 +119,8 @@ public class PPNPreferenceDetailsTable extends AbstractTableModel{
 				fireTableCellUpdated(row, col);
 			}
 		}
-		
-		if (col==3){
-			if (value.getRequestor()!=null){
-				d.setRequestor(value.getRequestor());
-				fireTableCellUpdated(row, col);
-			}
-		}
 	}
-    public void addRow(PPNPreferenceDetails d){
+    public void addRow(PPNPreferenceDetailsBean d){
     	//System.out.println("addRow("+d.toString()+")");
     	this.details.add(d);
     	this.fireTableDataChanged();
@@ -143,7 +130,7 @@ public class PPNPreferenceDetailsTable extends AbstractTableModel{
     	this.fireTableDataChanged();
     }
     
-    public PPNPreferenceDetails getRow(int row){
+    public PPNPreferenceDetailsBean getRow(int row){
     	return this.details.get(row);
     }
 }

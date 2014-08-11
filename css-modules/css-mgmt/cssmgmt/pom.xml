@@ -81,24 +81,24 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<dependency>
+<!-- 		<dependency>
 			<groupId>org.societies.platform</groupId>
 			<artifactId>socialdata</artifactId>
 			<version>${release.version}</version>
 			<scope>provided</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.societies.cis</groupId>
 			<artifactId>CisDirectoryClient</artifactId>
 			<version>${release.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 		    <groupId>org.societies</groupId>
 		    <artifactId>activityfeed-client</artifactId>
 		    <version>${release.version}</version>
 		    <scope>provided</scope>
-	    </dependency>
+	    </dependency> -->
 
 	</dependencies>
 

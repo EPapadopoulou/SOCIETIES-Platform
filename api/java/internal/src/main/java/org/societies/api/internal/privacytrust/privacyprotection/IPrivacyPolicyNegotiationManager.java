@@ -26,7 +26,7 @@ package org.societies.api.internal.privacytrust.privacyprotection;
 
 import org.societies.api.identity.RequestorCis;
 import org.societies.api.identity.RequestorService;
-import org.societies.api.internal.privacytrust.privacyprotection.negotiation.NegotiationDetails;
+import org.societies.api.internal.schema.useragent.feedback.NegotiationDetailsBean;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 
 
@@ -41,12 +41,12 @@ public interface IPrivacyPolicyNegotiationManager {
 	 * 
 	 * @param details	requestor and negotiation id
 	 */
-	public void negotiateCISPolicy(NegotiationDetails details) throws PrivacyException;
+	public void negotiateCISPolicy(NegotiationDetailsBean details) throws PrivacyException;
 
 	/**
 	 * 
 	 * @param details	requestor and negotiation id
 	 */
-	public void negotiateServicePolicy(NegotiationDetails details) throws PrivacyException;
+	public void negotiateServicePolicy(NegotiationDetailsBean details) throws PrivacyException;
 
 }

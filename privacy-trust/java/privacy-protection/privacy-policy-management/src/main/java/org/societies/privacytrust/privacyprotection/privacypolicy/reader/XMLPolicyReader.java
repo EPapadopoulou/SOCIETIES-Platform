@@ -47,14 +47,18 @@ import org.societies.api.identity.RequestorCis;
 import org.societies.api.identity.RequestorService;
 import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Condition;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestItem;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Resource;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ActionConstants;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ConditionConstants;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
 import org.societies.api.schema.identity.DataIdentifierScheme;
+import org.societies.api.schema.identity.RequestorBean;
+import org.societies.api.schema.identity.RequestorCisBean;
+import org.societies.api.schema.identity.RequestorServiceBean;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -143,7 +147,7 @@ public class XMLPolicyReader {
 
 	public RequestPolicy readPolicyFromFile(Document doc){
 		try {
-			Requestor subject = null;
+			RequestorBean subject = null;
 			ArrayList<RequestItem> targets;
 
 
@@ -177,7 +181,10 @@ public class XMLPolicyReader {
 			//				return null;
 			//			}
 
-			return new RequestPolicy(subject,targets);
+			RequestPolicy policy = new RequestPolicy();
+			policy.setRequestor(subject);
+			policy.setRequestItems(targets);
+			return policy;
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -186,7 +193,7 @@ public class XMLPolicyReader {
 		return null;
 	}
 
-	private Requestor readSubject(NodeList subjectList){
+	private RequestorBean readSubject(NodeList subjectList){
 		Element subjectElement = (Element) subjectList.item(0);
 		log("subjectElement.getTagName: "+subjectElement.getTagName());
 		try {
@@ -271,9 +278,16 @@ public class XMLPolicyReader {
 			}
 			if (providerIdentity!=null){
 				if (serviceID!=null){
-					return new RequestorService(providerIdentity, serviceID);
+					RequestorServiceBean bean = new RequestorServiceBean();
+					bean.setRequestorId(providerIdentity.getBareJid());
+					bean.setRequestorServiceId(serviceID);
+					return bean;
+					
 				}else if (cisIdentity!=null){
-					return new RequestorCis(providerIdentity, cisIdentity);
+					RequestorCisBean bean = new RequestorCisBean();
+					bean.setRequestorId(providerIdentity.getBareJid());
+					bean.setCisRequestorId(cisIdentity.getBareJid());
+					return bean;
 
 				}
 			}else{
@@ -356,7 +370,13 @@ public class XMLPolicyReader {
 				}
 			}
 		}
-		RequestItem rItem = new RequestItem(r,actionsList, conditionsList, isOptional);
+		RequestItem rItem = new RequestItem();
+		rItem.setResource(r);
+		rItem.setActions(actionsList);
+		rItem.setConditions(conditionsList);
+		rItem.setOptional(isOptional);
+		
+		
 		return rItem;
 
 	}
@@ -405,11 +425,13 @@ public class XMLPolicyReader {
 				return null;
 			}else{
 
-				return new Resource(scheme, ctxID.getType());
+				return ResourceUtils.create(scheme, ctxID.getType());
+				
+				
 			}
 		}else{
 			//TODO: make the necessary changes to include the scheme in the privacy policy			
-			return new Resource(scheme,ctxType);
+			return ResourceUtils.create(scheme,ctxType);
 		}
 	}
 
@@ -436,7 +458,8 @@ public class XMLPolicyReader {
 					NodeList attributeValueList = attributeElement.getElementsByTagName("AttributeValue");
 					Element attributeValueElement = (Element) attributeValueList.item(0);
 					ActionConstants ac = ActionConstants.valueOf(attributeValueElement.getFirstChild().getNodeValue().toUpperCase());
-					a = new Action(ac);
+					a = new Action();
+					a.setActionConstant(ac);
 				}
 			}
 		}
@@ -484,7 +507,9 @@ public class XMLPolicyReader {
 					ConditionConstants cc = ConditionConstants.valueOf(attributeValueElement.getAttribute("DataType"));
 
 					conditionValue = attributeValueElement.getFirstChild().getNodeValue();
-					c = new Condition(cc,conditionValue);
+					c = new Condition();
+					c.setConditionConstant(cc);
+					c.setValue(conditionValue);
 				}
 			}
 		}

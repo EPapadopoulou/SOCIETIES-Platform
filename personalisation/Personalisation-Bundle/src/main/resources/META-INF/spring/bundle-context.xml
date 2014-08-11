@@ -9,6 +9,21 @@
 		We've kept the osgi definitions in a separate configuration file so that 
 		this file can easily be used for integration testing outside of an OSGi environment -->
 
+	<bean id="persoMgr"
+		class="org.societies.personalisation.management.impl.PersonalisationManager"
+		name="persoMgr" lazy-init="true"
+		init-method="initialisePersonalisationManager">
+<!-- 		<property name="pcm" ref="pcm"></property>
+		<property name="dianne" ref="dianne"></property>
+		<property name="ctxBroker" ref="ctxBroker"></property>
+		<property name="commsMgr" ref="commsMgr"></property>
+		<property name="decisionMaker" ref="decisionMaker"></property>
+		<property name="eventMgr" ref="eventMgmtRef"></property>
+		<property name="cristPrediction" ref="cristPrediction"></property>
+		<property name="cauiPrediction" ref="cauiPrediction"></property> -->
+	</bean>
+	
+	<!-- 
  
 	<bean id="pcm"
 		class="org.societies.personalisation.UserPreferenceManagement.impl.monitoring.UserPreferenceConditionMonitor"
@@ -90,19 +105,7 @@
 	</bean>
 
 
-	<bean id="persoMgr"
-		class="org.societies.personalisation.management.impl.PersonalisationManager"
-		name="persoMgr" lazy-init="true"
-		init-method="initialisePersonalisationManager">
-		<property name="pcm" ref="pcm"></property>
-		<property name="dianne" ref="dianne"></property>
-		<property name="ctxBroker" ref="ctxBroker"></property>
-		<property name="commsMgr" ref="commsMgr"></property>
-		<property name="decisionMaker" ref="decisionMaker"></property>
-		<property name="eventMgr" ref="eventMgmtRef"></property>
-		<property name="cristPrediction" ref="cristPrediction"></property>
-		<property name="cauiPrediction" ref="cauiPrediction"></property>
-	</bean>
+
 
 	<bean id="dianne" class="org.societies.personalisation.dianne.DIANNE"
 		name="dianne" init-method="initialiseDIANNELearning">
@@ -142,6 +145,6 @@
 	    <property name="commsManager" ref="commsMgr"></property>
 	    <property name="communityPreferenceManager" ref="communityPreferenceManager"></property>
 	    
-	</bean>
+	</bean> -->
 	<!-- <context:component-scan base-package="org.societies.personalisation.management.impl"></context:component-scan> -->
 </beans>

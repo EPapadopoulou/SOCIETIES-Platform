@@ -26,46 +26,45 @@ package org.societies.privacytrust.privacyprotection.privacypreferencemanager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
-
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.comm.xmpp.interfaces.ICommManager;
+import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
-import org.societies.api.identity.Requestor;
+import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyAgreementManager;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.AgreementEnvelope;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.IAgreement;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
 import org.societies.api.internal.useragent.feedback.IUserFeedback;
 import org.societies.api.osgi.event.IEventMgr;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestorUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponseItemUtils;
 import org.societies.api.schema.identity.DataIdentifier;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPrivacyPreferenceTreeModel;
@@ -73,6 +72,8 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.eva
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.PrivatePreferenceCache;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.AccessControlPreferenceCreator;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.DObfPreferenceCreator;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.NegotiationListener;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.PPNPreferenceMerger;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.monitoring.PrivacyPreferenceConditionMonitor;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.monitoring.accessCtrl.AccCtrlMonitor;
 
@@ -107,10 +108,14 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 	private IPrivacyAgreementManager agreementMgr;
 	private PPNegotiationPreferenceManager ppnMgr;
 	private IDSPreferenceManager idsMgr;
+	private AttrSelPreferenceManager attrSelPrefMgr;
 	private IEventMgr eventMgr;
 	private AccessControlPreferenceCreator accCtrlPreferenceCreator;
 	private AccCtrlMonitor accCtrlMonitor;
 	private DObfPreferenceCreator dobfPreferenceCreator;
+	private PPNPreferenceMerger ppnPreferenceMerger;
+	private NegotiationListener negotiationListener;
+	private IIdentity userIdentity;
 
 	public PrivacyPreferenceManager(){
 
@@ -127,11 +132,14 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 	}
 
 	public void initialisePrivacyPreferenceManager(){
+		this.userIdentity = this.idm.getThisNetworkNode();
 		prefCache = new PrivatePreferenceCache(ctxBroker, this.idm);
-		contextCache = new PrivateContextCache(ctxBroker);
+		
 		this.privacyPCM = new PrivacyPreferenceConditionMonitor(ctxBroker, this, this.privacyDataManagerInternal, commsMgr);
-		contextCache = new PrivateContextCache(ctxBroker);
+		this.contextCache = new PrivateContextCache(ctxBroker);
 		this.accCtrlPreferenceCreator = new AccessControlPreferenceCreator(this);
+		this.ppnPreferenceMerger = new PPNPreferenceMerger(this);
+		negotiationListener = new NegotiationListener(this);
 		this.dobfPreferenceCreator = new DObfPreferenceCreator(this);
 		accCtrlMonitor = new AccCtrlMonitor(this);
 	}
@@ -147,23 +155,29 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 
 	private PPNegotiationPreferenceManager getPPNegotiationPreferenceManager(){
 		if (this.ppnMgr==null){
-			ppnMgr = new PPNegotiationPreferenceManager(prefCache, contextCache, privacyPCM, trustBroker);
+			ppnMgr = new PPNegotiationPreferenceManager(prefCache, contextCache, privacyPCM, trustBroker, this.userIdentity);
 		}
 		return ppnMgr;
 	}
 
 	private DObfPrivacyPreferenceManager getDObfPreferenceManager(){
-		DObfPrivacyPreferenceManager dobfMgr = new DObfPrivacyPreferenceManager(prefCache, contextCache, trustBroker);
+		DObfPrivacyPreferenceManager dobfMgr = new DObfPrivacyPreferenceManager(prefCache, contextCache, trustBroker, this.userIdentity);
 		return dobfMgr;
 	}
 
 	private IDSPreferenceManager getIDSPreferenceManager(){
 		if (idsMgr ==null){
-			idsMgr = new IDSPreferenceManager(prefCache, contextCache, trustBroker);
+			idsMgr = new IDSPreferenceManager(prefCache, contextCache, trustBroker, this.userIdentity);
 		}
 		return idsMgr;
 	}
 
+	private AttrSelPreferenceManager getAttrSelPreferenceManager(){
+		if (attrSelPrefMgr==null){
+			attrSelPrefMgr = new AttrSelPreferenceManager(this, this.prefCache);
+		}
+		return attrSelPrefMgr;
+	}
 	public AccCtrlMonitor getAccCtrlMonitor() {
 		return accCtrlMonitor;
 	}
@@ -225,17 +239,7 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 
 	
 	
-	@Override
-	@Deprecated
-	public List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> checkPermission(Requestor requestor, DataIdentifier dataId,
-			List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions) throws PrivacyException {
 
-
-		List<DataIdentifier> dataIds = new ArrayList<DataIdentifier>();
-		dataIds.add(dataId);
-		List<ResponseItem> permissions = checkPermission(RequestorUtils.toRequestorBean(requestor), dataIds, ActionUtils.toActionBeans(actions));
-		return ResponseItemUtils.toResponseItems(permissions);
-	}
 	@Override
 	public boolean deleteAccCtrlPreference(
 			AccessControlPreferenceDetailsBean details) {
@@ -254,6 +258,14 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 			e.printStackTrace();
 		}
 		return this.getAccessControlPreferenceManager().deleteAccCtrlPreference(details);
+	}
+
+	@Override
+	public boolean deleteAttSelPreference(
+			AttributeSelectionPreferenceDetailsBean details) {
+		
+		return this.getAttrSelPreferenceManager().deleteAttSelPreference(details);
+		
 	}
 
 
@@ -281,6 +293,7 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 		List<Condition> conditions = new ArrayList<Condition>();
 		try {
 			AgreementEnvelope agreementEnv = this.agreementMgr.getAgreement(RequestorUtils.toRequestor(details.getRequestor(), this.idm));
+			
 			if (agreementEnv!=null){
 				IAgreement agreement = agreementEnv.getAgreement();
 
@@ -312,6 +325,10 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 
 
 	@Override
+	public Hashtable<Resource, CtxIdentifier> evaluateAttributeSelectionPreferences(Agreement agreement){
+		return this.getAttrSelPreferenceManager().evaluateAttributeSelectionPreferences(agreement);
+	}
+	@Override
 	public double evaluateDObfPreference(DObfPreferenceDetailsBean details) {
 		return this.getDObfPreferenceManager().evaluateDObfPreference(details);
 	}
@@ -324,13 +341,10 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 
 
 	@Override
-	public IIdentity evaluateIDSPreferences(IAgreement agreement,
+	public IIdentity evaluateIDSPreferences(Agreement agreement,
 			List<IIdentity> identities) {
-		//TODO: return this.getIDSPreferenceManager().evaluateIDSPreferences(agreement, identities);
-		if (identities.size()>0){
-			return identities.get(0);
-		}
-		return null;
+		return this.getIDSPreferenceManager().evaluateIDSPreferences(agreement, identities);
+		
 	}
 
 
@@ -342,10 +356,21 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 
 
 	@Override
+	public AttributeSelectionPreferenceTreeModel getAttrSelPreference(AttributeSelectionPreferenceDetailsBean details) {
+		return this.getAttrSelPreferenceManager().getAttrSelPreference(details);
+	}
+
+
+
+	@Override
 	public List<AccessControlPreferenceDetailsBean> getAccCtrlPreferenceDetails() {
 		return this.getAccessControlPreferenceManager().getAccCtrlPreferenceDetails();
 	}
 
+	@Override
+	public List<AttributeSelectionPreferenceDetailsBean> getAttrSelPreferenceDetails() {
+		return this.getAttrSelPreferenceManager().getAttrSelPreferenceDetails();
+	}
 
 	@Override
 	public DObfPreferenceTreeModel getDObfPreference(
@@ -395,6 +420,11 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 		return this.getAccessControlPreferenceManager().storeAccCtrlPreference(details, model);
 	}
 
+
+	@Override
+	public boolean storeAttrSelPreference(AttributeSelectionPreferenceDetailsBean details,	AttributeSelectionPreferenceTreeModel model) {
+		return this.getAttrSelPreferenceManager().storeAttrSelPreference(details,model);
+	}
 
 	@Override
 	public boolean storeDObfPreference(DObfPreferenceDetailsBean details,
@@ -582,6 +612,16 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 
 	public AccessControlPreferenceCreator getAccCtrlPreferenceCreator() {
 		return accCtrlPreferenceCreator;
+	}
+
+
+	public PPNPreferenceMerger getPpnPreferenceMerger() {
+		return ppnPreferenceMerger;
+	}
+
+
+	public void setPpnPreferenceMerger(PPNPreferenceMerger ppnPreferenceMerger) {
+		this.ppnPreferenceMerger = ppnPreferenceMerger;
 	}
 
 

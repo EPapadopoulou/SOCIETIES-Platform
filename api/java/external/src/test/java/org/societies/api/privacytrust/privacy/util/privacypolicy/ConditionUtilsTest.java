@@ -34,6 +34,7 @@ import java.util.List;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
@@ -65,17 +66,17 @@ public class ConditionUtilsTest {
 		assertTrue("Empty conditions should be equal (inverse)", ConditionUtils.equal(condition2, condition1));
 		assertFalse("Empty condition and empty object should not be equal", ConditionUtils.equal(condition1, notCondition));
 		// -- Privacy Policy
-		condition1 = ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, "Yes");
+		condition1 = ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[1]);
 		assertTrue("Same condition should be equal", ConditionUtils.equal(condition1, condition1));
 		assertFalse("Different conditions should be equal", ConditionUtils.equal(condition1, condition2));
 		assertFalse("Different conditions should be equal (inverse)", ConditionUtils.equal(condition2, condition1));
-		condition2 = ConditionUtils.create(ConditionConstants.DATA_RETENTION_IN_HOURS, "Yes");
+		condition2 = ConditionUtils.create(ConditionConstants.DATA_RETENTION, PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[0]);
 		assertFalse("Different conditions should be equal (2)", ConditionUtils.equal(condition1, condition2));
 		assertFalse("Different conditions should be equal (inverse) (2)", ConditionUtils.equal(condition2, condition1));
-		condition2 = ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, "Yes", true);
+		condition2 = ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[1], true);
 		assertFalse("Different conditions should be equal (2)", ConditionUtils.equal(condition1, condition2));
 		assertFalse("Different conditions should be equal (inverse) (2)", ConditionUtils.equal(condition2, condition1));
-		condition2 = ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, "Yes");
+		condition2 = ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[1]);
 		assertTrue("Equal conditions should be equal", ConditionUtils.equal(condition1, condition2));
 		assertTrue("Equal conditions should be equal (inverse)", ConditionUtils.equal(condition2, condition1));
 		assertFalse("condition and object should not be equal", ConditionUtils.equal(condition1, notCondition));
@@ -98,42 +99,42 @@ public class ConditionUtilsTest {
 		assertTrue("Empty requested conditions means nothing is mandatory (2/2)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
 
 		// Only mandatory
-		requestedConditions.add(ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, "1"));
+		requestedConditions.add(ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[1]));
 		assertFalse("Only Mandatory requested conditions (1/5)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
-		providedConditions.add(ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, "1"));
+		providedConditions.add(ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[1]));
 		assertTrue("Only Mandatory requested conditions  (2/5)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
-		requestedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION_IN_MINUTES, "25"));
+		requestedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION, PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[1]));
 		assertFalse("Only Mandatory requested conditions (3/5)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
-		providedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION_IN_MINUTES, "25"));
+		providedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION, PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[1]));
 		assertTrue("Only Mandatory requested conditions  (4/5)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
-		providedConditions.add(ConditionUtils.create(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA, "1"));
+		providedConditions.add(ConditionUtils.create(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA, PrivacyConditionsConstantValues.getValues(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA)[1]));
 		assertTrue("Only Mandatory requested conditions, even with provided more data (5/5)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
 
 		// With optional fields
-		requestedConditions.add(ConditionUtils.create(ConditionConstants.MAY_BE_INFERRED, "0", true));
+		requestedConditions.add(ConditionUtils.create(ConditionConstants.MAY_BE_INFERRED, PrivacyConditionsConstantValues.getValues(ConditionConstants.MAY_BE_INFERRED)[1], true));
 		assertTrue("With option field, it should still match (1/3)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
-		providedConditions.add(ConditionUtils.create(ConditionConstants.MAY_BE_INFERRED, "0", true));
+		providedConditions.add(ConditionUtils.create(ConditionConstants.MAY_BE_INFERRED, PrivacyConditionsConstantValues.getValues(ConditionConstants.MAY_BE_INFERRED)[1], true));
 		assertTrue("With option field, it should still match (2/3)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
 		providedConditions = new ArrayList<Condition>();
 		providedConditions.add(ConditionUtils.create(ConditionConstants.MAY_BE_INFERRED, "0"));
-		providedConditions.add(ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, "1"));
-		providedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION_IN_MINUTES, "25"));
+		providedConditions.add(ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[1]));
+		providedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION, PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[1]));
 //		LOG.debug("Requested conditions:\n"+ConditionUtils.toString(requestedConditions));
 //		LOG.debug("Provided conditions:\n"+ConditionUtils.toString(providedConditions));
 		assertTrue("With option field, it should still match (3/3)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
 
 		// Only optional fields
 		requestedConditions = new ArrayList<Condition>();
-		requestedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION_IN_HOURS, "10", true));
+		requestedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION, "10", true));
 		providedConditions = null;
 		assertTrue("Only optional field, it should still match (1/4)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
 		providedConditions = new ArrayList<Condition>();
 		assertTrue("Only optional field, it should still match (2/4)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
-		providedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION_IN_HOURS, "10", true));
+		providedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION, PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[1], true));
 		assertTrue("Only optional field, it should still match (3/4)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
 		providedConditions = new ArrayList<Condition>();
-		providedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION_IN_MINUTES, "25"));
-		providedConditions.add(ConditionUtils.create(ConditionConstants.MAY_BE_INFERRED, "0", true));
+		providedConditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION, PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[1]));
+		providedConditions.add(ConditionUtils.create(ConditionConstants.MAY_BE_INFERRED, PrivacyConditionsConstantValues.getValues(ConditionConstants.MAY_BE_INFERRED)[1], true));
 		assertTrue("Only optional field, it should still match (4/4)", ConditionUtils.containAllMandotory(providedConditions, requestedConditions));
 
 	}
@@ -142,12 +143,12 @@ public class ConditionUtilsTest {
 	public void testGetFriendlyName() {
 		String testTitle = "Get friendly name";
 		LOG.info("[Test] "+testTitle);
-		String expectedFriendlyName = "Shared with the world";
-		String actualFriendlyName = ConditionUtils.getFriendlyName(ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, "1"));
+		String expectedFriendlyName = "Shared with";
+		String actualFriendlyName = ConditionUtils.getFriendlyName(ConditionUtils.create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[1]));
 		assertEquals("Friendly names should be equal", expectedFriendlyName, actualFriendlyName);
 
-		expectedFriendlyName = "Data retention in hours";
-		actualFriendlyName = ConditionUtils.getFriendlyName(ConditionUtils.create(ConditionConstants.DATA_RETENTION_IN_HOURS, "1"));
+		expectedFriendlyName = "Data retention period";
+		actualFriendlyName = ConditionUtils.getFriendlyName(ConditionUtils.create(ConditionConstants.DATA_RETENTION, PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[1]));
 		assertEquals("Friendly names should be equal", expectedFriendlyName, actualFriendlyName);
 	}
 }

@@ -19,7 +19,7 @@
         <value>org.societies.personalisation.common.api.management.IInternalPersonalisationManager</value>
         </osgi:interfaces>
         </osgi:service>
-        
+       <!--  
 		
 		<osgi:service ref="pcm">
         <osgi:interfaces>
@@ -95,7 +95,7 @@
                 <value>org.societies.api.comm.xmpp.interfaces.ICommCallback</value>
             </osgi:interfaces>
         </osgi:service>
-        
+         -->
         
 <!--         PersonalisationManager is needed by pcm, dianne, cristPrediction, cauiPrediction
         <osgi:reference id="persoMgr" interface="org.societies.personalisation.common.api.management.IInternalPersonalisationManager" >
@@ -152,7 +152,7 @@ start importing internal services. cardinality is set to 0..1 because we have a 
 		 -->
 <!-- importing external services -->
 	
-		<osgi:reference id="ctxBroker" interface="org.societies.api.internal.context.broker.ICtxBroker">
+<!-- 		<osgi:reference id="ctxBroker" interface="org.societies.api.internal.context.broker.ICtxBroker">
 		</osgi:reference>
 		
 		<osgi:reference id="decisionMaker" interface="org.societies.api.internal.useragent.decisionmaking.IDecisionMaker">
@@ -168,7 +168,7 @@ start importing internal services. cardinality is set to 0..1 because we have a 
 		
 		<osgi:reference id="cisManager" interface="org.societies.api.cis.management.ICisManager"></osgi:reference>
 		
-		<osgi:reference id="serviceDiscovery" interface="org.societies.api.internal.servicelifecycle.IServiceDiscovery"></osgi:reference>
+		<osgi:reference id="serviceDiscovery" interface="org.societies.api.internal.servicelifecycle.IServiceDiscovery"></osgi:reference> -->
 		
 		<!--  <osgi:reference id="upcm" interface="org.societies.personalisation.preference.api.UserPreferenceConditionMonitor.IUserPreferenceConditionMonitor"/> -->
 		

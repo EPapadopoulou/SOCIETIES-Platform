@@ -51,12 +51,6 @@ public interface IPrivacyDataManagerRemote {
 	 * @param listener The callback object
 	 */
 	public void checkPermission(RequestorBean requestor, List<DataIdentifier> dataId, List<Action> actions, IPrivacyDataManagerListener listener) throws PrivacyException;
-	/**
-	 * Will be removed in 1.2
-	 * @see checkPermission
-	 */
-	@Deprecated
-	public void checkPermission(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions, IPrivacyDataManagerListener listener) throws PrivacyException;
 
 	/**
 	 * Remote call to protect a data following the user preferences by obfuscating it to a correct

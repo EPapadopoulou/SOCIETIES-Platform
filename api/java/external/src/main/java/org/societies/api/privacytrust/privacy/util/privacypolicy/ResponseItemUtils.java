@@ -43,6 +43,13 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Respons
  */
 public class ResponseItemUtils {
 
+	public static ResponseItem copyOf(ResponseItem item){
+		ResponseItem rItem = new ResponseItem();
+		rItem.setDecision(item.getDecision());
+		rItem.setRequestItem(RequestItemUtils.copyOf(item.getRequestItem()));
+		rItem.setResponseItemId(item.getResponseItemId());
+		return rItem;
+	}
 	public static ResponseItem create(Decision decision, RequestItem requestItem) {
 		ResponseItem responseItem = new ResponseItem();
 		responseItem.setDecision(decision);
@@ -92,24 +99,26 @@ public class ResponseItemUtils {
 		return sb.toString();
 	}
 
-	public static String toString(ResponseItem value){
+	public static String toString(ResponseItem responseItem){
 		StringBuilder builder = new StringBuilder();
-		builder.append("ResponseItem [");
-		if (null != value) {
-			builder.append("getDecision()=");
-			builder.append(value.getDecision());
-			builder.append(", getRequestItem()=");
-			builder.append(RequestItemUtils.toString(value.getRequestItem()));
+		
+		builder.append("ResponseItem \n");
+		if (null != responseItem) {
+			builder.append("Decision: ");
+			builder.append(responseItem.getDecision());
+			builder.append(RequestItemUtils.toString(responseItem.getRequestItem()));
 		}
-		builder.append("]");
+		
 		return builder.toString();
 	}
 
-	public static String toString(List<ResponseItem> values){
+	public static String toString(List<ResponseItem> responseItems){
 		StringBuilder sb = new StringBuilder();
-		if (null != values) {
-			for(ResponseItem entry : values) {
-				sb.append(toString(entry));
+		sb.append("ResponseItems\n");
+		if (null != responseItems) {
+			for(ResponseItem responseItem : responseItems) {
+				sb.append(toString(responseItem));
+				sb.append("\n");
 			}
 		}
 		return sb.toString();
@@ -220,49 +229,5 @@ public class ResponseItemUtils {
 			return null;
 		}
 		return permissions;
-	}
-
-
-	public static org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem toResponseItem(ResponseItem responseItemBean)
-	{
-		if (null == responseItemBean) {
-			return null;
-		}
-		org.societies.api.privacytrust.privacy.model.privacypolicy.RequestItem requestItem = RequestItemUtils.toRequestItem(responseItemBean.getRequestItem());
-		org.societies.api.privacytrust.privacy.model.privacypolicy.Decision decision = DecisionUtils.toDecision(responseItemBean.getDecision());
-		return new org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem(requestItem, decision);
-	}
-	public static List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> toResponseItems(List<ResponseItem> responseItemBeans)
-	{
-		if (null == responseItemBeans) {
-			return null;
-		}
-		List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> responseItems = new ArrayList<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem>();
-		for(ResponseItem responseItemBean : responseItemBeans) {
-			responseItems.add(ResponseItemUtils.toResponseItem(responseItemBean));
-		}
-		return responseItems;
-	}
-
-	public static ResponseItem toResponseItemBean(org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem responseItem)
-	{
-		if (null == responseItem) {
-			return null;
-		}
-		ResponseItem responseItemBean = new ResponseItem();
-		responseItemBean.setDecision(DecisionUtils.toDecisionBean(responseItem.getDecision()));
-		responseItemBean.setRequestItem(RequestItemUtils.toRequestItemBean(responseItem.getRequestItem()));
-		return responseItemBean;
-	}
-	public static List<ResponseItem> toResponseItemBeans(List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> responseItems)
-	{
-		if (null == responseItems) {
-			return null;
-		}
-		List<ResponseItem> responseItemBeans = new ArrayList<ResponseItem>();
-		for(org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem responseItem : responseItems) {
-			responseItemBeans.add(ResponseItemUtils.toResponseItemBean(responseItem));
-		}
-		return responseItemBeans;
 	}
 }

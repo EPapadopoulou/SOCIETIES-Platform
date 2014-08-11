@@ -26,12 +26,14 @@ package org.societies.privacytrust.privacyprotection.api;
 
 
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 
+import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.identity.IIdentity;
-import org.societies.api.identity.Requestor;
-import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.IAgreement;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
@@ -39,11 +41,12 @@ import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.schema.identity.DataIdentifier;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPrivacyPreferenceTreeModel;
@@ -56,18 +59,6 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  */
 public interface IPrivacyPreferenceManager {
 
-	/**
-	 * Method to check the access control permission
-	 * @return	responseItem that indicates the resource, the Actions and Conditions and the Decision to permit or deny
-	 * 
-	 * @param requestor the identity of the requestor (maybe RequestorService or RequestorCis)
-	 * @param ctxId    the affected context identifier
-	 * @param actions    the actions requested
-	 * @exception PrivacyPreferenceException PrivacyPreferenceException
-	 */
-	@Deprecated
-	public List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> checkPermission(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions)
-	  throws PrivacyException;
 
 	/**
 	 * Method to check the access control permission
@@ -121,7 +112,7 @@ public interface IPrivacyPreferenceManager {
 	 * @param identities	the list of identities that the IdentitySelection module deemed appropriate for this transaction
 	 * @return				the selected identity. is null if none of the identities passed to this method matched the preferences of the user.
 	 */
-	public IIdentity evaluateIDSPreferences(IAgreement agreement, List<IIdentity> identities);
+	public IIdentity evaluateIDSPreferences(Agreement agreement, List<IIdentity> identities);
 
 
 
@@ -148,7 +139,9 @@ public interface IPrivacyPreferenceManager {
 	 */
 	public ResponseItem evaluateAccCtrlPreference(AccessControlPreferenceDetailsBean details);
 	
+
 	
+	public Hashtable<Resource, CtxIdentifier> evaluateAttributeSelectionPreferences(Agreement agreement);
 	/**
 	 * Method to retrieve the list of PPN preferences (not the actual preference objects, only the details for which a preference exists)
 	 * @return				the list of all PPN preference details. 
@@ -173,6 +166,12 @@ public interface IPrivacyPreferenceManager {
 	 * @return
 	 */
 	public List<AccessControlPreferenceDetailsBean> getAccCtrlPreferenceDetails();
+	
+	/**
+	 * Method to retrieve the list of Attribute selection preferences  (not the actual preference objects, only the details for which the preference exists)
+	 * @return
+	 */
+	public List<AttributeSelectionPreferenceDetailsBean> getAttrSelPreferenceDetails();
 	
 	
 	/**
@@ -204,6 +203,13 @@ public interface IPrivacyPreferenceManager {
 	 * @return				the preference to which the details relate to
 	 */
 	public AccessControlPreferenceTreeModel getAccCtrlPreference(AccessControlPreferenceDetailsBean details);
+	
+	/**
+	 * Method to retrieve the Attribute Selection preference based on the given parameters.  
+	 * @param details		the specific details to which the preference requested relates to
+	 * @return				the preference to which the details relate to
+	 */
+	public AttributeSelectionPreferenceTreeModel getAttrSelPreference(AttributeSelectionPreferenceDetailsBean details);
 	
 	/**
 	 * Method to store a PPN preference related to the specific details (param)
@@ -238,6 +244,16 @@ public interface IPrivacyPreferenceManager {
 	 * @return			true if successfully stored, false otherwise
 	 */
 	public boolean storeAccCtrlPreference(AccessControlPreferenceDetailsBean details, AccessControlPreferenceTreeModel model);
+	
+	/**
+	 * Method to store an Attribute selection preference related to the specific details
+	 * @param details		the details to which the preference to be stored relates to
+	 * @param model			the preference to be stored relating to the provided details
+	 * @return			true if successfully stored, false otherwise
+	 */
+	public boolean storeAttrSelPreference(AttributeSelectionPreferenceDetailsBean details, AttributeSelectionPreferenceTreeModel model);
+	
+	
 	/**
 	 * Method to delete an existing PPN preference model
 	 * @param details		the details related to this preference
@@ -266,5 +282,11 @@ public interface IPrivacyPreferenceManager {
 	 */
 	public boolean deleteAccCtrlPreference(AccessControlPreferenceDetailsBean details);
 
+	/**
+	 * Method to delete the attribute selection preference referring to this details object
+	 * @param details	the details to which the preference to be deleted refers to
+	 * @return			true if successfully deleted, false otherwise
+	 */
+	public boolean deleteAttSelPreference(AttributeSelectionPreferenceDetailsBean details);
 	
 }

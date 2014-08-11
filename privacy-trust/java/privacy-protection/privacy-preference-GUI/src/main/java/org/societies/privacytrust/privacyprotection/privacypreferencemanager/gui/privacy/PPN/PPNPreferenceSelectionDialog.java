@@ -58,6 +58,8 @@ import org.societies.api.identity.Requestor;
 import org.societies.api.identity.RequestorCis;
 import org.societies.api.identity.RequestorService;
 import org.societies.api.internal.context.broker.ICtxBroker;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PPNPreferenceDetails;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.gui.GUI;
 /**
@@ -359,10 +361,13 @@ public class PPNPreferenceSelectionDialog extends JDialog implements ActionListe
 	}
 
 
-	public PPNPreferenceDetails getNewPPNPreferenceDetails(){
+	public PPNPreferenceDetailsBean getNewPPNPreferenceDetails(){
 		
 		String contextType = (String) this.cmbContextTypes.getSelectedItem();
-		PPNPreferenceDetails details = new PPNPreferenceDetails(contextType);
+		PPNPreferenceDetailsBean details = new PPNPreferenceDetailsBean();
+		Resource resource = new Resource();
+		resource.setDataType(contextType);
+		details.setResource(resource);
 		
 		String ctxIDStr = (String) this.cmbContextIDs.getSelectedItem();
 		if (!ctxIDStr.equalsIgnoreCase("Generic")){

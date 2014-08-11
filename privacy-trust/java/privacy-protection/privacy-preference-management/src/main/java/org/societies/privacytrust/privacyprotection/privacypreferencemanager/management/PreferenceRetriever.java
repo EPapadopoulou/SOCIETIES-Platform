@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -38,10 +39,14 @@ import org.societies.api.context.CtxException;
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelType;
+import org.societies.api.context.model.IndividualCtxEntity;
+import org.societies.api.context.model.util.SerialisationHelper;
+import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceTreeModelBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceTreeModelBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPrivacyPreferenceTreeModelBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPrivacyPreferenceTreeModelBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPrivacyPreferenceTreeModelBean;
@@ -55,7 +60,7 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.Ctx
  * 
  */
 public class PreferenceRetriever {
-	
+
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	private ICtxBroker ctxBroker;
 	private final IIdentityManager idMgr; 
@@ -64,56 +69,29 @@ public class PreferenceRetriever {
 		this.ctxBroker = ctxBroker;
 		this.idMgr = idMgr;
 	}
-	
+
 	public Registry retrieveRegistry(){
+		IIdentity userId = this.idMgr.getThisNetworkNode();
+
+		this.logging.debug("Retrieving registry");
 		try {
-			Future<List<CtxIdentifier>> futureAttrList = ctxBroker.lookup(CtxModelType.ATTRIBUTE, CtxTypes.PRIVACY_PREFERENCE_REGISTRY); 
-			List<CtxIdentifier> attrList = futureAttrList.get();
-			if (null!=attrList){
-				if (attrList.size()>0){
-					CtxIdentifier identifier = attrList.get(0);
-					CtxAttribute attr = (CtxAttribute) ctxBroker.retrieve(identifier).get();
-					Object obj = this.convertToObject(attr.getBinaryValue());
-					
-					if (obj==null){
-						this.logging.debug("PreferenceRegistry not found in DB. Creating new registry");
-						return new Registry();
-					}
-					
-					if (obj instanceof RegistryBean){
-						this.logging.debug("PreferenceRegistry found in DB ");
-						Registry registry = Registry.fromBean((RegistryBean) obj, idMgr);
-						return registry;
-					}else{
-						this.logging.debug("PreferenceRegistry not found in DB. Creating new registry");
-						return new Registry();
-					}
-				}
-				this.logging.debug("PreferenceRegistry not found in DB. Creating new registry");
+			IndividualCtxEntity entityPerson = ctxBroker.retrieveIndividualEntity(userId).get();
+			Set<CtxAttribute> attributes = entityPerson.getAttributes(CtxTypes.PRIVACY_PREFERENCE_REGISTRY);
+			if (attributes.size()==0){
 				return new Registry();
 			}
-			this.logging.debug("PreferenceRegistry not found in DB. Creating new registry");
-			return new Registry();
+			CtxAttribute ctxAttribute = attributes.iterator().next();
+			Registry registry = (Registry) SerialisationHelper.deserialise(ctxAttribute.getBinaryValue(), this.getClass().getClassLoader());
+			return registry;
 		} catch (CtxException e) {
 			this.logging.debug("Exception while loading PreferenceRegistry from DB ");
 			e.printStackTrace();
-			return new Registry();
 		} catch (InterruptedException e) {
 			this.logging.debug("Exception while loading PreferenceRegistry from DB ");
 			e.printStackTrace();
-			return new Registry();
 		} catch (ExecutionException e) {
 			this.logging.debug("Exception while loading PreferenceRegistry from DB ");
 			e.printStackTrace();
-			return new Registry();
-		}
-	}
-	
-	private Object convertToObject(byte[] byteArray){
-		try {
-			ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(byteArray));
-			Object obj = ois.readObject();
-			return obj;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -121,9 +99,12 @@ public class PreferenceRetriever {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
+
+		this.logging.debug("Error retrieving registry from DB, creating new registry");
+		return new Registry();
 	}
-	
+
+
 	/*
 	 * retrieves a preference object using that preference object's context identifier to find it
 	 * @param id
@@ -134,29 +115,33 @@ public class PreferenceRetriever {
 			//retrieve directly the attribute in context that holds the preference as a blob value
 			CtxAttribute attrPref = (CtxAttribute) ctxBroker.retrieve(id).get();
 			//cast the blob value to type IPreference and return it
-			Object obj = this.convertToObject(attrPref.getBinaryValue());
-			if (null!=obj){
-				if (obj instanceof IPrivacyPreferenceTreeModel){
-					return (IPrivacyPreferenceTreeModel) obj;
-				}
-				
-				
-				if (obj instanceof PPNPrivacyPreferenceTreeModelBean){
-					return PrivacyPreferenceUtils.toPPNPrivacyPreferenceTreeModel((PPNPrivacyPreferenceTreeModelBean) obj, this.idMgr);
-				}
-				
-				if (obj instanceof IDSPrivacyPreferenceTreeModelBean){
-					return PrivacyPreferenceUtils.toIDSPrivacyPreferenceTreeModel((IDSPrivacyPreferenceTreeModelBean) obj, idMgr);
-				}
-				
-				if (obj instanceof DObfPrivacyPreferenceTreeModelBean){
-					return PrivacyPreferenceUtils.toDObfPreferenceTreeModel((DObfPrivacyPreferenceTreeModelBean) obj, idMgr);
-				}
-				
-				if (obj instanceof AccessControlPreferenceTreeModelBean){
-					return PrivacyPreferenceUtils.toAccCtrlPreferenceTreeModel((AccessControlPreferenceTreeModelBean) obj, idMgr);
-				}
+			Object obj = SerialisationHelper.deserialise(attrPref.getBinaryValue(), this.getClass().getClassLoader());
+
+			if (obj instanceof PPNPrivacyPreferenceTreeModelBean){
+				this.logging.debug("Returning ppn preference");
+				return PrivacyPreferenceUtils.toPPNPrivacyPreferenceTreeModel((PPNPrivacyPreferenceTreeModelBean) obj, this.idMgr);
 			}
+
+			if (obj instanceof IDSPrivacyPreferenceTreeModelBean){
+				this.logging.debug("Returning ids preference");
+				return PrivacyPreferenceUtils.toIDSPrivacyPreferenceTreeModel((IDSPrivacyPreferenceTreeModelBean) obj, idMgr);
+			}
+
+			if (obj instanceof DObfPrivacyPreferenceTreeModelBean){
+				this.logging.debug("Returning dobf preference");
+				return PrivacyPreferenceUtils.toDObfPreferenceTreeModel((DObfPrivacyPreferenceTreeModelBean) obj, idMgr);
+			}
+
+			if (obj instanceof AccessControlPreferenceTreeModelBean){
+				this.logging.debug("Returning accCtrl preference");
+				return PrivacyPreferenceUtils.toAccCtrlPreferenceTreeModel((AccessControlPreferenceTreeModelBean) obj, idMgr);
+			}
+			
+			if (obj instanceof AttributeSelectionPreferenceTreeModelBean){
+				this.logging.debug("Returning attrSel preference");
+				return PrivacyPreferenceUtils.toAccCtrlPreferenceTreeModel((AccessControlPreferenceTreeModelBean) obj, idMgr);
+			}
+
 		}
 		catch (CtxException e) {
 			// TODO Auto-generated catch block
@@ -170,19 +155,23 @@ public class PreferenceRetriever {
 		} catch (InvalidFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (URISyntaxException e) {
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		//returns null if no preference is found in the database.
+		this.logging.debug("Could not retrieve ctxAttribute with id: "+id.toUriString()+" from DB. returning null");
 		return null;
 	}
-	
-	
-	
-	
 
-	
+
+
+
+
+
 
 }
 

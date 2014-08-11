@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.CtxException;
@@ -40,7 +42,9 @@ import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.CtxOriginType;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
+import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
+import org.societies.api.identity.INetworkNode;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.Requestor;
 import org.societies.api.identity.util.RequestorUtils;
@@ -99,6 +103,7 @@ public class AccessControlPreferenceManager {
 	private final DObfPreferenceCreator dobfPrefCreator;
 	private IPrivacyDataManagerInternal privacyDataManagerInternal;
 	private String[] sensedDataTypes;
+	private IIdentity userIdentity;
 
 
 
@@ -110,6 +115,7 @@ public class AccessControlPreferenceManager {
 		this.ctxBroker = ctxBroker;
 		this.agreementMgr = agreementMgr;
 		this.idMgr = idMgr;
+		userIdentity = idMgr.getThisNetworkNode();
 		this.dobfPrefCreator = dobfPrefCreator;
 		this.privacyDataManagerInternal = privacyDataManagerInternal;
 		sensedDataTypes = new String[]{CtxAttributeTypes.TEMPERATURE, 
@@ -133,66 +139,10 @@ public class AccessControlPreferenceManager {
 		return false;
 	}
 
-	/*	private ResponseItem checkPreferenceForAccessControl(AccessControlPreferenceDetailsBean details, IPrivacyPreferenceTreeModel model, List<Condition> conditions) throws MalformedCtxIdentifierException{
-		RequestorBean requestor = details.getRequestor();
-		DataIdentifier dataId = DataIdentifierFactory.fromUri(details.getResource().getDataIdUri());
-		Action action = details.getAction();
-		this.logging.debug("Evaluating preference");
-		IPrivacyOutcome outcome = this.evaluatePreference(model.getRootPreference(), conditions);
-
-		String actionList = "";
-
-		if (null==outcome){
-			this.logging.debug("Evaluation returned no result. Asking the user: "+dataId.getType());
-
-			this.logging.debug("Evaluation returned no result. Asking the user: "+dataId.getType());
-
-			String allow = "Allow";
-			String deny = "Deny";
 
 
-			List<String> response = new ArrayList<String>();
-
-			String proposalText = requestor.getRequestorId().toString()+" is requesting access to: \n"
-					+ "resource:"+dataId.getType()+"\n("+dataId.getUri()+")\nto perform a "+actionList+" operation.";
-			try {
-				response = this.userFeedback.getExplicitFB(ExpProposalType.ACKNACK, new ExpProposalContent(proposalText, new String[]{allow,deny})).get();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			if (response.contains(allow)){
-				this.storeDecision(requestor, dataId, conditions, action,  PrivacyOutcomeConstantsBean.ALLOW);
-				return this.createResponseItem(requestor, dataId, action, conditions, Decision.PERMIT);
-			}else{
-				this.storeDecision(requestor, dataId, conditions, action, PrivacyOutcomeConstantsBean.BLOCK);
-				return this.createResponseItem(requestor, dataId, action, conditions, Decision.DENY);
-			}
-			int n = myMessageBox.showConfirmDialog(requestor.getRequestorId().toString()+" is requesting access to: \n"
-					+ "resource:"+dataId.getType()+"\n("+dataId.getUri()+")\nto perform a "+actionList+" operation. \nAllow?", "Access request", JOptionPane.YES_NO_OPTION);
-			if (n==JOptionPane.YES_OPTION){
-				this.askToStoreDecision(requestor, dataId, conditions, actions,  PrivacyOutcomeConstants.ALLOW);
-				return this.createResponseItem(requestor, dataId, actions, conditions, Decision.PERMIT);
-			}else{
-				this.askToStoreDecision(requestor, dataId, conditions, actions, PrivacyOutcomeConstants.BLOCK);
-				return this.createResponseItem(requestor, dataId, actions, conditions, Decision.DENY);
-			}
-		}else{
-			if (((AccessControlOutcome) outcome).getEffect()==PrivacyOutcomeConstantsBean.ALLOW){
-				this.logging.debug("Returning PERMIT decision for resource: "+dataId.getUri());
-				return this.createResponseItem(requestor, dataId, action, conditions, Decision.PERMIT);
-			}
-			this.logging.debug("Returning DENY decision for resource: "+dataId.getUri());
-			return this.createResponseItem(requestor, dataId, action, conditions, Decision.DENY);
-		}
-	}*/
-
-	public IPrivacyOutcome evaluatePreference(IPrivacyPreference privPref, List<Condition> conditions){
-		PreferenceEvaluator ppE = new PreferenceEvaluator(this.contextCache, trustBroker);
+	public IPrivacyOutcome evaluatePreference(IPrivacyPreference privPref, List<Condition> conditions, RequestorBean requestor){
+		PreferenceEvaluator ppE = new PreferenceEvaluator(this.contextCache, trustBroker, requestor, this.userIdentity);
 		Hashtable<IPrivacyOutcome, List<CtxIdentifier>> results = ppE.evaluateAccessCtrlPreference(privPref, conditions);
 		Enumeration<IPrivacyOutcome> outcomes = results.keys();
 		//JOptionPane.showMessageDialog(null, results.size());
@@ -293,33 +243,24 @@ public class AccessControlPreferenceManager {
 			}
 		}
 		if (preferencesDoNotExist.size()>0){
-			try {
-				List<AccessControlResponseItem> list = this.userFeedback.getAccessControlFB(RequestorUtils.toRequestor(requestor, idMgr), preferencesDoNotExist).get();
-				for (AccessControlResponseItem item: list){
-					if (item.isRemember()){
-						this.privacyDataManagerInternal.updatePermission(requestor, item);
-						this.storeDecision(requestor, item.getRequestItem().getResource(), item.getRequestItem().getConditions(), action, item.getDecision());
-						this.logging.debug("Stored access control feedback as preference");
-					}else{
-						this.logging.debug("One-off access granted. Permission not stored permanently");
-					}
-					if (item.isObfuscationInput()){
-						this.dobfPrefCreator.createPreference(requestor, item.getRequestItem().getResource(), item.getObfuscationLevel());
-						this.logging.debug("Stored DObf preference based on user input to the access control feedback popup.");
-					}
+			//TODO: AC gui!
+			//List<AccessControlResponseItem> list = this.userFeedback.getAccessControlFB(RequestorUtils.toRequestor(requestor, idMgr), preferencesDoNotExist).get();
+			List<AccessControlResponseItem> list = new ArrayList<AccessControlResponseItem>();
+			for (AccessControlResponseItem item: list){
+				if (item.isRemember()){
+					this.privacyDataManagerInternal.updatePermission(requestor, item);
+					this.storeDecision(requestor, item.getRequestItem().getResource(), item.getRequestItem().getConditions(), action, item.getDecision());
+					this.logging.debug("Stored access control feedback as preference");
+				}else{
+					this.logging.debug("One-off access granted. Permission not stored permanently");
 				}
-				permissions.addAll(list);
-				return permissions;
-			} catch (InvalidFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (item.isObfuscationInput()){
+					this.dobfPrefCreator.createPreference(requestor, item.getRequestItem().getResource(), item.getObfuscationLevel());
+					this.logging.debug("Stored DObf preference based on user input to the access control feedback popup.");
+				}
 			}
+			permissions.addAll(list);
+			return permissions;
 		}
 		return permissions;
 	}
@@ -395,40 +336,31 @@ public class AccessControlPreferenceManager {
 			List<AccessControlResponseItem> responseItems = new ArrayList<AccessControlResponseItem>();
 			responseItems.add(responseItem);
 
-			try{	
-				List<AccessControlResponseItem> resultlist = this.userFeedback.getAccessControlFB(RequestorUtils.toRequestor(requestor, idMgr), responseItems).get();
-				if (resultlist.size()==0){
-					responseItem.setDecision(Decision.DENY);
-					return responseItem;
-				}
-
-				AccessControlResponseItem accessControlResponseItem = resultlist.get(0);
-				if (accessControlResponseItem.isRemember()){
-					this.privacyDataManagerInternal.updatePermission(requestor, accessControlResponseItem);
-					this.storeDecision(requestor, resource, accessControlResponseItem.getRequestItem().getConditions(), action, accessControlResponseItem.getDecision());
-					this.logging.debug("Stored access control feedback as preference");
-				}else{
-					this.logging.debug("One-off access granted. Permission not stored permanently");
-				}
-				if (accessControlResponseItem.isObfuscationInput()){
-					this.dobfPrefCreator.createPreference(requestor, accessControlResponseItem.getRequestItem().getResource(), accessControlResponseItem.getObfuscationLevel());
-					this.logging.debug("Stored DObf preference based on user input to the access control feedback popup.");
-				}else{
-					this.logging.debug("Obfuscation not requested in the access control");
-				}
-				return accessControlResponseItem;
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvalidFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			List<AccessControlResponseItem> resultlist = new ArrayList<AccessControlResponseItem>();
+			//TODO! AC GUI (SEE LINES 412,413)
+			//List<AccessControlResponseItem> resultlist = this.userFeedback.getAccessControlFB(RequestorUtils.toRequestor(requestor, idMgr), responseItems).get();
+			if (resultlist.size()==0){
+				responseItem.setDecision(Decision.DENY);
+				return responseItem;
 			}
-			responseItem.setDecision(Decision.DENY);
-			return responseItem;
+
+			AccessControlResponseItem accessControlResponseItem = resultlist.get(0);
+			if (accessControlResponseItem.isRemember()){
+				this.privacyDataManagerInternal.updatePermission(requestor, accessControlResponseItem);
+				this.storeDecision(requestor, resource, accessControlResponseItem.getRequestItem().getConditions(), action, accessControlResponseItem.getDecision());
+				this.logging.debug("Stored access control feedback as preference");
+			}else{
+				this.logging.debug("One-off access granted. Permission not stored permanently");
+			}
+			if (accessControlResponseItem.isObfuscationInput()){
+				this.dobfPrefCreator.createPreference(requestor, accessControlResponseItem.getRequestItem().getResource(), accessControlResponseItem.getObfuscationLevel());
+				this.logging.debug("Stored DObf preference based on user input to the access control feedback popup.");
+			}else{
+				this.logging.debug("Obfuscation not requested in the access control");
+			}
+			return accessControlResponseItem;
+			//responseItem.setDecision(Decision.DENY);
+			//return responseItem;
 		}else{
 			return evaluateAccCtrlPreference;
 		}
@@ -619,7 +551,7 @@ public class AccessControlPreferenceManager {
 		if (model!=null){
 			try {
 				//return this.checkPreferenceForAccessControl(details, model, conditions);
-				IPrivacyOutcome evaluatePreference = this.evaluatePreference(model.getPref(), conditions);
+				IPrivacyOutcome evaluatePreference = this.evaluatePreference(model.getPref(), conditions, details.getRequestor());
 
 				if (evaluatePreference!=null){
 					if (evaluatePreference instanceof AccessControlOutcome){
@@ -690,7 +622,7 @@ public class AccessControlPreferenceManager {
 					//if the preference refers to this requestor
 
 
-					if (RequestorUtils.equal(detail.getRequestor(), RequestorUtils.toRequestorBean(requestor))){
+					if (RequestorUtils.equals(detail.getRequestor(), RequestorUtils.toRequestorBean(requestor))){
 						//JOptionPane.showMessageDialog(null, "Requestor: "+RequestorUtils.toString(detail.getRequestor())+" vs "+RequestorUtils.toString(RequestorUtils.toRequestorBean(requestor)));
 						//retrieve the preference, iterate through it, and retrieve all the conditions
 						AccessControlPreferenceTreeModel accCtrlPreference = this.getAccCtrlPreference(detail);
@@ -751,7 +683,7 @@ public class AccessControlPreferenceManager {
 		condition.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
 		condition.setValue("No");
 		Condition condition2 = new Condition();
-		condition2.setConditionConstant(ConditionConstants.DATA_RETENTION_IN_HOURS);
+		condition2.setConditionConstant(ConditionConstants.DATA_RETENTION);
 		condition2.setValue("24");
 		conditions.add(condition2);
 		conditions.add(condition);

@@ -42,6 +42,7 @@ import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestPolicyUt
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponsePolicy;
+import org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyManagerInternal;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.provider.ProviderResponsePolicyGenerator;
 import org.springframework.scheduling.annotation.AsyncResult;
 
@@ -52,7 +53,7 @@ import org.springframework.scheduling.annotation.AsyncResult;
 public class NegotiationAgent implements INegotiationAgent{
 
 	private IIdentity myIdentity;
-	private IPrivacyPolicyManager policyMgr;
+	private IPrivacyPolicyManagerInternal policyMgr;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	private ICommManager commsMgr;
 	
@@ -73,21 +74,18 @@ public class NegotiationAgent implements INegotiationAgent{
 	 */
 	@Override
 	public Future<RequestPolicy> getPolicy(RequestorBean requestor) {
-		this.log("Returning requested policy for : "+requestor.toString());
+		this.logging.debug("Returning requested policy for : "+requestor.toString());
 	
 		RequestPolicy requestedPolicy;
 		try {
-			requestedPolicy = RequestPolicyUtils.toRequestPolicyBean(this.getPolicyMgr().getPrivacyPolicy(RequestorUtils.toRequestor(requestor, this.commsMgr.getIdManager())));
+			requestedPolicy = this.getPolicyMgr().getPrivacyPolicy(requestor);
 			if (requestedPolicy==null){
-				log("RequestPolicy is NULL");
+				logging.debug("RequestPolicy is NULL");
 			}else{
-				log("FOUND non-null request policy and returning to requestor");
+				logging.debug("FOUND non-null request policy and returning to requestor");
 			}
 			return new AsyncResult<RequestPolicy>(requestedPolicy);
 		} catch (PrivacyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -109,20 +107,17 @@ public class NegotiationAgent implements INegotiationAgent{
 	 */
 	@Override
 	public Future<ResponsePolicy> negotiate(RequestorBean requestor, ResponsePolicy policy) {
-		log("Received responsePolicy from client");
-		log(policy.toString());
+		logging.debug("Received responsePolicy from client");
+		logging.debug(policy.toString());
 		try {
-			RequestPolicy myPolicy = RequestPolicyUtils.toRequestPolicyBean(this.getPolicyMgr().getPrivacyPolicy(RequestorUtils.toRequestor(requestor, this.commsMgr.getIdManager())));
+			RequestPolicy myPolicy = this.getPolicyMgr().getPrivacyPolicy(requestor);
 			if (myPolicy==null){
-				log("Could not retrieve MY POLICY!");
+				logging.debug("Could not retrieve MY POLICY!");
 			}
-			ProviderResponsePolicyGenerator respPolGen = new ProviderResponsePolicyGenerator();
+			ProviderResponsePolicyGenerator respPolGen = new ProviderResponsePolicyGenerator(this.policyMgr.getPolicyRegistryManager());
 			ResponsePolicy myResponse = respPolGen.generateResponse(policy, myPolicy);
 			return new AsyncResult<ResponsePolicy>(myResponse);
 		} catch (PrivacyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -134,14 +129,14 @@ public class NegotiationAgent implements INegotiationAgent{
 	 */
 	@Override
 	public Future<Boolean> acknowledgeAgreement(AgreementEnvelope envelope) {
-		log("Client requests to acknowledge agreement");
+		logging.debug("Client requests to acknowledge agreement");
 		try{
 			
 			Key key = AgreementEnvelopeUtils.getPublicKey(envelope);
 			
-			log("Got Public Key from Agreement Envelope "+key.toString());
+			logging.debug("Got Public Key from Agreement Envelope "+key.toString());
 		}catch(Exception e){
-			log("Could not retrieve Public Key from Agreement Envelope");
+			logging.debug("Could not retrieve Public Key from Agreement Envelope");
 			e.printStackTrace();
 		}
 
@@ -150,21 +145,18 @@ public class NegotiationAgent implements INegotiationAgent{
 		
 	}
 	
-	private void log(String message){
-		this.logging.info(this.getClass().getName()+" : "+message);
-	}
 
 	/**
 	 * @return the policyMgr
 	 */
-	public IPrivacyPolicyManager getPolicyMgr() {
+	public IPrivacyPolicyManagerInternal getPolicyMgr() {
 		return policyMgr;
 	}
 
 	/**
 	 * @param policyMgr the policyMgr to set
 	 */
-	public void setPolicyMgr(IPrivacyPolicyManager policyMgr) {
+	public void setPolicyMgr(IPrivacyPolicyManagerInternal policyMgr) {
 		this.policyMgr = policyMgr;
 	}
 

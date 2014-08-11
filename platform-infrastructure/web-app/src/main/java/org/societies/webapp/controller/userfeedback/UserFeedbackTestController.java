@@ -404,7 +404,7 @@ public class UserFeedbackTestController extends BasePageController {
         action4.setOptional(true);
 
         Condition condition1 = new Condition();
-        condition1.setConditionConstant(ConditionConstants.DATA_RETENTION_IN_HOURS);
+        condition1.setConditionConstant(ConditionConstants.DATA_RETENTION);
         condition1.setValue("12");
         condition1.setOptional(false);
         Condition condition2 = new Condition();
@@ -446,7 +446,7 @@ public class UserFeedbackTestController extends BasePageController {
         action4.setOptional(true);
 
         Condition condition1 = new Condition();
-        condition1.setConditionConstant(ConditionConstants.DATA_RETENTION_IN_HOURS);
+        condition1.setConditionConstant(ConditionConstants.DATA_RETENTION);
         condition1.setValue("12");
         condition1.setOptional(false);
         Condition condition2 = new Condition();

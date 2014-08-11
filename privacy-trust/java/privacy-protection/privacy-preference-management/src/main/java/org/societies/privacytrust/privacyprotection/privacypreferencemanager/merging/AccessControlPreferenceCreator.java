@@ -51,6 +51,7 @@ import org.societies.api.osgi.event.IEventMgr;
 import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponseItemUtils;
 import org.societies.api.schema.identity.DataIdentifierScheme;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
@@ -74,7 +75,7 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.Pri
  * @author Eliza
  * 
  */
-public class AccessControlPreferenceCreator extends EventListener{
+public class AccessControlPreferenceCreator{
 
 	private final IEventMgr eventMgr;
 	private IPrivacyAgreementManager agreementMgr;
@@ -95,11 +96,7 @@ public class AccessControlPreferenceCreator extends EventListener{
 		this.privacyDataManagerInternal = ppMgr.getprivacyDataManagerInternal();
 		this.idMgr = ppMgr.getCommsMgr().getIdManager();
 		this.accCtrlPrefMgr = ppMgr.getAccessControlPreferenceManager();
-		try{
-			this.eventMgr.subscribeInternalEvent(this, new String[]{EventTypes.PRIVACY_POLICY_NEGOTIATION_EVENT}, null);
-		}catch(Exception e){
-			System.out.println("could not subscribe to event: "+EventTypes.PRIVACY_POLICY_NEGOTIATION_EVENT);
-		}
+
 
 		sensedDataTypes = new String[]{CtxAttributeTypes.TEMPERATURE, 
 				CtxAttributeTypes.STATUS,
@@ -107,14 +104,10 @@ public class AccessControlPreferenceCreator extends EventListener{
 				CtxAttributeTypes.LOCATION_COORDINATES,
 				CtxAttributeTypes.ACTION};
 	}
-	@Override
-	public void handleExternalEvent(CSSEvent arg0) {
-		// TODO Auto-generated method stub
 
-	}
 
-	@Override
-	public void handleInternalEvent(InternalEvent event) {
+
+	public void notifyNegotiationResult(InternalEvent event) {
 		this.logging.debug("Received event: name: "+event.geteventName()+" - type: "+event.geteventType());
 		if (event.geteventInfo() instanceof PPNegotiationEvent){
 			PPNegotiationEvent ppnEvent = (PPNegotiationEvent) event.geteventInfo();
@@ -129,8 +122,8 @@ public class AccessControlPreferenceCreator extends EventListener{
 				dataTypes = dataTypes.concat(dataType+", ");
 			}
 			this.logging.debug("Agreement contains the following datatypes: "+dataTypes);
-			for (ResponseItem item: responseItems){
-
+			for (ResponseItem tempItem: responseItems){
+				ResponseItem item = ResponseItemUtils.copyOf(tempItem);
 				String dataType = item.getRequestItem().getResource().getDataType();
 				this.logging.debug("Processing datatype: "+dataType+" with scheme: "+item.getRequestItem().getResource().getScheme());
 				if (item.getRequestItem().getResource().getScheme().equals(DataIdentifierScheme.CONTEXT)){

@@ -32,8 +32,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Condition;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ConditionConstants;
+import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
 
 /**
  * Tool class to manage conversion between Java type and Bean XMLschema generated type
@@ -42,37 +43,46 @@ import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.Cond
 public class ConditionUtils {
 	public static Map<String, String> map2FriendlyName;
 
+	public static Condition copyOf(Condition condition1){
+		Condition condition = new Condition();
+		condition.setConditionConstant(condition1.getConditionConstant());
+		condition.setConditionId(condition1.getConditionId());
+		condition.setOptional(condition1.isOptional());
+		condition.setValue(condition1.getValue());
+		return condition;
+	}
 	/**
 	 * Instantiate a mandatory condition
 	 * @param conditionConstant
 	 * @param value
 	 * @return
 	 */
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition create(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants conditionConstant, String value) {
+	public static Condition create(ConditionConstants conditionConstant, String value) {
 		return create(conditionConstant, value, false);
 	}
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition create(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants conditionConstant, String value, boolean optional) {
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition condition = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition();
+	public static Condition create(ConditionConstants conditionConstant, String value, boolean optional) {
+		Condition condition = new Condition();
 		condition.setConditionConstant(conditionConstant);
 		condition.setValue(value);
 		condition.setOptional(optional);
 		return condition;
 	}
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition createPrivate() {
-		return create(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.SHARE_WITH_CIS_OWNER_ONLY, "1");
+	public static Condition createPrivate() {
+		return create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[1]);
 	}
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition createMembersOnly() {
-		return create(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.SHARE_WITH_CIS_MEMBERS_ONLY, "1");
+	public static Condition createMembersOnly() {
+		return create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[2]);
 	}
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition createPublic() {
-		return create(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.SHARE_WITH_3RD_PARTIES, "1");
+	public static Condition createPublic() {
+		return create(ConditionConstants.SHARE_WITH_3RD_PARTIES, PrivacyConditionsConstantValues.getValues(ConditionConstants.SHARE_WITH_3RD_PARTIES)[4]);
+
 	}
 
-	public static String toXmlString(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition condition){
+	public static String toXmlString(Condition condition){
 		StringBuilder sb = new StringBuilder();
 		if (null != condition) {
 			sb.append("\n<Condition>\n");
@@ -85,35 +95,35 @@ public class ConditionUtils {
 		return sb.toString();
 	}
 
-	public static String toXmlString(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> conditions){
+	public static String toXmlString(List<Condition> conditions){
 		StringBuilder sb = new StringBuilder();
 		if (null != conditions) {
-			for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition condition : conditions) {
+			for(Condition condition : conditions) {
 				sb.append(toXmlString(condition));
 			}
 		}
 		return sb.toString();
 	}
 
-	public static String toString(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition condition){
+	public static String toString(Condition condition){
 		StringBuilder builder = new StringBuilder();
-		builder.append("Condition [");
+		builder.append("Condition ");
 		if (null != condition) {
-			builder.append("getConditionConstant()=");
 			builder.append(condition.getConditionConstant());
-			builder.append(", isOptional()=");
+			builder.append(" optional: ");
 			builder.append(condition.isOptional());
-			builder.append(", getValue()=");
+			builder.append(" value: ");
 			builder.append(condition.getValue());
 		}
-		builder.append("]");
+		builder.append("\n");
 		return builder.toString();
 	}
 
-	public static String toString(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> conditions){
+	public static String toString(List<Condition> conditions){
 		StringBuilder sb = new StringBuilder();
+		sb.append("Conditions: \n");
 		if (null != conditions) {
-			for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition condition : conditions) {
+			for(Condition condition : conditions) {
 				sb.append(toString(condition));
 			}
 		}
@@ -126,23 +136,19 @@ public class ConditionUtils {
 	 * @param entry condition
 	 * @return condition friendly name
 	 */
-	public static String getFriendlyName(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition entry) {
+	public static String getFriendlyName(Condition entry) {
 		if (null == entry || null == entry.getConditionConstant()) {
 			return "";
 		}
 		if (null == map2FriendlyName || map2FriendlyName.size() <= 0) {
 			map2FriendlyName = new HashMap<String, String>();
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.SHARE_WITH_3RD_PARTIES.name(), "Shared with the world");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.SHARE_WITH_CIS_MEMBERS_ONLY.name(), "Shared with community members");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.SHARE_WITH_CIS_OWNER_ONLY.name(), "Not shared");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.MAY_BE_INFERRED.name(), "Warning, this data may be inferred");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.DATA_RETENTION_IN_SECONDS.name(), "Data retention in seconds");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.DATA_RETENTION_IN_MINUTES.name(), "Data retention in minutes");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.DATA_RETENTION_IN_HOURS.name(), "Data retention in hours");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.RIGHT_TO_OPTOUT.name(), "Right to optout");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.STORE_IN_SECURE_STORAGE.name(), "Stored in a secure storage");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA.name(), "Right to access held data");
-			map2FriendlyName.put(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA.name(), "Right to correct invalid data");
+			map2FriendlyName.put(ConditionConstants.SHARE_WITH_3RD_PARTIES.name(), "Shared with");
+			map2FriendlyName.put(ConditionConstants.MAY_BE_INFERRED.name(), "Warning, this data may be inferred");
+			map2FriendlyName.put(ConditionConstants.DATA_RETENTION.name(), "Data retention period");
+			map2FriendlyName.put(ConditionConstants.RIGHT_TO_OPTOUT.name(), "Right to optout");
+			map2FriendlyName.put(ConditionConstants.STORE_IN_SECURE_STORAGE.name(), "Stored in a secure storage");
+			map2FriendlyName.put(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA.name(), "Right to access held data");
+			map2FriendlyName.put(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA.name(), "Right to correct invalid data");
 		}
 		if (map2FriendlyName.containsKey(entry.getConditionConstant().name())) {
 			return map2FriendlyName.get(entry.getConditionConstant().name());
@@ -155,13 +161,13 @@ public class ConditionUtils {
 	 * @param haystack List of conditions
 	 * @return List of condition friendly names
 	 */
-	public List<String> getFriendlyName(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> haystack) {
+	public List<String> getFriendlyName(List<Condition> haystack) {
 		List<String> friendlyNameList = new ArrayList<String>();
 		if (null != haystack && haystack.size() > 0) {
 			// Sort
 			Collections.sort(haystack, new ConditionComparator());
 			// Retrieve friendly names
-			for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition entry : haystack) {
+			for(Condition entry : haystack) {
 				friendlyNameList.add(getFriendlyName(entry));
 			}
 		}
@@ -176,21 +182,21 @@ public class ConditionUtils {
 	 * @param dontCheckOptional At true, the optional field won't be checked
 	 * @return
 	 */
-	public static boolean equal(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition o1, Object o2, boolean dontCheckOptional) {
+	public static boolean equal(Condition o1, Object o2, boolean dontCheckOptional) {
 		// -- Verify reference equality
 		if (o1 == o2) { return true; }
 		if (o2 == null) { return false; }
 		if (o1 == null) { return false; }
 		if (o1.getClass() != o2.getClass()) { return false; }
 		// -- Verify obj type
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition ro2 = (org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition) o2;
+		Condition ro2 = (Condition) o2;
 		return (ConditionConstantsUtils.equal(o1.getConditionConstant(), ro2.getConditionConstant())
 				&& (StringUtils.equals(o1.getValue(), ro2.getValue()))
 				&& (dontCheckOptional || o1.isOptional() == ro2.isOptional())
 				);
 	}
 	@Deprecated
-	public static boolean equals(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition o1, Object o2) {
+	public static boolean equals(Condition o1, Object o2) {
 		return equal(o1, o2);
 	}
 	/**
@@ -199,34 +205,34 @@ public class ConditionUtils {
 	 * @param o2
 	 * @return
 	 */
-	public static boolean equal(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition o1, Object o2) {
+	public static boolean equal(Condition o1, Object o2) {
 		return equal(o1, o2, false);
 	}
 
-	public static boolean equal(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> o1, Object o2) {
+	public static boolean equal(List<Condition> o1, Object o2) {
 		// -- Verify reference equality
 		if (o1 == o2) { return true; }
 		if (o2 == null) { return false; }
 		if (o1 == null) { return false; }
 		if (!(o2 instanceof List)) { return false; }
 		// -- Verify obj type
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> ro2 = (List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition>) o2;
+		List<Condition> ro2 = (List<Condition>) o2;
 		if (o1.size() != ro2.size()) {
 			return false;
 		}
 		boolean result = true;
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition o1Entry : o1) {
+		for(Condition o1Entry : o1) {
 			result &= contain(o1Entry, ro2);
 		}
 		return result;
 	}
 
 
-	public static class ConditionComparator implements Comparator<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> { 
+	public static class ConditionComparator implements Comparator<Condition> { 
 		@Override
 		public int compare(
-				org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition o1,
-				org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition o2) {
+				Condition o1,
+				Condition o2) {
 			if (equal(o1, o2)) {
 				return 0;
 			}
@@ -241,11 +247,11 @@ public class ConditionUtils {
 	}
 
 
-	public static boolean contain(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition conditionToCheck, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> conditions) {
+	public static boolean contain(Condition conditionToCheck, List<Condition> conditions) {
 		if (null == conditions || conditions.size() <= 0 || null == conditionToCheck) {
 			return false;
 		}
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition condition : conditions) {
+		for(Condition condition : conditions) {
 			if (equal(conditionToCheck, condition)) {
 				return true;
 			}
@@ -260,11 +266,11 @@ public class ConditionUtils {
 	 * @param haystack
 	 * @return
 	 */
-	public static boolean containAllMandotory(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> needles, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> haystack) {
+	public static boolean containAllMandotory(List<Condition> needles, List<Condition> haystack) {
 		if (null == haystack || haystack.size() <= 0) {
 			return true;
 		}
-		for (org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition entry : haystack){
+		for (Condition entry : haystack){
 			if (entry.isOptional()) {
 				continue;
 			}
@@ -277,55 +283,12 @@ public class ConditionUtils {
 
 
 
-	public static Condition toCondition(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition conditionBean)
-	{
-		if (null == conditionBean) {
-			return null;
-		}
-		ConditionConstants conditionConstant = ConditionConstants.valueOf(conditionBean.getConditionConstant().name());
-		return new Condition(conditionConstant, conditionBean.getValue(), conditionBean.isOptional());
-	}
-	public static List<Condition> toConditions(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> conditionBeans)
-	{
-		if (null == conditionBeans) {
-			return null;
-		}
-		List<Condition> conditions = new ArrayList<Condition>();
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition conditionBean : conditionBeans) {
-			conditions.add(ConditionUtils.toCondition(conditionBean));
-		}
-		return conditions;
-	}
 
-	public static org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition toConditionBean(Condition condition)
-	{
-		if (null == condition) {
-			return null;
-		}
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition conditionBean = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition();
-		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants conditionConstant = org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.valueOf(condition.getConditionName().name());
-		conditionBean.setConditionConstant(conditionConstant);
-		conditionBean.setValue(condition.getValueAsString());
-		conditionBean.setOptional(condition.isOptional());
-		return conditionBean;
-	}
-	public static List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> toConditionBeans(List<Condition> conditions)
-	{
-		if (null == conditions) {
-			return null;
-		}
-		List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> conditionBeans = new ArrayList<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition>();
-		for(Condition condition : conditions) {
-			conditionBeans.add(ConditionUtils.toConditionBean(condition));
-		}
-		return conditionBeans;
-	}
-
-	public static boolean contains(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants conditionToCheck, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition> conditions) {
+	public static boolean contains(ConditionConstants conditionToCheck, List<Condition> conditions) {
 		if (null == conditions || conditions.size() <= 0 || null == conditionToCheck) {
 			return false;
 		}
-		for(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition condition : conditions) {
+		for(Condition condition : conditions) {
 			if (condition.getConditionConstant().equals(conditionToCheck)) {
 				return true;
 			}
@@ -338,7 +301,7 @@ public class ConditionUtils {
 			return false;
 		}
 		for(Condition condition : conditions) {
-			if (condition.getConditionName().equals(conditionToCheck.getConditionName())) {
+			if (condition.getConditionConstant().equals(conditionToCheck.getConditionConstant())) {
 				return true;
 			}
 		}
@@ -367,5 +330,14 @@ public class ConditionUtils {
 			}
 		}
 		return false;
+	}
+	public static List<Condition> copyOf(List<Condition> conditions1) {
+		List<Condition> conditions = new ArrayList<Condition>();
+		
+		for (Condition condition : conditions1){
+			conditions.add(copyOf(condition));
+		}
+		
+		return conditions;
 	}
 }

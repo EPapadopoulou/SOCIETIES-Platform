@@ -24,21 +24,33 @@
  */
 package org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client;
 
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
+
+import javax.swing.JOptionPane;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.societies.api.internal.schema.useragent.feedback.NegotiationDetailsBean;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.DecisionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponseItemUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponsePolicyUtils;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.NegotiationStatus;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponsePolicy;
+import org.societies.privacytrust.privacyprotection.privacynegotiation.PrivacyPolicyNegotiationManager;
+import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.PPNWindow;
 
 
 
@@ -49,8 +61,10 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Respons
  */
 public class ClientResponseChecker {
 	private static Logger LOG = LoggerFactory.getLogger(ClientResponseChecker.class);
+	private PrivacyPolicyNegotiationManager negotiationManager;
 
-	public ClientResponseChecker(){
+	public ClientResponseChecker(PrivacyPolicyNegotiationManager negotiationManager){
+		this.negotiationManager = negotiationManager;
 
 	}
 
@@ -63,128 +77,156 @@ public class ClientResponseChecker {
 	 * @param providerPolicy
 	 * @return True if provided and requested ResponsePolicy match
 	 */
-	public boolean checkResponse(ResponsePolicy myPolicy, ResponsePolicy providerPolicy){
-		/* 2013-04-18 - fixed by Olivier:
-		 * Fix: when providerPolicy was empty or not complete, the reply was true.
-		 * Added: We need to check that every mandatory fields at least are in the providerPolicy.
-		 */
-
+	public ResponsePolicy checkResponse(ResponsePolicy myPolicy, ResponsePolicy providerPolicy){
 		// -- Empty requested ResponsePolicy
 		if (null == myPolicy || null == myPolicy.getResponseItems() || myPolicy.getResponseItems().size() <= 0) {
 			LOG.info("Empty requested policy");
-			return true;
+			return null;
 		}
 		// -- Empty provider ResponsePolicy
 		if ((null == providerPolicy || null == providerPolicy.getResponseItems() || providerPolicy.getResponseItems().size() <= 0)
 				&& !ResponsePolicyUtils.hasOptionalResponseItemsOnly(myPolicy)) {
 			LOG.info("Empty provided policy and requested policy not completely optional");
-			return false;
+			return null;
+		}
+		Hashtable<ResponseItem, ResponseItem> table = new Hashtable<ResponseItem, ResponseItem>();
+
+		//align user's response item to provider's request item
+		for (ResponseItem myItem : myPolicy.getResponseItems()){
+			for (ResponseItem providerItem : providerPolicy.getResponseItems()){
+				if (myItem.getRequestItem().getResource().getDataType().equalsIgnoreCase(providerItem.getRequestItem().getResource().getDataType())){
+					table.put(myItem, providerItem);
+				}
+			}
 		}
 
+		List<ResponseItem> itemsNotMatching = new ArrayList<ResponseItem>();
 		// -- Check every ResponseItems		
 		for (ResponseItem myItem : myPolicy.getResponseItems()){
 			LOG.info("Requested item \""+myItem.getRequestItem().getResource().getDataType()+"\"...");
-			ResponseItem providerItem = ResponseItemUtils.containSameResource(myItem, providerPolicy.getResponseItems());
-			// - Resource not accepted (because not even their)
-			if (null == providerItem) {
-				// But it was optional
-				if (myItem.getRequestItem().isOptional()) {
-					continue;
+
+
+			ResponseItem providerItem = table.get(myItem);
+
+			if (myItem.getDecision().equals(Decision.DENY)){
+				if (providerItem!=null){
+					return null;
 				}
-				LOG.info("Mandatory requested item \""+myItem.getRequestItem().getResource().getDataType()+"\" not provided");
+			}
+
+			if (providerItem==null){
+				JOptionPane.showMessageDialog(null, "provider is null");
+			}
+			if (myItem.getRequestItem()==null){
+				JOptionPane.showMessageDialog(null, "myItem.getRequestItem(); is null");
+			}
+			if (providerItem.getRequestItem()==null){
+				JOptionPane.showMessageDialog(null, "provideritem.getRequestItem(); is null");
+			}
+			
+			
+			if (actionsMatch(myItem.getRequestItem().getActions(), providerItem.getRequestItem().getActions())){
+				if (!(conditionsMatch(myItem.getRequestItem().getConditions(), providerItem.getRequestItem().getConditions()))){
+					itemsNotMatching.add(providerItem);
+				}
+			}else{
+				itemsNotMatching.add(providerItem);
+			}
+		}
+		if (itemsNotMatching.size()==0){
+
+			for (ResponseItem item: providerPolicy.getResponseItems()){
+				item.setDecision(Decision.PERMIT);
+			}
+			providerPolicy.setNegotiationStatus(NegotiationStatus.SUCCESSFUL);
+			return providerPolicy;
+		}
+
+		RequestPolicy tempPolicy = new RequestPolicy();
+		tempPolicy.setRequestor(myPolicy.getRequestor());
+		tempPolicy.setRequestItems(new ArrayList<RequestItem>());
+		for (ResponseItem item : itemsNotMatching){
+			tempPolicy.getRequestItems().add(item.getRequestItem());
+		}
+
+
+		HashMap<RequestItem, ResponseItem> evaluatePPNPreferences = negotiationManager.getPrivacyPreferenceManager().evaluatePPNPreferences(tempPolicy);
+
+		NegotiationDetailsBean negDetails = new NegotiationDetailsBean();
+
+		negDetails.setRequestor(myPolicy.getRequestor());
+		StringBuilder sb = new StringBuilder();
+		for (ResponseItem item: itemsNotMatching){
+			sb.append(item.getRequestItem().getResource().getDataType());
+			sb.append(", ");
+		}
+		try{
+			sb.delete(sb.lastIndexOf(", "), sb.length());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		String message = "<html>The terms and conditions you requested for the data items: "+sb.toString()+" from the provider were not entirely acceptable. The provider has suggested alternatives. If you accept the alternatives provided, you can continue to install the service. Otherwise, the negotiation will fail. </html>";
+		PPNWindow window = new PPNWindow(negDetails, evaluatePPNPreferences, false, message);
+		ResponsePolicy userResponsePolicy = window.getResponsePolicy();
+		for (ResponseItem item : userResponsePolicy.getResponseItems()){
+			if (item.getDecision().equals(Decision.DENY)){
+				return null;
+			}
+		}
+
+
+		for (ResponseItem item: providerPolicy.getResponseItems()){
+			item.setDecision(Decision.PERMIT);
+		}
+		providerPolicy.setNegotiationStatus(NegotiationStatus.SUCCESSFUL);
+		return providerPolicy;
+	}
+
+
+
+
+	private boolean conditionsMatch(List<Condition> myConditions,	List<Condition> providerConditions) {
+		Hashtable<Condition, Condition> table = new Hashtable<Condition, Condition>();
+
+		for (Condition myCondition: myConditions){
+			for (Condition providerCondition : providerConditions){
+				if (myCondition.getConditionConstant().equals(providerCondition.getConditionConstant())){
+					table.put(myCondition, providerCondition);
+					break;
+				}
+			}
+		}
+
+		Enumeration<Condition> keys = table.keys();
+
+		while (keys.hasMoreElements()){
+			Condition myCondition = keys.nextElement();
+			Condition providerCondition = table.get(myCondition);
+			if (!myCondition.getValue().equals(providerCondition.getValue())){
 				return false;
 			}
-			// - Resource requested
-			else {
-				// Requested item is not matching
-				if (!checkResponseItem(myItem, providerItem)) {
-					LOG.info("Provided item \""+providerItem.getRequestItem().getResource().getDataType()+"\" doesn't match the request item");
-					return false;
-				}
-				// Requested item is matching
-				else {
-					LOG.info("Provided item \""+providerItem.getRequestItem().getResource().getDataType()+"\" matches the request item");
-					// TODO Question for Eliza: the code below is not used. Is it normal? If you need to change the provided ResponseItemList, you should return it, it will be easier in my (humble) opinion.
-//					providerItem = new ResponseItem();
-//					providerItem.setDecision(Decision.PERMIT);
-//					RequestItem requestItem = providerItem.getRequestItem();
-//					providerItem.setRequestItem(requestItem);
-				}
-			}
 		}
+
 		return true;
 	}
 
-	/**
-	 * Decision is equal, or requested item is optional
-	 * All mandatory actions are set
-	 * All mandatory conditions are set
-	 * @param myItem
-	 * @param providerItem
-	 * @return
-	 */
-	private boolean checkResponseItem(ResponseItem myItem, ResponseItem providerItem){
-		RequestItem myRequestItem = myItem.getRequestItem();
-		RequestItem providerRequestItem = providerItem.getRequestItem();
 
-		// -- Check Decision
-		// PERMIT decision OR (not PERMIT decision but optional field or underterminate requested decision
-		if (!DecisionUtils.equal(Decision.PERMIT, providerItem.getDecision())
-				&& !myItem.getRequestItem().isOptional()
-				&& !DecisionUtils.equal(Decision.INDETERMINATE, myItem.getDecision())){
-			LOG.info("Mandatory requested item is provided as DENY");
-			return false;
+	private boolean actionsMatch(List<Action> myActions, List<Action> providerActions) {
+		for (Action providerAction : providerActions){
+			boolean found = false;
+			for (Action myAction : myActions){
+				if (myAction.getActionConstant().equals(providerAction.getActionConstant())){
+					found = true;
+				}
+			}
+			if (!found){
+				return false;
+			}
 		}
 
-		// -- Check Actions
-		// All mandatory requested actions are available in the provided action list
-		if (!ActionUtils.containAllMandotory(providerRequestItem.getActions(), myRequestItem.getActions())) {
-			LOG.info("At least one mandatory requested actions is not available in the provided action list");
-			return false;
-		}
-
-		// -- Check Conditions
-		// All mandatory requested conditions are available in the provided condition list
-		if (!ConditionUtils.containAllMandotory(providerRequestItem.getConditions(), myRequestItem.getConditions())) {
-			LOG.info("At least one mandatory requested conditions is not available in the provided condition list");
-			return false;
-		}
 		return true;
 	}
 
-	@Deprecated
-	private ResponseItem containsItem(ResponseItem item, List<ResponseItem> list){
-		for (ResponseItem r : list){
-			if (item.getRequestItem().getResource().getDataType().equals(r.getRequestItem().getResource().getDataType())){
-				return r;
-			}
-		}
 
-		return null;
-	}
 
-	@Deprecated
-	private boolean containsAction(Action action, List<Action> actions){
-		for (Action a : actions){
-			if (a.getActionConstant().equals(a.getActionConstant())){
-				return true;
-
-			}
-		}
-
-		return false;
-	}
-
-	@Deprecated
-	private boolean containsCondition(Condition condition, List<Condition> conditions){
-		for (Condition con : conditions){
-			if (con.getConditionConstant().equals(condition.getConditionConstant())){
-				if (con.getValue().equalsIgnoreCase(condition.getValue())){
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
 }

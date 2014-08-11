@@ -59,8 +59,6 @@
 		<xs:complexContent>
 			<xs:extension base="PrivacyPreferenceConditionBean">
 				<xs:sequence>
-					<xs:element name="trustId" type="trust:trustedEntityIdBean"
-						minOccurs="1" maxOccurs="1" />
 					<xs:element name="value" type="xs:double" minOccurs="1"
 						maxOccurs="1" />
 
@@ -149,7 +147,21 @@
 		</xs:complexContent>
 	</xs:complexType>
 
-
+	<xs:complexType name="AttributeSelectionPreferenceBean">
+		<xs:complexContent>
+			<xs:extension base="PrivacyPreferenceBean">
+				<xs:sequence>
+					<xs:element name="condition" type="PrivacyPreferenceConditionBean"
+						minOccurs="1" maxOccurs="1" />
+					<xs:element name="children" type="AttributeSelectionPreferenceBean"
+						minOccurs="1" maxOccurs="unbounded" />
+					<xs:element name="outcome" type="AttributeSelectionOutcomeBean"
+						minOccurs="1" maxOccurs="1" />
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
 	<xs:complexType name="PrivacyPreferenceTreeModelBean">
 		<xs:sequence>
 			<xs:element name="privacyType" type="PrivacyPreferenceTypeConstantsBean"
@@ -215,6 +227,20 @@
 		</xs:complexContent>
 	</xs:complexType>
 
+	<xs:complexType name="AttributeSelectionPreferenceTreeModelBean">
+		<xs:complexContent>
+			<xs:extension base="PrivacyPreferenceTreeModelBean">
+
+				<xs:sequence>
+					<xs:element name="details" type="AttributeSelectionPreferenceDetailsBean"
+						minOccurs="1" maxOccurs="1" />
+					<xs:element name="pref" type="AttributeSelectionPreferenceBean"
+						minOccurs="1" maxOccurs="1" />
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
 
 
 	<xs:complexType name="RuleTargetBean">
@@ -243,7 +269,7 @@
 				maxOccurs="1" />
 			<xs:element name="requestor" type="ns1:requestorBean"
 				minOccurs="1" maxOccurs="1" />
-		<xs:element name="action" type="ns3:action" minOccurs="1" maxOccurs="1"/>				
+			<!-- <xs:element name="action" type="ns3:action" minOccurs="1" maxOccurs="1"/> -->
 		</xs:sequence>
 	</xs:complexType>
 
@@ -262,17 +288,29 @@
 				maxOccurs="1" />
 			<xs:element name="requestor" type="ns1:requestorBean"
 				minOccurs="0" maxOccurs="1" />
-			<xs:element name="action" type="ns3:action" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="action" type="ns3:action" minOccurs="1"
+				maxOccurs="1" />
 		</xs:sequence>
 	</xs:complexType>
 
+	<xs:complexType name="AttributeSelectionPreferenceDetailsBean">
+		<xs:sequence>
+			<xs:element name="dataType" type="xs:string" minOccurs="1"
+				maxOccurs="1" />
+			<xs:element name="requestor" type="ns1:requestorBean"
+				minOccurs="0" maxOccurs="1" />
+			<xs:element name="action" type="ns3:action" minOccurs="1"
+				maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
 
 	<xs:complexType name="PPNPOutcomeBean">
 		<xs:sequence>
 			<xs:element name="decision" type="ns3:decision" minOccurs="1"
 				maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
-
+			<xs:element name="actions" type="ns3:action" minOccurs="0"
+				maxOccurs="unbounded" />
 		</xs:sequence>
 	</xs:complexType>
 
@@ -302,6 +340,14 @@
 				minOccurs="1" maxOccurs="1" />
 			<xs:element name="type" type="PrivacyPreferenceTypeConstantsBean"
 				minOccurs="0" maxOccurs="1" />
+			<xs:element name="confidenceLevel" type="xs:int" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="AttributeSelectionOutcomeBean">
+		<xs:sequence>
+			<xs:element name="ctxID" type="context:ctxAttributeIdentifierBean"
+				minOccurs="1" maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
 		</xs:sequence>
 	</xs:complexType>
@@ -401,6 +447,13 @@
 		</xs:sequence>
 	</xs:complexType>
 
-
+	<xs:complexType name="AttrSelMappings">
+		<xs:sequence>
+			<xs:element name="attrSelPrefDetails" type="AttributeSelectionPreferenceDetailsBean"
+				minOccurs="1" maxOccurs="1" />
+			<xs:element name="ctxID" type="context:ctxAttributeIdentifierBean"
+				minOccurs="1" maxOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
 </xs:schema>
 

@@ -27,7 +27,6 @@ package org.societies.privacytrust.privacyprotection.privacypolicy.servicepolicy
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
-import com.alee.laf.WebLookAndFeel;
 
 public class initiatePolicyGUI
 {

@@ -103,7 +103,7 @@ public class PrivacyPolicyUtilsTest {
 				"<Condition>"+
 				" <Attribute AttributeId=\"urn:oasis:names:tc:xacml:1.0:action:condition-id\" "+
 				"   DataType=\"org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.constants.ConditionConstants\">"+
-				"  <AttributeValue DataType=\"DATA_RETENTION_IN_MINUTES\">412</AttributeValue>"+
+				"  <AttributeValue DataType=\"DATA_RETENTION\">412</AttributeValue>"+
 				" </Attribute>"+
 				"<optional>true</optional>"+
 				"</Condition>"+

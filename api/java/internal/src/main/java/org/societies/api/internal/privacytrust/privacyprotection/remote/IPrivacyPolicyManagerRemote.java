@@ -68,13 +68,6 @@ public interface IPrivacyPolicyManagerRemote {
 	 */
 	public void updatePrivacyPolicy(RequestPolicy privacyPolicy, IIdentity targetedNode, IPrivacyPolicyManagerListener listener) throws PrivacyException;
 	/**
-	 * Will be removed in 1.2
-	 * @see updatePrivacyPolicy
-	 */
-	@Deprecated
-	public void updatePrivacyPolicy(org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy privacyPolicy, IIdentity targetedNode, IPrivacyPolicyManagerListener listener) throws PrivacyException;
-	
-	/**
 	 * Remote call to delete a privacy policy by the ID of the Service or CIS
 	 * 
 	 * @param requestor Id of the CIS or the 3P service

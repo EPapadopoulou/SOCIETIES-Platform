@@ -34,18 +34,21 @@ import org.societies.api.identity.RequestorService;
 import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.personalisation.preference.IUserPreferenceManagement;
+import org.societies.api.internal.privacytrust.privacyprotection.INegotiationAgent;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyManager;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyNegotiationManager;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.PPNegotiationEvent;
 import org.societies.api.internal.privacytrust.privacyprotection.negotiation.FailedNegotiationEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.negotiation.NegotiationDetails;
 import org.societies.api.internal.privacytrust.privacyprotection.remote.INegotiationAgentRemote;
+import org.societies.api.internal.schema.useragent.feedback.NegotiationDetailsBean;
 import org.societies.api.internal.useragent.feedback.IUserFeedback;
 import org.societies.api.internal.useragent.model.ExpProposalContent;
 import org.societies.api.internal.useragent.model.ExpProposalType;
 import org.societies.api.osgi.event.*;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.schema.identity.RequestorBean;
+import org.societies.api.schema.identity.RequestorCisBean;
+import org.societies.api.schema.identity.RequestorServiceBean;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyAgreementManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager;
@@ -54,11 +57,18 @@ import org.societies.privacytrust.privacyprotection.privacynegotiation.negotiati
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.provider.PolicyRetriever;
 
 
+
+
+
+
+
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+
+import javax.swing.UIManager;
 
 
 public class PrivacyPolicyNegotiationManager extends EventListener implements IPrivacyPolicyNegotiationManager {
@@ -83,8 +93,12 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
     private IPrivacyAgreementManagerInternal privacyAgreementManagerInternal;
     private IPrivacyDataManagerInternal privacyDataManagerInternal;
 
+    //this only used for full societies
     private INegotiationAgentRemote negotiationAgentRemote;
 
+    private INegotiationAgent negotiationAgent;
+    
+    
     private IIdentitySelection identitySelection;
 
     private ICommManager commsMgr;
@@ -223,9 +237,12 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
     }
 
     public PrivacyPolicyNegotiationManager() {
+    	UIManager.put("ClassLoader", getClass().getClassLoader());
+
     }
 
     public void initialisePrivacyPolicyNegotiationManager() {
+    	UIManager.put("ClassLoader", getClass().getClassLoader());
         /*
 		this.myPublicDPI = this.IDM.getPublicDigitalPersonalIdentifier();
 		String localServiceID = (String) cc.getProperties().get(PssConstants._FW_SERVICE_ID);
@@ -288,6 +305,12 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
 	public IIdentity selectExactIdentity(List<IIdentity> dpis, IAgreement agreement) {
 		return this.privPrefMgr.evaluateIDSPreferences(agreement, dpis);
 	}*/
+    
+    public void setNegotiationAborted(NegotiationDetailsBean bean){
+    	if (negClients.containsKey(bean.getRequestor())){
+    		this.negClients.remove(bean.getRequestor());
+    	}
+    }
 
 
     /*
@@ -295,10 +318,10 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
      * @see org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyNegotiationManager#negotiateCISPolicy(org.societies.api.identity.RequestorCis)
      */
     @Override
-    public void negotiateCISPolicy(NegotiationDetails details) throws PrivacyException {
+    public void negotiateCISPolicy(NegotiationDetailsBean details) throws PrivacyException {
 
-        if (details.getRequestor() instanceof RequestorCis) {
-            RequestorCis requestor = (RequestorCis) details.getRequestor();
+        if (details.getRequestor() instanceof RequestorCisBean) {
+            RequestorCisBean requestor = (RequestorCisBean) details.getRequestor();
 
             if (this.negClients.containsKey(requestor)) {
                 this.logging.debug("Another negotiation has been requested while a previous one is ongoing with the same requestor");
@@ -317,9 +340,9 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
                 this.logging.debug("User has aborted the previous negotiation request");
             }
             this.logging.debug("Starting new negotiation with cis: " + requestor.toString());
-            NegotiationClient negClient = new NegotiationClient(this.negotiationAgentRemote, this);
+            NegotiationClient negClient = new NegotiationClient(this.negotiationAgent, this);
             negClient.startPrivacyPolicyNegotiation(details, null);
-            this.negClients.put(RequestorUtils.toRequestorBean(requestor), negClient);
+            this.negClients.put(requestor, negClient);
         } else {
             throw new PrivacyException("Supplied Requestor not a CisRequestor");
         }
@@ -329,11 +352,11 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
      * @param requestor
      * @return true to abort previous negotiation
      */
-    private boolean askUserNegotiationStarted(Requestor requestor) {
+    private boolean askUserNegotiationStarted(RequestorBean requestor) {
         String abort = "Abort previous";
         String ignore = "Ignore new request";
         ExpProposalContent content;
-        if (requestor instanceof RequestorCis) {
+        if (requestor instanceof RequestorCisBean) {
             content = new ExpProposalContent("A Privacy Policy Negotiation process has already started with CIS : \n"
                     + requestor.toString() + ". A new Privacy Policy Negotiation process was requested to be performed. Do you want to abort the previous negotiation and start a new one?", new String[]{abort, ignore});
         } else {
@@ -364,9 +387,9 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
      * @see org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyNegotiationManager#negotiateServicePolicy(org.societies.api.identity.RequestorService)
      */
     @Override
-    public void negotiateServicePolicy(NegotiationDetails details) throws PrivacyException {
-        if (details.getRequestor() instanceof RequestorService) {
-            RequestorService requestor = (RequestorService) details.getRequestor();
+    public void negotiateServicePolicy(NegotiationDetailsBean details) throws PrivacyException {
+        if (details.getRequestor() instanceof RequestorServiceBean) {
+            RequestorServiceBean requestor = (RequestorServiceBean) details.getRequestor();
             if (this.negClients.containsKey(requestor)) {
                 this.logging.debug("Another negotiation has been requested while a previous one is ongoing with the same requestor");
                 if (!askUserNegotiationStarted(requestor)) {
@@ -382,9 +405,9 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
                 this.negClients.remove(requestor);
             }
             this.logging.debug("Starting new negotiation with service: " + requestor.toString());
-            NegotiationClient negClient = new NegotiationClient(this.getNegotiationAgentRemote(), this);
+            NegotiationClient negClient = new NegotiationClient(this.negotiationAgent, this);
             negClient.startPrivacyPolicyNegotiation(details, null);
-            this.negClients.put(RequestorUtils.toRequestorBean(requestor), negClient);
+            this.negClients.put(requestor, negClient);
         }
     }
 
@@ -444,7 +467,7 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
         this.logging.debug("Received an event: " + event.geteventType());
         if (event.geteventType().equals(EventTypes.FAILED_NEGOTIATION_EVENT)) {
             FailedNegotiationEvent negEvent = (FailedNegotiationEvent) event.geteventInfo();
-            Requestor id = negEvent.getDetails().getRequestor();
+            RequestorBean id = negEvent.getDetails().getRequestor();
             this.logging.debug("Received Failed Negotiation event for : " + id.toString());
             if (this.negClients.containsKey(id)) {
                 //INegotiationClient client = this.negClients.get(id);
@@ -544,6 +567,14 @@ public class PrivacyPolicyNegotiationManager extends EventListener implements IP
         this.logging.debug("NegotiationComms bound");
         this.negotiationAgentRemote = negAgent;
     }
+
+	public INegotiationAgent getNegotiationAgent() {
+		return negotiationAgent;
+	}
+
+	public void setNegotiationAgent(INegotiationAgent negotiationAgent) {
+		this.negotiationAgent = negotiationAgent;
+	}
 
 
 }

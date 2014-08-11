@@ -34,6 +34,8 @@ import org.societies.api.identity.IIdentityManager;
 import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceTreeModelBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceTreeModelBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPrivacyPreferenceTreeModelBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
@@ -43,6 +45,7 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.preferen
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
@@ -64,7 +67,8 @@ public class PrivatePreferenceCache {
 	private Hashtable<CtxAttributeIdentifier, DObfPreferenceTreeModel> dobfCtxIDtoModel;
 	//the key refers to the ctxID of the (accCtrl) preference attribute (not the affected context attribute)
 	private Hashtable<CtxAttributeIdentifier, AccessControlPreferenceTreeModel> accCtrlCtxIDtoModel;
-
+	private Hashtable<CtxAttributeIdentifier, AttributeSelectionPreferenceTreeModel> attrSelCtxIDtoModel;
+	
 	private IIdentityManager idMgr;
 
 
@@ -75,6 +79,7 @@ public class PrivatePreferenceCache {
 		this.idsCtxIDtoModel = new Hashtable<CtxAttributeIdentifier, IDSPrivacyPreferenceTreeModel>();
 		this.dobfCtxIDtoModel = new Hashtable<CtxAttributeIdentifier, DObfPreferenceTreeModel>();
 		this.accCtrlCtxIDtoModel = new Hashtable<CtxAttributeIdentifier, AccessControlPreferenceTreeModel>();
+		this.attrSelCtxIDtoModel = new Hashtable<CtxAttributeIdentifier, AttributeSelectionPreferenceTreeModel>();
 		this.retriever = new PreferenceRetriever(broker, this.idMgr);
 		this.storer = new PreferenceStorer(broker, idMgr);
 		this.registry = retriever.retrieveRegistry();
@@ -213,19 +218,18 @@ public class PrivatePreferenceCache {
 
 	public boolean addAccCtrlPreference(AccessControlPreferenceDetailsBean details, AccessControlPreferenceTreeModel model){
 		printCacheContentsOnScreen("Before Update");
-		this.logging.debug("REquest to add preference :\n"+details.toString());
+		
 		this.logging.debug("REquest to add preference :\n"+details.toString());
 		CtxAttributeIdentifier preferenceCtxID = this.registry.getAccCtrlPreference(details);
 		AccessControlPreferenceTreeModelBean bean = PrivacyPreferenceUtils.toAccessControlPreferenceTreeModelBean(model);
 		if (preferenceCtxID==null){
-			this.logging.debug("Registry did not contain preference details. Proceeding to add as new preference");
+		
 			this.logging.debug("Registry did not contain preference details. Proceeding to add as new preference");
 			String name = this.registry.getNameForNewPreference(PrivacyPreferenceTypeConstants.ACCESS_CONTROL);
 			try {
 				preferenceCtxID = this.storer.storeNewPreference(bean, name);
 			} catch (PrivacyException e) {
 				e.printStackTrace();
-				this.logging.debug("Could not save AccCtrl preference. Broker returned null ctx ID");
 				this.logging.debug("Could not save AccCtrl preference. Broker returned null ctx ID");
 				return false;
 			}
@@ -237,22 +241,17 @@ public class PrivatePreferenceCache {
 			} catch (PrivacyException e) {
 				e.printStackTrace();
 				this.logging.debug("Unable to update Registry after adding AccCtrl preference");
-				this.logging.debug("Unable to update Registry after adding AccCtrl preference");
 				return false;
 			}
-			this.logging.debug("Preference didn't exist. Created new context attribute");
 			this.logging.debug("Preference didn't exist. Created new context attribute");
 
 
 		}else{
 			this.logging.debug("Registry contained preference details. Proceeding to update existing preference");
-			this.logging.debug("Registry contained preference details. Proceeding to update existing preference");
 			if (this.storer.storeExisting(preferenceCtxID, bean)){
 				this.accCtrlCtxIDtoModel.put(preferenceCtxID, model);
 				this.logging.debug("Preference existed and updated.");
-				this.logging.debug("Preference existed and updated.");
 			}else{
-				this.logging.debug("Unable to store AccCtrl preference");
 				this.logging.debug("Unable to store AccCtrl preference");
 				return false;
 			}
@@ -262,6 +261,47 @@ public class PrivatePreferenceCache {
 		return true;
 	}
 
+	public boolean addAttrSelPreference(AttributeSelectionPreferenceDetailsBean details, AttributeSelectionPreferenceTreeModel model) {
+		printCacheContentsOnScreen("Before Update");
+		
+		this.logging.debug("REquest to add preference :\n"+details.toString());
+		CtxAttributeIdentifier preferenceCtxID = this.registry.getAttrSelPreference(details);
+		AttributeSelectionPreferenceTreeModelBean bean = PrivacyPreferenceUtils.toAttributeSelectionPreferenceTreeModelBean(model);
+		if (preferenceCtxID==null){
+			this.logging.debug("Registry did not contain preference details. Proceeding to add as new preference");
+			String name = this.registry.getNameForNewPreference(PrivacyPreferenceTypeConstants.ATTRIBUTE_SELECTION);
+			try {
+				preferenceCtxID = this.storer.storeNewPreference(bean, name);
+			} catch (PrivacyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				this.logging.debug("Could not save AttrSel preference. Broker returned null ctx ID");
+				return false;
+			}
+			this.registry.addAttrSelPreference(details, preferenceCtxID);
+			this.attrSelCtxIDtoModel.put(preferenceCtxID, model);
+			try {
+				this.storer.storeRegistry(registry);
+			} catch (PrivacyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				this.logging.debug("Unable to update Registry after adding AttrSel preference");
+				return false;
+			}
+		}else{
+			this.logging.debug("Registry contained preference details. Proceeding to update existing preference");
+			if (this.storer.storeExisting(preferenceCtxID, bean)){
+				this.attrSelCtxIDtoModel.put(preferenceCtxID, model);
+				this.logging.debug("Preference existed and updated");
+			}else{
+				this.logging.debug("Unable to store AttrSel preference");
+				return false;
+			}
+		}
+		printCacheContentsOnScreen("After update");
+		return true;
+		
+	}
 	public PPNPrivacyPreferenceTreeModel getPPNPreference(PPNPreferenceDetailsBean details){
 
 		this.logging.debug("Request for preference: \n"+details.toString());
@@ -359,6 +399,7 @@ public class PrivatePreferenceCache {
 					return this.retrieveAccCtrlPFromDB(preferenceCtxID);
 				} catch (PrivacyException e) {
 					this.logging.debug("AccessCtrl preference not found");
+					e.printStackTrace();
 					return null;
 				}
 			}
@@ -369,6 +410,37 @@ public class PrivatePreferenceCache {
 			return null;
 		}
 	}
+	
+	public AttributeSelectionPreferenceTreeModel getAttrSelPreference(AttributeSelectionPreferenceDetailsBean details) {
+
+		this.logging.debug("Request for preference: \n"+details.toString());
+		printCacheContentsOnScreen("No update");
+
+		CtxAttributeIdentifier preferenceCtxID = this.registry.getAttrSelPreference(details);
+		
+		if (preferenceCtxID!=null){
+			if (this.attrSelCtxIDtoModel.containsKey(preferenceCtxID)){
+				this.logging.debug("Found preference in registry and cache. returning object");
+				return this.attrSelCtxIDtoModel.get(preferenceCtxID);
+			}else{
+				this.logging.debug("Found preference in registry. Cache doesn't have preference. Will return obj if found in DB");
+				try {
+					return this.retrieveAttrSelPFromDB(preferenceCtxID);
+				} catch (PrivacyException e) {
+					this.logging.debug("Attribute selection preference not found");
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return null;
+				}
+			}
+		}else{
+			this.logging.debug("ERROR251 - Not found preference in registry, returning null");
+			return null;
+		}
+	}
+
+
+
 	private PPNPrivacyPreferenceTreeModel retrievePPNPFromDB(CtxAttributeIdentifier preferenceCtxID) throws PrivacyException{
 		this.logging.debug("Request to retrieve preference from DB");
 		IPrivacyPreferenceTreeModel model = this.retriever.retrievePreference(preferenceCtxID);
@@ -443,6 +515,25 @@ public class PrivatePreferenceCache {
 			throw new PrivacyException("Access control Preference not found.");
 		}
 	}
+	
+	private AttributeSelectionPreferenceTreeModel retrieveAttrSelPFromDB(CtxAttributeIdentifier preferenceCtxID) throws PrivacyException {
+		IPrivacyPreferenceTreeModel model = this.retriever.retrievePreference(preferenceCtxID);
+		
+		if (model!=null){
+			if (model instanceof AttributeSelectionPreferenceTreeModel){
+				this.logging.debug("Preference found, returning");
+				this.attrSelCtxIDtoModel.put(preferenceCtxID, (AttributeSelectionPreferenceTreeModel) model);
+				return (AttributeSelectionPreferenceTreeModel) model;
+			}else{
+				this.logging.debug("FAILURE: Retrieved model from context DB not of type "+AttributeSelectionPreferenceTreeModel.class.getName());
+				throw new PrivacyException("FAILURE: Retrieved model from context DB not of type "+AttributeSelectionPreferenceTreeModel.class.getName());
+			}
+		}else{
+			this.logging.debug("Attribute selection Preference not found.");
+			throw new PrivacyException("Attribute selection Preference not found.");
+		}
+	}
+	
 	private PPNPrivacyPreferenceTreeModel findPPNPreference(CtxAttributeIdentifier preferenceCtxID) throws PrivacyException{
 		if (this.ppnCtxIDtoModel.containsKey(preferenceCtxID)){
 			return this.ppnCtxIDtoModel.get(preferenceCtxID);
@@ -574,6 +665,32 @@ public class PrivatePreferenceCache {
 		}
 		return false;
 	}
+	
+	public boolean removeAttSelPreference(AttributeSelectionPreferenceDetailsBean details) {
+		this.logging.debug("Request to remove preference : \n"+details.toString());
+		CtxAttributeIdentifier preferenceCtxID = this.registry.getAttrSelPreference(details);
+		if (preferenceCtxID!=null){
+			this.storer.deletePreference(preferenceCtxID);
+			if (this.attrSelCtxIDtoModel.containsKey(preferenceCtxID)){
+				this.attrSelCtxIDtoModel.remove(preferenceCtxID);
+				this.registry.removeAttrSelPreference(details);
+				try {
+					this.storer.storeRegistry(registry);
+				} catch (PrivacyException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					this.logging.debug("Unable to store updated registry after deleting AttrSel preference");
+					return false;
+				}
+				return true;
+			}
+		}else{
+			this.logging.debug("Preference Details not found in registry: "+details.toString());
+		}
+		return false;
+	}
+	
+	
 	private void printCacheContentsOnScreen(String string){
 
 		this.logging.debug("*********CACHE CONTENTS START "+string+"**************");
@@ -597,6 +714,20 @@ public class PrivatePreferenceCache {
 	public List<AccessControlPreferenceDetailsBean> getAccCtrlPreferenceDetails(){
 		return this.registry.getAccCtrlPreferenceDetails();
 	}
+
+
+	public List<AttributeSelectionPreferenceDetailsBean> getAttrSelPreferenceDetails() {
+		return this.registry.getAttrSelPreferenceDetails();
+	}
+
+
+
+
+
+
+
+
+
 
 
 

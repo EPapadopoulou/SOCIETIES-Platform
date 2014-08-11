@@ -62,7 +62,7 @@ public class PrivacyDataManagerCommClientCallback {
 			if (bean.isAck()) {
 				listener.onAccessControlChecked(bean.getPermissions());
 				if (null != bean.getPermissions() && bean.getPermissions().size() > 0) {
-					listener.onAccessControlChecked(ResponseItemUtils.toResponseItem(bean.getPermissions().get(0)));
+					listener.onAccessControlChecked(bean.getPermissions());
 				}
 			}
 			else {

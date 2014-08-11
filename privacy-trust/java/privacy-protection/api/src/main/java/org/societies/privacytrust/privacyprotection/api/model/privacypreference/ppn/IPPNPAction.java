@@ -27,7 +27,7 @@ package org.societies.privacytrust.privacyprotection.api.model.privacypreference
 import java.util.List;
 
 import org.societies.api.identity.Requestor;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Decision;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
 
 

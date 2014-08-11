@@ -26,8 +26,8 @@ package org.societies.api.internal.privacytrust.privacyprotection;
 
 //TODO : temporary mock package import to solve missing package in API folder
 
-import org.societies.api.internal.privacytrust.privacyprotection.negotiation.NegotiationDetails;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.AgreementEnvelope;
+import org.societies.api.internal.schema.useragent.feedback.NegotiationDetailsBean;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponsePolicy;
@@ -70,6 +70,6 @@ public interface INegotiationClient {
 	 * @param serviceIdentifier
 	 * @param serviceIdentity
 	 */
-	public void startPrivacyPolicyNegotiation(NegotiationDetails details, RequestPolicy policy);
+	public void startPrivacyPolicyNegotiation(NegotiationDetailsBean details, RequestPolicy policy);
 
 }

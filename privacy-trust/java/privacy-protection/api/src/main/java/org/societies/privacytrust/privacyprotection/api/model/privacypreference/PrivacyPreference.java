@@ -25,11 +25,21 @@
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference;
 
 
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
+
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSOutcomeBean;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPOutcome;
 
 /**
  * @author Elizabeth
@@ -58,7 +68,58 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 
 
 	@Override
-	public String toString() {
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		if (this.getUserObject()==null){
+			return "root";
+		}
+		
+		if (this.isBranch()){
+			sb.append("If ");
+			if (this.userObject instanceof ContextPreferenceCondition){
+				sb.append(((ContextPreferenceCondition) userObject).getCtxIdentifier().getType()+" ");
+				sb.append(((ContextPreferenceCondition) userObject).getOperator() +" ");
+				sb.append(((ContextPreferenceCondition) userObject).getValue());
+			}
+			else if (this.userObject instanceof PrivacyCondition){
+				sb.append(((PrivacyCondition) userObject).getCondition().getConditionConstant()+" ");
+				sb.append(" = ");
+				sb.append(((PrivacyCondition) userObject).getCondition().getValue());
+			}
+			else if (this.userObject instanceof TrustPreferenceCondition){
+				sb.append(" trust level is above ");
+				sb.append(((TrustPreferenceCondition) userObject).getTrustThreshold());
+			}
+		}else if (this.isLeaf()){
+			sb.append("Then: ");
+			if (this.userObject instanceof PPNPOutcome){
+				sb.append("Decision: ");
+				sb.append(((PPNPOutcome) userObject).getDecision());
+				sb.append(" (Actions: ");
+				List<ActionConstants> actionList = new ArrayList<ActionConstants>();
+				for (Action action : ((PPNPOutcome) userObject).getActions()){
+					actionList.add(action.getActionConstant());
+				}
+				sb.append(actionList);
+				sb.append(")");
+			}else if (this.userObject instanceof AccessControlOutcome){
+				sb.append("Access: ");
+				sb.append(((AccessControlOutcome) userObject).getEffect());
+				sb.append("Action: ");
+			}else if (this.userObject instanceof IdentitySelectionPreferenceOutcome){
+				sb.append("Use identity: ");
+				sb.append(((IdentitySelectionPreferenceOutcome) userObject).getIdentity().getBareJid());
+			}else if (this.userObject instanceof DObfOutcome){
+				sb.append("Apply level: ");
+				sb.append(((DObfOutcome) userObject).getObfuscationLevel());
+			}
+		}
+		
+		return sb.toString();
+	}
+	
+	
+	public String toTreeString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("PrivacyPreference \n[userObject=");
 		builder.append(userObject);
@@ -67,6 +128,9 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 		builder.append("]");
 		return builder.toString();
 	}
+	
+	
+	
 
 	@Override
 	public Enumeration<IPrivacyPreference> breadthFirstEnumeration() {

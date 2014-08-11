@@ -12,7 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.PPNegotiationEvent;
 import org.societies.api.internal.privacytrust.privacyprotection.negotiation.FailedNegotiationEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.negotiation.NegotiationDetails;
+import org.societies.api.internal.schema.useragent.feedback.NegotiationDetailsBean;
 import org.societies.api.internal.security.policynegotiator.INegotiationCallback;
 import org.societies.api.osgi.event.CSSEvent;
 import org.societies.api.osgi.event.EventTypes;
@@ -73,7 +73,8 @@ public class PrivacyPolicyNegotiationListenerTest {
 	@Test
 	public void testHandleInternalSuccessEvent() throws InterruptedException {
 		
-		NegotiationDetails details = new NegotiationDetails(null, id);
+		NegotiationDetailsBean details = new NegotiationDetailsBean();
+		details.setNegotiationID(id);
 		PPNegotiationEvent payload = new PPNegotiationEvent(null, NegotiationStatus.SUCCESSFUL, details);
 		InternalEvent event = new InternalEvent(EventTypes.PRIVACY_POLICY_NEGOTIATION_EVENT,
 				"eventName", "eventSource", payload);
@@ -91,7 +92,8 @@ public class PrivacyPolicyNegotiationListenerTest {
 	
 	@Test
 	public void testHandleInternalOtherEvent() throws InterruptedException {
-		NegotiationDetails details = new NegotiationDetails(null, id % 17 + 1);
+		NegotiationDetailsBean details = new NegotiationDetailsBean();
+		details.setNegotiationID(id % 17 + 1);
 		PPNegotiationEvent payload = new PPNegotiationEvent(null, NegotiationStatus.SUCCESSFUL, details);
 		InternalEvent event = new InternalEvent(EventTypes.PRIVACY_POLICY_NEGOTIATION_EVENT,
 				"eventName", "eventSource", payload);
@@ -110,7 +112,8 @@ public class PrivacyPolicyNegotiationListenerTest {
 	@Test
 	public void testHandleInternalFailureEvent_1() throws InterruptedException {
 		
-		NegotiationDetails details = new NegotiationDetails(null, id);
+		NegotiationDetailsBean details = new NegotiationDetailsBean();
+		details.setNegotiationID(id);
 		PPNegotiationEvent payload = new PPNegotiationEvent(null, NegotiationStatus.FAILED, details);
 		InternalEvent event = new InternalEvent(EventTypes.PRIVACY_POLICY_NEGOTIATION_EVENT,
 				"eventName", "eventSource", payload);
@@ -128,7 +131,8 @@ public class PrivacyPolicyNegotiationListenerTest {
 	@Test
 	public void testHandleInternalFailureEvent_2() throws InterruptedException {
 		
-		NegotiationDetails details = new NegotiationDetails(null, id);
+		NegotiationDetailsBean details = new NegotiationDetailsBean();
+		details.setNegotiationID(id);
 		FailedNegotiationEvent payload = new FailedNegotiationEvent(details);
 		InternalEvent event = new InternalEvent(EventTypes.FAILED_NEGOTIATION_EVENT,
 				"eventName", "eventSource", payload);

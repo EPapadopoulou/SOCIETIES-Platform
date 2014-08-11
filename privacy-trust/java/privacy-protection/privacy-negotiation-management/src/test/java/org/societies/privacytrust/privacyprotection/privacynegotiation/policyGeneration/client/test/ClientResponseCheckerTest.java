@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,11 +62,12 @@ public class ClientResponseCheckerTest {
 
 	private ClientResponseChecker checkResponseChecked;
 
-
+/*
 	@Before
 	public void setUp() {
 		checkResponseChecked = new ClientResponseChecker();
 	}
+	@Ignore
 	@Test
 	public void testCheckResponse() {
 		String testTitle = "Check Response";
@@ -236,5 +238,5 @@ public class ClientResponseCheckerTest {
 		providedResponseItems.add(ResponseItemUtils.create(Decision.PERMIT, requestItemLocation));
 		providedPolicy.setResponseItems(providedResponseItems);
 		assertTrue(" one mandatory, one optional Response policies should match (6/7)", checkResponseChecked.checkResponse(requestedPolicy, providedPolicy));
-	}
+	}*/
 }

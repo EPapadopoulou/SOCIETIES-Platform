@@ -62,7 +62,6 @@ import org.societies.api.identity.Requestor;
 import org.societies.api.identity.RequestorCis;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyManager;
 import org.societies.api.internal.privacytrust.privacyprotection.model.listener.IPrivacyPolicyManagerListener;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.api.internal.privacytrust.privacyprotection.remote.IPrivacyPolicyManagerRemote;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestPolicyUtils;
@@ -72,6 +71,8 @@ import org.societies.api.schema.cis.community.CommunityMethods;
 import org.societies.api.schema.cis.community.JoinResponse;
 import org.societies.api.schema.cis.community.LeaveResponse;
 import org.societies.api.schema.cis.directory.CisAdvertisementRecord;
+import org.societies.api.schema.identity.RequestorCisBean;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.cis.directory.client.CisDirectoryRemoteClient;
 import org.societies.cis.mgmtClient.CisManagerClient;
 import org.societies.webapp.models.AddActivityForm;
@@ -82,7 +83,6 @@ import org.societies.webapp.models.JoinCISForm;
 import org.societies.webapp.models.MembershipCriteriaForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -91,7 +91,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
-
 import org.societies.webapp.service.UserService;
 
 /**
@@ -330,12 +329,15 @@ public class CisManagerController {
 			else
 				model.put("isOwner", false);
 			// GET PRIVACY
-			RequestorCis requestor = null;
+			RequestorCisBean requestor = null;
 			RequestPolicy privacyPolicy = null;
 			try {
-				requestor = new RequestorCis(this.commMngrRef.getIdManager().fromJid(getInfResp.getOwnerJid())
+/*				requestor = new RequestorCis(this.commMngrRef.getIdManager().fromJid(getInfResp.getOwnerJid())
 						,this.commMngrRef.getIdManager().fromJid(getInfResp.getCommunityJid())
-						);
+						);*/
+				requestor = new RequestorCisBean();
+				requestor.setRequestorId(getInfResp.getOwnerJid());
+				requestor.setCisRequestorId(getInfResp.getCommunityJid());
 				privacyPolicy = privacyPolicyManager.getPrivacyPolicy(requestor);
 				// GET POLICY
 				if(null != privacyPolicy){
@@ -741,15 +743,7 @@ public @ResponseBody JsonResponse getMyCommunities( ){
 			returnList = new ArrayBlockingQueue<RequestPolicy>(1);
 		}
 		
-		@Override
-		public void onPrivacyPolicyRetrieved(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy p) {
-			try {
-				this.privacyPolicy = RequestPolicyUtils.toRequestPolicy(p, commMngrRef.getIdManager());
-				insertComObjInQueue(this.privacyPolicy);
-			} catch (InvalidFormatException e) {
-				onOperationAborted("Privacy policy retrieved, but we can't understand it.", e);
-			}
-		}
+	
 		
 		@Override
 		public void onPrivacyPolicyRetrieved(RequestPolicy p) {

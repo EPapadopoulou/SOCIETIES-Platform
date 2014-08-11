@@ -24,6 +24,13 @@
  */
 package org.societies.api.privacytrust.privacy.model.privacypolicy.constants;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.societies.api.privacytrust.privacy.model.PrivacyException;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
+
 /**
  * @author Eliza
  */
@@ -32,18 +39,84 @@ public class PrivacyConditionsConstantValues {
     private static final String[] hours = new String[]{"12", "24", "36", "48", "60", "72", "84", "96"};
     private static final String[] minutes = new String[]{"30", "60", "90", "120", "180", "240", "300", "360", "480", "600"};
     private static final String[] seconds = new String[]{"10", "20", "30", "40", "50", "60", "90", "120", "150", "180", "210", "240"};
-//    private static final String[] boolValues = new String[]{"Yes", "No"};
-    private static final String[] boolValues = new String[]{"1", "0"};
+    private static final String[] timeValues = new String[]{"30 minutes", "1 hour", "2 hours", "6 hours", "12 hours", "1 day", "2 days", "3 days", "4 days", "a week", "until account is deactivated"};
+    private static final List<String> timeValuesAsList = Arrays.asList(timeValues);
+    
+    private static final String[] boolValues = new String[]{"yes", "no"};
+    private static final String[] shareValues = new String[]{"No sharing","CIS Administrator", "All CIS members", "affiliated services", "anyone"};
+    private static final List<String> shareValuesAsList = Arrays.asList(shareValues);
+    
+    public static String getBetterDataRetention(String value1, String value2) throws PrivacyException{
 
+		if ((!timeValuesAsList.contains(value1) || !timeValuesAsList.contains(value2))){
+			throw new PrivacyException("Ranges: "+value1+" or "+value2+" are not acceptable values for a data retention condition ");
+		}
+		
+		int indexOf_Value1 = timeValuesAsList.indexOf(value1);
+		int indexOf_Value2 = timeValuesAsList.indexOf(value2);
+		
+		if (indexOf_Value1>=indexOf_Value2){
+			return value2;
+		}else{
+			return value1;
+		}
+		
+    }
+    
+    public static String getBetterSharedValue(String value1, String value2) throws PrivacyException {
+		if ((!shareValuesAsList.contains(value1) || !shareValuesAsList.contains(value2))){
+			throw new PrivacyException("Ranges: "+value1+" or "+value2+" are not acceptable values for a \"shared with\" condition ");
+		}
+		
+		
+		int indexOf_Value1 = shareValuesAsList.indexOf(value1);
+		int indexOf_Value2 = shareValuesAsList.indexOf(value2);
+		
+		if (indexOf_Value1>=indexOf_Value2){
+			return value2;
+		}else{
+			return value1;
+		}
+    }
+    public static String getBetterConditionValue(ConditionConstants constant){
+    	switch (constant){
+    	case  DATA_RETENTION:
+    		return timeValues[0];
+    	case MAY_BE_INFERRED:
+    		return boolValues[1];
+    	case SHARE_WITH_3RD_PARTIES:
+    		return shareValues[0];
+    	default: return boolValues[0];
+    	}
+    }
+    
+    public static String getBetterConditionValue(ConditionConstants constant, String value1, String value2) throws PrivacyException{
+    	switch (constant){
+    	case  DATA_RETENTION:
 
-    public static String[] getValues(org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ConditionConstants con) {
-        switch (con) {
-            case DATA_RETENTION_IN_HOURS:
-                return hours;
-            case DATA_RETENTION_IN_MINUTES:
-                return minutes;
-            case DATA_RETENTION_IN_SECONDS:
-                return seconds;
+				return getBetterDataRetention(value1, value2);
+
+    	case MAY_BE_INFERRED:
+    		if (value1.equalsIgnoreCase(value2)){
+    			return value1;
+    		}
+    		return boolValues[1];
+    	case SHARE_WITH_3RD_PARTIES:
+
+				return getBetterSharedValue(value1, value2);
+
+    	default: 
+    		if (value1.equalsIgnoreCase(value2)){
+    			return value1;
+    		}
+    		return boolValues[0];
+    	}
+    }
+    
+    public static String[] getValues(ConditionConstants condition) {
+        switch (condition) {
+        	case DATA_RETENTION:
+        		return timeValues;
             case MAY_BE_INFERRED:
                 return boolValues;
             case RIGHT_TO_ACCESS_HELD_DATA:
@@ -53,44 +126,16 @@ public class PrivacyConditionsConstantValues {
             case RIGHT_TO_OPTOUT:
                 return boolValues;
             case SHARE_WITH_3RD_PARTIES:
-                return boolValues;
-            case SHARE_WITH_CIS_MEMBERS_ONLY:
-                return boolValues;
-            case SHARE_WITH_CIS_OWNER_ONLY:
-                return boolValues;
+                return shareValues;
             case STORE_IN_SECURE_STORAGE:
                 return boolValues;
         }
 
         return new String[]{};
     }
-
-    public static String[] getValues(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants condition) {
-        switch (condition) {
-            case DATA_RETENTION_IN_HOURS:
-                return hours;
-            case DATA_RETENTION_IN_MINUTES:
-                return minutes;
-            case DATA_RETENTION_IN_SECONDS:
-                return seconds;
-            case MAY_BE_INFERRED:
-                return boolValues;
-            case RIGHT_TO_ACCESS_HELD_DATA:
-                return boolValues;
-            case RIGHT_TO_CORRECT_INCORRECT_DATA:
-                return boolValues;
-            case RIGHT_TO_OPTOUT:
-                return boolValues;
-            case SHARE_WITH_3RD_PARTIES:
-                return boolValues;
-            case SHARE_WITH_CIS_MEMBERS_ONLY:
-                return boolValues;
-            case SHARE_WITH_CIS_OWNER_ONLY:
-                return boolValues;
-            case STORE_IN_SECURE_STORAGE:
-                return boolValues;
-        }
-
-        return new String[]{};
+    
+    
+    public static List<String> getValuesAsList(ConditionConstants condition){
+    	return Arrays.asList(getValues(condition));
     }
 }

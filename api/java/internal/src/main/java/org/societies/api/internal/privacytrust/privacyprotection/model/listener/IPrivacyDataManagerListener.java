@@ -42,13 +42,7 @@ public interface IPrivacyDataManagerListener {
 	 * @param permissions List of permissions for all requested data
 	 */
 	public void onAccessControlChecked(List<ResponseItem> permissions);
-	/**
-	 * Will be removed in 1.2
-	 * @see onAccessControlChecked
-	 */
-	@Deprecated
-	public void onAccessControlChecked(org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem permission);
-	
+
 	/**
 	 * The operation has been cancelled (by the user or the system)
 	 * @param msg Explanation about the cancel (if any)

@@ -101,10 +101,7 @@ public class PrivacyPolicyManagerCommClient implements IPrivacyPolicyManagerRemo
 			throw new PrivacyException("Exception: "+MethodType.UPDATE_PRIVACY_POLICY, e);
 		}
 	}
-	@Deprecated
-	public void updatePrivacyPolicy(org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy privacyPolicy, IIdentity targetedNode, IPrivacyPolicyManagerListener listener) throws PrivacyException {
-		updatePrivacyPolicy(RequestPolicyUtils.toRequestPolicyBean(privacyPolicy), targetedNode, listener);
-	}
+
 
 	@Override
 	public void deletePrivacyPolicy(RequestorBean requestor, IIdentity targetedNode, IPrivacyPolicyManagerListener listener) throws PrivacyException {

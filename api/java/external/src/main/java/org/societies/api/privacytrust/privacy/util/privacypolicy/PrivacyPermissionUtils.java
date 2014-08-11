@@ -31,9 +31,10 @@ import java.util.List;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.PrivacyPermission;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestItem;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
+
 
 /**
  * Tool class to manage conversion between Java type and Bean XMLschema generated type
@@ -45,8 +46,8 @@ public class PrivacyPermissionUtils {
 		if (null == privacyPermissionBean) {
 			return null;
 		}
-		RequestItem requestItem = RequestItemUtils.toRequestItem(privacyPermissionBean.getRequestItem());
-		Decision decision = DecisionUtils.toDecision(privacyPermissionBean.getDecision());
+		RequestItem requestItem = privacyPermissionBean.getRequestItem();
+		Decision decision = privacyPermissionBean.getDecision();
 		return new PrivacyPermission(requestItem, decision, privacyPermissionBean.getObfuscationLevel(), privacyPermissionBean.getCreationDate(), privacyPermissionBean.getValidityDuration());
 	}
 	public static List<PrivacyPermission> toPrivacyPermissions(List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.PrivacyPermission> privacyPermissionBeans)
@@ -67,8 +68,8 @@ public class PrivacyPermissionUtils {
 			return null;
 		}
 		org.societies.api.schema.privacytrust.privacy.model.privacypolicy.PrivacyPermission privacyPermissionBean = new org.societies.api.schema.privacytrust.privacy.model.privacypolicy.PrivacyPermission();
-		privacyPermissionBean.setDecision(DecisionUtils.toDecisionBean(privacyPermission.getDecision()));
-		privacyPermissionBean.setRequestItem(RequestItemUtils.toRequestItemBean(privacyPermission.getRequestItem()));
+		privacyPermissionBean.setDecision(privacyPermission.getDecision());
+		privacyPermissionBean.setRequestItem(privacyPermission.getRequestItem());
 		privacyPermissionBean.setObfuscationLevel(privacyPermission.getObfuscationLevel());
 		//GregorianCalendar gCalendar = new GregorianCalendar();
 		//gCalendar.setTime(privacyPermission.getCreationDate());

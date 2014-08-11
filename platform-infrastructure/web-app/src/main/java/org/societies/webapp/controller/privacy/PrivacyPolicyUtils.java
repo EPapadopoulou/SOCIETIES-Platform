@@ -23,6 +23,7 @@ import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.util.DataIdentifierFactory;
 import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
+import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
 //import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
 //import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
 //import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
@@ -132,7 +133,7 @@ public class PrivacyPolicyUtils {
 		// -- Conditions
 		List<Condition> conditions = new ArrayList<Condition>();
 		// - Common
-		conditions.add(ConditionUtils.create(ConditionConstants.STORE_IN_SECURE_STORAGE, "1"));
+		conditions.add(ConditionUtils.create(ConditionConstants.STORE_IN_SECURE_STORAGE, PrivacyConditionsConstantValues.getValues(ConditionConstants.STORE_IN_SECURE_STORAGE)[0]));
 		// - Visibility
 		// Public
 		if (PrivacyPolicyBehaviourConstants.PUBLIC.name().equals(globalBehaviour.name())) {
@@ -147,6 +148,12 @@ public class PrivacyPolicyUtils {
 			conditions.add(ConditionUtils.createPrivate());
 		}
 
+		conditions.add(ConditionUtils.create(ConditionConstants.MAY_BE_INFERRED, PrivacyConditionsConstantValues.getValues(ConditionConstants.MAY_BE_INFERRED)[1]));
+		conditions.add(ConditionUtils.create(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA, PrivacyConditionsConstantValues.getValues(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA)[0]));
+		conditions.add(ConditionUtils.create(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA, PrivacyConditionsConstantValues.getValues(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA)[0]));
+		conditions.add(ConditionUtils.create(ConditionConstants.RIGHT_TO_OPTOUT, PrivacyConditionsConstantValues.getValues(ConditionConstants.RIGHT_TO_OPTOUT)[0]));
+		conditions.add(ConditionUtils.create(ConditionConstants.DATA_RETENTION, PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION).length-1]));
+		
 		// --- Prepare request item list
 		List<RequestItem> requestItems = new ArrayList<RequestItem>();
 		boolean optional = false;

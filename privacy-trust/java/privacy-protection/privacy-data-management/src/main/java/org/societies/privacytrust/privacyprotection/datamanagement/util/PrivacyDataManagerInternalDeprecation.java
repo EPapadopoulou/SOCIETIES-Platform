@@ -47,56 +47,20 @@ import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInter
  * @author Olivier Maridat (Trialog)
  */
 public abstract class PrivacyDataManagerInternalDeprecation implements IPrivacyDataManagerInternal {
-	@Deprecated
-	@Override
-	public List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> getPermissions(Requestor requestor, DataIdentifier dataId) throws PrivacyException {
-		return ResponseItemUtils.toResponseItems(getPermissions(RequestorUtils.toRequestorBean(requestor), dataId));
-	}
 
-	@Deprecated
-	@Override
-	public List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem> getPermissions(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions) throws PrivacyException {
-		return this.getPermissions(RequestorUtils.toRequestorBean(requestor), dataId, ActionUtils.toActionBeans(actions));
-	}
 	
 	public abstract List<ResponseItem> getPermissions(RequestorBean requestor, DataIdentifier dataId) throws PrivacyException;
 	
 	public abstract List<ResponseItem> getPermissions(RequestorBean requestor, DataIdentifier dataId, List<Action> actions) throws PrivacyException;
 
-	
-	@Deprecated
-	@Override
-	public boolean updatePermission(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions, org.societies.api.privacytrust.privacy.model.privacypolicy.Decision permission) throws PrivacyException {
-		return this.updatePermission(RequestorUtils.toRequestorBean(requestor), dataId, ActionUtils.toActionBeans(actions), DecisionUtils.toDecisionBean(permission));
-	}
 
 	@Deprecated
 	@Override
-	public boolean updatePermission(Requestor requestor, org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem permission) throws PrivacyException {
-		DataIdentifier dataId;
-		// Data id
-		if (null != permission.getRequestItem().getResource().getDataId()) {
-			dataId = permission.getRequestItem().getResource().getDataId();
-		}
-		// Data type only
-		else if (null != permission.getRequestItem().getResource().getDataType() && !"".equals(permission.getRequestItem().getResource().getDataType())) {
-			dataId = new SimpleDataIdentifier();
-			dataId.setType(permission.getRequestItem().getResource().getDataType());
-			dataId.setScheme(permission.getRequestItem().getResource().getScheme());
-		}
-		else {
-			throw new PrivacyException("[Parameters] DataId or DataType is missing");
-		}
-		return this.updatePermission(requestor, dataId, permission.getRequestItem().getActions(), permission.getDecision());
-	}
-
-	@Deprecated
-	@Override
-	public boolean updatePermissions(Requestor requestor, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem> permissions1) throws PrivacyException {
-		List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> permissions = ResponseItemUtils.toResponseItems(permissions1);
+	public boolean updatePermissions(Requestor requestor, List<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem> permissions) throws PrivacyException {
+		
 		boolean res = true;
-		for (org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem permission : permissions) {
-			res &= updatePermission(requestor, permission);
+		for (ResponseItem permission : permissions) {
+			res &= updatePermission(RequestorUtils.toRequestorBean(requestor), permission);
 		}
 		return res;
 	}
@@ -110,11 +74,7 @@ public abstract class PrivacyDataManagerInternalDeprecation implements IPrivacyD
 		return deletePermissions(RequestorUtils.toRequestorBean(requestor), dataId);
 	}
 
-	@Deprecated
-	@Override
-	public boolean deletePermission(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions) throws PrivacyException {
-		return deletePermissions(RequestorUtils.toRequestorBean(requestor), dataId, ActionUtils.toActionBeans(actions));
-	}
+
 	
 	public abstract boolean deletePermissions(RequestorBean requestor, DataIdentifier dataId) throws PrivacyException;
 	

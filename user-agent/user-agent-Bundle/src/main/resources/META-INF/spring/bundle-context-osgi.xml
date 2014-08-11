@@ -10,7 +10,13 @@
         is to facilitate integration testing of the bundle outside of an OSGi container -->
 
 
-    <osgi:service ref="userActionMonitor">
+    <osgi:service ref="userFeedback">
+        <osgi:interfaces>
+            <value>org.societies.api.internal.useragent.feedback.IUserFeedback</value>
+        </osgi:interfaces>
+    </osgi:service>
+
+    <!-- <osgi:service ref="userActionMonitor">
         <osgi:interfaces>
             <value>org.societies.api.useragent.monitoring.IUserActionMonitor</value>
             <value>org.societies.useragent.api.monitoring.IInternalUserActionMonitor</value>
@@ -23,12 +29,7 @@
         </osgi:interfaces>
     </osgi:service>
 
-    <osgi:service ref="userFeedback">
-        <osgi:interfaces>
-            <value>org.societies.api.internal.useragent.feedback.IUserFeedback</value>
-            <value>org.societies.useragent.api.feedback.IInternalUserFeedback</value>
-        </osgi:interfaces>
-    </osgi:service>
+
     
     
     <osgi:service ref="uaCommsClient">
@@ -38,27 +39,27 @@
     </osgi:service>
 
 
-    <!-- Import External services -->
+    Import External services
 
-    <!-- context Broker is needed by internalUserActionMonitor (at least) -->
+    context Broker is needed by internalUserActionMonitor (at least)
     <osgi:reference id="ctxBroker" interface="org.societies.api.internal.context.broker.ICtxBroker">
     </osgi:reference>
 
-    <!-- event manager (local eventing) is needed by the internalUserActionMonitor -->
+    event manager (local eventing) is needed by the internalUserActionMonitor
     <osgi:reference id="eventManager" interface="org.societies.api.osgi.event.IEventMgr">
     </osgi:reference>
 
-    <!-- comms manager is needed by the internalUserActionMonitor -->
+    comms manager is needed by the internalUserActionMonitor
     <osgi:reference id="commsManager" interface="org.societies.api.comm.xmpp.interfaces.ICommManager">
     </osgi:reference>
 
-    <!-- pubsub is needed by the user feedback -->
+    pubsub is needed by the user feedback
     <osgi:reference id="pubsub" interface="org.societies.api.comm.xmpp.pubsub.PubsubClient">
     </osgi:reference>
 
-    <!-- IServiceDiscovery is needed by dm (at least) <osgi:reference id="servicedis" interface="org.societies.api.internal.servicelifecycle.IServiceDiscovery">
-    </osgi:reference>-->
-    <!-- CSS Manager is needed by internalUserActionMonitor -->
+    IServiceDiscovery is needed by dm (at least) <osgi:reference id="servicedis" interface="org.societies.api.internal.servicelifecycle.IServiceDiscovery">
+    </osgi:reference>
+    CSS Manager is needed by internalUserActionMonitor
     <osgi:reference id="cssManager" interface="org.societies.api.internal.css.ICSSInternalManager">
     </osgi:reference>
 
@@ -67,5 +68,5 @@
     
     <osgi:reference id="serviceRegistry" interface="org.societies.api.internal.servicelifecycle.serviceRegistry.IServiceRegistry">
     </osgi:reference>
-
+ -->
 </beans>

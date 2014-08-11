@@ -45,9 +45,11 @@ public class PrivacyPolicyRegistry implements Serializable{
 	private static final long serialVersionUID = -7184601590881429985L;
 	private Hashtable<String, CtxIdentifier> policies;
 
+	private Hashtable<String, CtxIdentifier> conditionRanges;
 
 	public PrivacyPolicyRegistry(){
 		this.policies = new Hashtable<String, CtxIdentifier>();		
+		this.conditionRanges = new Hashtable<String, CtxIdentifier>();
 	}
 
 
@@ -66,6 +68,19 @@ public class PrivacyPolicyRegistry implements Serializable{
 		return null;
 	}
 
+
+	public CtxIdentifier getConditionRangeStorageID(RequestorBean requestor){
+		if (requestor==null){
+			return null;
+		}
+		if (this.conditionRanges.containsKey(RequestorUtils.toUriString(requestor))) {
+			return this.conditionRanges.get(RequestorUtils.toUriString(requestor));
+		}
+		return null;
+	}
+
+	
+	
 	/**
 	 * method to add a service policy document to the registry object
 	 * @param requestor	the serviceID of the service or the IIdentity of the CIS for which this policy is for
@@ -78,14 +93,24 @@ public class PrivacyPolicyRegistry implements Serializable{
 		this.policies.put(RequestorUtils.toUriString(requestor), ctxID);
 	}
 
+	public void addConditionRanges(RequestorBean requestor, CtxIdentifier ctxID){
+		if (this.conditionRanges == null){
+			this.conditionRanges = new Hashtable<String, CtxIdentifier>();	
+		}
+		this.conditionRanges.put(RequestorUtils.toUriString(requestor), ctxID);
+	}
 	/**
 	 * method to check if any policies exist in the registry
 	 * @return
 	 */
-	public boolean isEmpty(){
+	public boolean isPoliciesEmpty(){
 		return this.policies.isEmpty();
 	}
 
+	public boolean isConditionRangesEmpty(){
+		return this.conditionRanges.isEmpty();
+	}
+	
 	public void replaceServiceIdentifier(RequestorBean oldRequestor, RequestorBean newRequestor){
 		CtxIdentifier ctxID = this.getPolicyStorageID(oldRequestor);
 		if (ctxID==null){
@@ -101,6 +126,13 @@ public class PrivacyPolicyRegistry implements Serializable{
 		}
 	}
 
+	public void removeConditionRanges(RequestorBean requestor){
+		if (this.conditionRanges.containsKey(RequestorUtils.toUriString(requestor))){
+			this.conditionRanges.remove(RequestorUtils.toUriString(requestor));
+		}
+	}
+
+		
 	/**
 	 * @return the policies
 	 */
@@ -113,5 +145,15 @@ public class PrivacyPolicyRegistry implements Serializable{
 	 */
 	public void setPolicies(Hashtable<String, CtxIdentifier> policies) {
 		this.policies = policies;
+	}
+
+
+	public Hashtable<String, CtxIdentifier> getConditionRanges() {
+		return conditionRanges;
+	}
+
+
+	public void setConditionRanges(Hashtable<String, CtxIdentifier> conditionRanges) {
+		this.conditionRanges = conditionRanges;
 	}
 }

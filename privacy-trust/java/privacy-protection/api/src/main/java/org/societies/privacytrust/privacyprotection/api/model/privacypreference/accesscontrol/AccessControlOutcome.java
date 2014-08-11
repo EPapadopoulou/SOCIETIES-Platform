@@ -46,6 +46,11 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 public class AccessControlOutcome extends IPrivacyOutcome implements Serializable {
 
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	private PrivacyOutcomeConstantsBean effect;
 
 	private int confidenceLevel;
@@ -120,4 +125,10 @@ public class AccessControlOutcome extends IPrivacyOutcome implements Serializabl
 		return true;
 	}
 
+	@Override
+	public AccessControlOutcome clone(){
+		AccessControlOutcome outcome = new AccessControlOutcome(this.effect);
+		outcome.setConfidenceLevel(this.confidenceLevel);
+		return outcome;
+	}
 }

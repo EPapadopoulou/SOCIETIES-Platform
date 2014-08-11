@@ -64,10 +64,10 @@ public class ProviderResponsePolicyGeneratorTest {
 	private ProviderResponsePolicyGenerator checkResponseChecked;
 
 
-	@Before
+/*	@Before
 	public void setUp() {
 		checkResponseChecked = new ProviderResponsePolicyGenerator();
-	}
+	}*/
 	
 //	
 //	@Test

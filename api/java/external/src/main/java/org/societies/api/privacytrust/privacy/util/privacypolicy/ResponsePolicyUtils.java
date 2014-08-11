@@ -29,6 +29,7 @@ import java.util.List;
 import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.NegotiationStatus;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponsePolicy;
 
@@ -47,19 +48,16 @@ public class ResponsePolicyUtils {
 		return responsePolicy;
 	}
 
-	public static String toString(ResponsePolicy item){
+	public static String toString(ResponsePolicy policy){
 		StringBuilder builder = new StringBuilder();
-		builder.append("ResponsePolicy [");
-		if (null != item) {
-			builder.append("getNegotiationStatus()=");
-			builder.append(item.getNegotiationStatus());
-			builder.append(", getRequestItem()=");
-			builder.append(RequestorUtils.toString(item.getRequestor()));
-			builder.append(", getRequestItem()=");
-			builder.append(ResponseItemUtils.toString(item.getResponseItems()));
-		}
-		builder.append("]");
+		builder.append("ResponsePolicy: \n");
+		builder.append("NegotiationStatus: "+policy.getNegotiationStatus());
+		builder.append("\nRequestor: "+RequestorUtils.toString(policy.getRequestor()));
+		
+		builder.append(ResponseItemUtils.toString(policy.getResponseItems()));
+		
 		return builder.toString();
+		
 	}
 
 	public static String toString(List<ResponsePolicy> responsePolicies){
@@ -82,7 +80,7 @@ public class ResponsePolicyUtils {
 		// -- Verify obj type
 		ResponsePolicy ro2 = (ResponsePolicy) o2;
 		return (NegotiationStatusUtils.equal(o1.getNegotiationStatus(), ro2.getNegotiationStatus())
-				&& RequestorUtils.equal(o1.getRequestor(), ro2.getRequestor())
+				&& RequestorUtils.equals(o1.getRequestor(), ro2.getRequestor())
 				&& ResponseItemUtils.equal(o1.getResponseItems(), ro2.getResponseItems())
 				);
 	}

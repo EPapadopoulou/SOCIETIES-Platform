@@ -25,8 +25,12 @@
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.DecisionUtils;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
@@ -39,9 +43,11 @@ public class PPNPOutcome extends IPrivacyOutcome implements Serializable{
 
 	private Decision decision;
 	private int confidenceLevel;
+	private  List<Action> actions = new ArrayList<Action>();
 	
-	public PPNPOutcome(Decision decision) {
-		this.setDecision(decision);
+	public PPNPOutcome(Decision decision, List<Action> actions) {
+		this.actions = actions;
+		this.decision = decision;
 	}
 
 
@@ -65,10 +71,14 @@ public class PPNPOutcome extends IPrivacyOutcome implements Serializable{
 	}
 
 
+
+
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = 1;
+		int result = super.hashCode();
+		result = prime * result + ((actions == null) ? 0 : actions.hashCode());
 		result = prime * result
 				+ ((decision == null) ? 0 : decision.hashCode());
 		return result;
@@ -80,13 +90,21 @@ public class PPNPOutcome extends IPrivacyOutcome implements Serializable{
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
+		if (!super.equals(obj)) {
 			return false;
 		}
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
 		PPNPOutcome other = (PPNPOutcome) obj;
+		if (actions == null) {
+			if (other.actions != null) {
+				return false;
+			}
+		}else if (!ActionUtils.equals(actions, other.actions)){
+			return false;
+		}
+					
 		if (!DecisionUtils.equals(decision,other.decision)) {
 			return false;
 		}
@@ -107,6 +125,11 @@ public class PPNPOutcome extends IPrivacyOutcome implements Serializable{
 	@Override
 	public PrivacyPreferenceTypeConstants getOutcomeType() {
 		return PrivacyPreferenceTypeConstants.PRIVACY_POLICY_NEGOTIATION;
+	}
+
+
+	public List<Action> getActions() {
+		return actions;
 	}
 
 

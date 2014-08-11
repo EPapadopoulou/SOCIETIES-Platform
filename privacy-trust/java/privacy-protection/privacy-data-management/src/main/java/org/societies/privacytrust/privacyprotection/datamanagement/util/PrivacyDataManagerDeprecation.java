@@ -43,18 +43,7 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Respons
  * @author Olivier Maridat (Trialog)
  */
 public abstract class PrivacyDataManagerDeprecation implements IPrivacyDataManager {
-	@Deprecated
-	@Override
-	public List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> checkPermission(Requestor requestor, DataIdentifier dataId, List<org.societies.api.privacytrust.privacy.model.privacypolicy.Action> actions) throws PrivacyException {
-		return ResponseItemUtils.toResponseItems(checkPermission(RequestorUtils.toRequestorBean(requestor), dataId, ActionUtils.toActionBeans(actions)));
-	}
-	
-	@Deprecated
-	@Override
-	public List<org.societies.api.privacytrust.privacy.model.privacypolicy.ResponseItem> checkPermission(Requestor requestor, DataIdentifier dataId, org.societies.api.privacytrust.privacy.model.privacypolicy.Action action) throws PrivacyException {
-		return ResponseItemUtils.toResponseItems(checkPermission(RequestorUtils.toRequestorBean(requestor), dataId, ActionUtils.toActionBean(action)));
-	}
-	
+
 	public abstract List<ResponseItem> checkPermission(RequestorBean requestor, DataIdentifier dataId, List<Action> actions) throws PrivacyException;
 	
 	public abstract List<ResponseItem> checkPermission(RequestorBean requestor, DataIdentifier dataId, Action actions) throws PrivacyException;

@@ -49,8 +49,8 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVE
 		<module>UserContextDBManagement</module>
 		<module>CommunityContextDBManagement</module>
 		<module>UserContextHistoryManagement</module>
-		<module>ContextBroker</module>
-		<module>ContextSourceManagement</module>
+ 		<module>ContextBroker</module>
+		<!-- <module>ContextSourceManagement</module> -->
 		<module>UserContextRefinement</module>
 		<module>UserContextInferenceManagement</module>
 		<module>UserContextPrediction</module>
@@ -61,9 +61,10 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVE
 		<module>CommunityContextPrediction</module>
 		<module>UserContextInheritance</module>
 		<module>context-performance-tests</module>
-		<module>context-activity-feed</module>
+<!-- 		<module>context-activity-feed</module> -->
 		<module>time-context-source</module>
 		
 		<!-- <module>context-data-init</module>  -->
+		<module>context-cloud-bundle</module>
 	</modules>
 </project>

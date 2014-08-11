@@ -8,6 +8,15 @@
         We've kept the osgi definitions in a separate configuration file so that
         this file can easily be used for integration testing outside of an OSGi environment -->
 
+    <bean id="userFeedback"
+          class="org.societies.useragent.feedback.UserFeedback"
+          name="feedback"
+          init-method="initialiseUserFeedback">
+<!--         <property name="commsMgr" ref="commsManager"/>
+        <property name="pubsub" ref="pubsub"/> -->
+    </bean>
+
+<!-- 
     <bean id="userActionMonitor"
           class="org.societies.useragent.monitoring.UserActionMonitor"
           name="userActionMonitor"
@@ -19,14 +28,6 @@
         <property name="cssMgr" ref="cssManager"/>
     </bean>
 
-    <bean id="userFeedback"
-          class="org.societies.useragent.feedback.UserFeedback"
-          name="feedback"
-          depends-on="commsManager"
-          init-method="initialiseUserFeedback">
-        <property name="commsMgr" ref="commsManager"/>
-        <property name="pubsub" ref="pubsub"/>
-    </bean>
 
     <bean id="decisionMaker"
           class="org.societies.useragent.decisionmaking.DecisionMaker">
@@ -56,5 +57,5 @@
         <property name="internalUserActionMonitor" ref="userActionMonitor"/>
         <property name="feedback" ref="userFeedback"/>
     </bean>
-
+ -->
 </beans>

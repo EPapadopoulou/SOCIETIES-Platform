@@ -53,6 +53,7 @@ import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyM
 import org.societies.api.internal.schema.privacytrust.privacy.model.dataobfuscation.DataWrapper;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
+import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
@@ -293,14 +294,28 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 				if (DataIdentifierUtils.isParentOrSameType(requestItemId, dataId)) {
 					List<Action> actionsThatMatch = new ArrayList<Action>();
 					boolean allRequestedActionsMatch = ActionUtils.contains(actionsDeepCopy, request.getActions(), actionsThatMatch);
-					boolean canBeSharedWith3pServices = ConditionUtils.contains(ConditionConstants.SHARE_WITH_3RD_PARTIES, request.getConditions());
+					boolean canBeSharedWith3pServices = false;				
+					boolean canBeSharedWithCisMembersOnly = false;
+					
+					for (Condition con : request.getConditions()){
+						if (con.getConditionConstant().equals(ConditionConstants.SHARE_WITH_3RD_PARTIES)){
+							if (con.getValue()==PrivacyConditionsConstantValues.getBetterSharedValue(con.getValue(), PrivacyConditionsConstantValues.getValues(con.getConditionConstant())[2]))
+							canBeSharedWithCisMembersOnly = true;
+							
+							if (con.getValue()==PrivacyConditionsConstantValues.getBetterSharedValue(con.getValue(), PrivacyConditionsConstantValues.getValues(con.getConditionConstant())[3])){
+								canBeSharedWith3pServices = true;
+							}
+						}
+					}
 					// All requested actions are matching AND if this data is public
 					if (allRequestedActionsMatch && canBeSharedWith3pServices) {
 						LOG.trace("[CIS access control] All requested items are matching (public): PERMIT");
 						permissions.add(permissionPermit);
 						return permissions;
 					}
-					boolean canBeSharedWithCisMembersOnly = ConditionUtils.contains(ConditionConstants.SHARE_WITH_CIS_MEMBERS_ONLY, request.getConditions());
+					
+
+
 					// Retrieve Cis member list
 					if (null == cisMemberList) {
 						cisMemberList = retrieveCisMemberList(dataId.getOwnerId());

@@ -77,7 +77,7 @@ public class NegotiationDetailsUtils {
 		// -- Verify obj type
 		NegotiationDetailsBean ro2 = (NegotiationDetailsBean) o2;
 		return (o1.getNegotiationID() == ro2.getNegotiationID()
-				&& RequestorUtils.equal(o1.getRequestor(), ro2.getRequestor())
+				&& RequestorUtils.equals(o1.getRequestor(), ro2.getRequestor())
 				);
 	}
 

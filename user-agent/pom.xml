@@ -56,11 +56,12 @@
 	<modules>
 		<module>user-agent-api</module>
 		<module>user-feedback</module>
-		<module>user-action-monitor</module>
 		<module>user-agent-Bundle</module>
+<!-- 		<module>user-action-monitor</module>
+		
 		<module>decision-making</module>
 		<module>conflict-resolution</module>
-		<module>UACommsManager</module>
+		<module>UACommsManager</module> -->
 		<!-- add additional modules here -->
 	</modules>
 </project>

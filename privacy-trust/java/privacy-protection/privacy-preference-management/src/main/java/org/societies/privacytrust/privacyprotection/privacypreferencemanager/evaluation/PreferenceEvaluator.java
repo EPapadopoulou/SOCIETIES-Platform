@@ -37,9 +37,16 @@ import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.model.CtxIdentifier;
+import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
 import org.societies.api.privacytrust.trust.TrustException;
+import org.societies.api.privacytrust.trust.TrustQuery;
+import org.societies.api.privacytrust.trust.model.MalformedTrustedEntityIdException;
+import org.societies.api.privacytrust.trust.model.TrustedEntityId;
+import org.societies.api.privacytrust.trust.model.TrustedEntityType;
+import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
@@ -57,30 +64,34 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 
 
 public class PreferenceEvaluator {
-	
+
 	private PrivateContextCache contextCache;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	private ITrustBroker trustBroker;
 	private List<Condition> conditions;
-	public PreferenceEvaluator(PrivateContextCache cache, ITrustBroker broker){
-		
+	private RequestorBean requestor;
+	private IIdentity userIdentity;
+	public PreferenceEvaluator(PrivateContextCache cache, ITrustBroker broker, RequestorBean requestor, IIdentity userIdentity){
+
 		this.contextCache = cache;
 		trustBroker = broker;
+		this.requestor = requestor;
+		this.userIdentity = userIdentity;
 	}
-	
+
 	public Hashtable<IPrivacyOutcome,List<CtxIdentifier>> evaluatePreference(IPrivacyPreference ptn){
 		Hashtable<IPrivacyOutcome,List<CtxIdentifier>> temp = new Hashtable<IPrivacyOutcome,List<CtxIdentifier>>();
 		IPrivacyPreference p = this.evaluatePreferenceInternal(ptn);
 		if (p!=null){
 			ArrayList<CtxIdentifier> ctxIds = new ArrayList<CtxIdentifier>();
-			
+
 			Object[] objs = p.getUserObjectPath();
 			for (Object obj : objs){
 				if (obj instanceof ContextPreferenceCondition){
 					ctxIds.add( ((ContextPreferenceCondition) obj).getCtxIdentifier());
 				}
 			}
-			
+
 			/*IPreference[] prefs = (IPreference[]) p.getUserObjectPath();
 			for (int i = 0; i<prefs.length; i++){
 				if (null!=prefs[i].getUserObject()){
@@ -90,8 +101,8 @@ public class PreferenceEvaluator {
 					}
 				}
 			}*/
-			
-			
+
+
 			temp.put(p.getOutcome(), ctxIds);
 			////JOptionPane.showMessageDiathis.logging.debug(null, "Evaluation: returning outcome: "+p.getOutcome().toString());
 			return temp;
@@ -99,8 +110,8 @@ public class PreferenceEvaluator {
 			return new Hashtable<IPrivacyOutcome,List<CtxIdentifier>>();
 		}
 	}
-	
-	
+
+
 	private IPrivacyPreference evaluatePreferenceInternal(IPrivacyPreference ptn){
 		this.logging.debug("evaluating preference");
 		//a non-context aware preference
@@ -121,7 +132,7 @@ public class PreferenceEvaluator {
 				if (outcomePreference!=null){
 					prefList.add(outcomePreference);
 				}
-				
+
 			}
 			//if only one IOutcome is applicable with the current context return that
 			if (prefList.size()==1){
@@ -131,7 +142,7 @@ public class PreferenceEvaluator {
 			}
 			//if no IOutcome is applicable, return a null object
 			else if (prefList.size()==0){
-				
+
 				this.logging.debug("PrefEvaluator> No preference applicable");
 				//JOptionPane.showMessageDialog(null, "split: PrefEvaluator> No preference applicable");
 				return null;
@@ -183,46 +194,30 @@ public class PreferenceEvaluator {
 				return ptn;
 			}
 		}
-		
-		
+
+
 		return null;
 	}
 
-	
-	
-	
+
+
+
 	public boolean evaluatesToTrue(IPrivacyPreferenceCondition cond)throws PrivacyException{
 		if (cond instanceof ContextPreferenceCondition){
 			ContextPreferenceCondition contextCond = (ContextPreferenceCondition) cond;
 			String currentContextValue = this.getValueFromContext(contextCond.getCtxIdentifier());
 			OperatorConstants operator = contextCond.getOperator();
-			
+
 			this.logging.debug("evaluating cond: "+contextCond.toString()+" against current value: "+currentContextValue);
 			if (operator.equals(OperatorConstants.EQUALS)){
-				
+
 				return currentContextValue.equalsIgnoreCase(contextCond.getValue());
 			}
 			else
 				return this.evaluateInt(parseString(contextCond.getValue()), parseString(currentContextValue), operator);
 		}else if (cond instanceof TrustPreferenceCondition){
 			TrustPreferenceCondition trustCond = (TrustPreferenceCondition) cond;
-			try {
-				Double trustValue = this.trustBroker.retrieveTrust(trustCond.getTrustId()).get();
-				if (trustValue.compareTo(trustCond.getTrustThreshold())>=0){
-					return true;
-				}else{
-					return false;
-				}
-			} catch (TrustException e) {
-				e.printStackTrace();
-				return false;
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				return false;
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-				return false;
-			}
+			return this.evaluatesToTrueTrust(trustCond.getTrustThreshold());
 		}else if (cond instanceof PrivacyCondition){
 			this.logging.debug("evaluating condition: "+cond.toString());
 			this.logging.debug("Conditions available from negotiation: "+conditions.size());
@@ -240,9 +235,40 @@ public class PreferenceEvaluator {
 		else{
 			throw new PrivacyException("PM: Condition is not a Context condition");
 		}
-		
+
 	}
 	
+	private boolean evaluatesToTrueTrust(Double trustValue){
+		
+
+		TrustedEntityId trusteeID;
+		try {
+			trusteeID = new TrustedEntityId(TrustedEntityType.SVC, this.requestor.getRequestorId());
+			TrustedEntityId trustorID = new TrustedEntityId(TrustedEntityType.CIS, this.userIdentity.getBareJid());
+			TrustQuery trustQuery = new TrustQuery(trustorID);
+			trustQuery.setTrusteeId(trusteeID);
+			Double currentTrustValue = trustBroker.retrieveTrustValue(trustQuery).get();
+			
+			return currentTrustValue>=trustValue;
+			
+		} catch (MalformedTrustedEntityIdException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TrustException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return false;
+		
+	}
+
 	public boolean evaluateInt(int valueInPreference, int valueInContext, OperatorConstants operator){
 		boolean result = false;
 		switch (operator){
@@ -260,10 +286,10 @@ public class PreferenceEvaluator {
 			break;
 		default: this.logging.debug("Invalid Operator");
 		}
-		
+
 		return result;
 	}
-	
+
 	public String getValueFromContext(CtxIdentifier id){
 		if (id==null){
 			this.logging.debug("can't get context value from null id");
@@ -272,9 +298,9 @@ public class PreferenceEvaluator {
 			this.logging.debug("ContextCache is null. PrefEvaluator not initialised properly");
 		}
 		return this.contextCache.getContextValue(id);
-		
+
 	}
-	
+
 	public int parseString(String str){
 		try{
 			return Integer.parseInt(str);
@@ -282,14 +308,29 @@ public class PreferenceEvaluator {
 			this.logging.debug("Could not parse String to int");
 			return 0;
 		}
-		
-	}
-	
-	public HashMap<RequestItem, ResponseItem> evaluatePPNPreferences(
-			Hashtable<RequestItem, PPNPrivacyPreferenceTreeModel> modelsHashtable) {
 
-		Enumeration<RequestItem> items = modelsHashtable.keys();
-		HashMap<RequestItem, ResponseItem> toReturn = new HashMap<RequestItem, ResponseItem>();
+	}
+
+
+
+	public ResponseItem evaluatePPNPreferences(RequestItem requestItem, PPNPrivacyPreferenceTreeModel model) {
+		this.conditions = requestItem.getConditions();
+		//need a custom method
+		Hashtable<IPrivacyOutcome, List<CtxIdentifier>> evaluatePreference = this.evaluatePreference(model.getRootPreference());
+		if (evaluatePreference.keySet().size()>0){
+			IPrivacyOutcome outcome = evaluatePreference.keys().nextElement();
+			if (outcome instanceof PPNPOutcome){
+				ResponseItem responseItem = new ResponseItem();
+				responseItem.setDecision(((PPNPOutcome) outcome).getDecision());
+				responseItem.setRequestItem(RequestItemUtils.copyOf(requestItem));
+				return responseItem;
+			}
+		}
+
+		return null;
+
+		/*		Enumeration<RequestItem> items = modelsHashtable.keys();
+
 		//for every requestItem, a list of responseItems will be created
 		//for each action in the requestItem, there will be a ResponseItem
 		while(items.hasMoreElements()){
@@ -308,25 +349,27 @@ public class PreferenceEvaluator {
 					respItem.setRequestItem(item);
 					toReturn.put(item, respItem);
 				}
-				
-			
-			
+
+
+
 		}
-		
-		return toReturn;
+
+		return toReturn;*/
+
+
 	}
 
 	public Hashtable<IPrivacyOutcome, List<CtxIdentifier>> evaluateAccessCtrlPreference(IPrivacyPreference pref, List<Condition> conditions) {
 		this.conditions = conditions;
 		return this.evaluatePreference(pref);
 	}
-	
 
-/*	public static void main(String[] args){
+
+	/*	public static void main(String[] args){
 		ICtxBroker sbroker = new StubCtxBroker();
-		
+
 		try {
-			
+
 			ICtxEntity entity = sbroker.createEntity("Person");
 			if (entity==null){
 				this.logging.debug("entity is null");
@@ -338,7 +381,7 @@ public class PreferenceEvaluator {
 			//ICtxAttribute symlocAttr = new StubCtxAttribute(symlocAttrID, entityID);
 			symlocAttr.setStringValue("home");
 			sbroker.update(symlocAttr);
-			
+
 			IPreference condition1 = new PreferenceTreeNode(
 					new ContextPreferenceCondition(symlocAttr.getCtxIdentifier(), OperatorConstants.EQUALS, "home", CtxTypes.SYMBOLIC_LOCATION));
 			IPreference condition2 = new PreferenceTreeNode(
@@ -347,17 +390,17 @@ public class PreferenceEvaluator {
 			//define outcomes
 			IPreference outcome1 = new PreferenceTreeNode(new PreferenceOutcome("volume", "100"));
 			IPreference outcome2 = new PreferenceTreeNode(new PreferenceOutcome("volume", "0"));
-			
-		
+
+
 			//build tree
 			IPreference preference = new PreferenceTreeNode();
 			preference.add(condition1); //branch 1
 			condition1.add(outcome1);
 			preference.add(condition2); //branch 2
 			condition2.add(outcome2);
-			
+
 			PrivateContextCache cc = new PrivateContextCache(sbroker);
-		
+
 			PreferenceEvaluator ev = new PreferenceEvaluator(cc);
 			Hashtable<IOutcome,List<CtxIdentifier>> result = ev.evaluatePreference(preference);
 			if (result!=null && (!result.isEmpty())){

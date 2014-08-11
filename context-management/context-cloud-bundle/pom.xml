@@ -101,11 +101,11 @@
 			<artifactId>context-broker</artifactId>
 			<version>${version.cm}</version>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>org.societies.context-management</groupId>
 			<artifactId>context-source-mgmt</artifactId>
 			<version>${version.cm}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.societies.context-management</groupId>
 			<artifactId>user-context-inference-mgmt</artifactId>
@@ -141,11 +141,11 @@
 			<artifactId>community-context-estimation</artifactId>
 			<version>${version.cm}</version>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>org.societies.context-management</groupId>
 			<artifactId>context-activity-feed</artifactId>
 			<version>${version.cm}</version>
-		</dependency>
+		</dependency> -->
 		
 		<dependency>
 			<groupId>org.societies.context-management</groupId>

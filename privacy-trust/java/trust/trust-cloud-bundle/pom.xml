@@ -23,21 +23,7 @@
 			<artifactId>trust-api</artifactId>
 			<version>${version.pt}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.societies.privacytrust.trust</groupId>
-			<artifactId>trust-comms</artifactId>
-			<version>${version.pt}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.societies.privacytrust.trust</groupId>
-			<artifactId>trust-similarity-eval</artifactId>
-			<version>${version.pt}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.societies.privacytrust.trust</groupId>
-			<artifactId>trust-activity-feed</artifactId>
-			<version>${version.pt}</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.societies</groupId>
 			<artifactId>common-ext-libs</artifactId>

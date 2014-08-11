@@ -46,17 +46,20 @@ import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestPolicyUt
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.PrivacyPolicyTypeConstants;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
+import org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyManagerInternal;
+import org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyRegistryManager;
+import org.societies.privacytrust.privacyprotection.privacypolicy.gui.PPNWindow;
 
 /**
  * @author Olivier Maridat (Trialog)
  * @date 5 déc. 2011
  */
-public class PrivacyPolicyManager implements IPrivacyPolicyManager {
+public class PrivacyPolicyManager implements IPrivacyPolicyManagerInternal {
 	private static final Logger LOG = LoggerFactory.getLogger(PrivacyPolicyManager.class.getName());
 
 	ICommManager commManager;
 	ICtxBroker ctxBroker;
-	public PrivacyPolicyRegistryManager policyRegistryManager;
+	private PrivacyPolicyRegistryManager policyRegistryManager;
 
 
 	public void init() {
@@ -78,15 +81,6 @@ public class PrivacyPolicyManager implements IPrivacyPolicyManager {
 		// -- Search
 		RequestPolicy privacyPolicy = policyRegistryManager.getPrivacyPolicy(requestor);
 		return privacyPolicy;
-	}
-	@Deprecated
-	@Override
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy getPrivacyPolicy(Requestor requestor) throws PrivacyException {
-		try {
-			return RequestPolicyUtils.toRequestPolicy(getPrivacyPolicy(RequestorUtils.toRequestorBean(requestor)), commManager.getIdManager());
-		} catch (InvalidFormatException e) {
-			throw new PrivacyException(e);
-		}
 	}
 
 	@Override
@@ -135,40 +129,29 @@ public class PrivacyPolicyManager implements IPrivacyPolicyManager {
 			throw new PrivacyException("[Dependency Injection] PrivacyPolicyManager not ready");
 		}
 
-		// -- Add
-		policyRegistryManager.updatePrivacyPolicy(privacyPolicy.getRequestor(), privacyPolicy);
+		PPNWindow window = new PPNWindow(privacyPolicy);
+		policyRegistryManager.updatePrivacyPolicy(privacyPolicy.getRequestor(), window.getRequestPolicy(), window.getConditionRanges());
 		return privacyPolicy;
 	}
-	@Deprecated
-	@Override
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy updatePrivacyPolicy(org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy privacyPolicy) throws PrivacyException {
-		try {
-			return RequestPolicyUtils.toRequestPolicy(updatePrivacyPolicy(RequestPolicyUtils.toRequestPolicyBean(privacyPolicy)), commManager.getIdManager());
-		} catch (InvalidFormatException e) {
-			throw new PrivacyException(e);
-		}
-	}
+
 
 	@Override
 	public RequestPolicy updatePrivacyPolicy(String privacyPolicyXml, RequestorBean requestor) throws PrivacyException {
 		// Retrieve the privacy policy
 		RequestPolicy privacyPolicy = PrivacyPolicyUtils.fromXacmlString(privacyPolicyXml);
+		
 		if (null == privacyPolicy) {
 			throw new PrivacyException("This XML formatted string of the privacy policy can not be parsed as a privacy policy.");
 		}
 		// Fill the requestor id
 		privacyPolicy.setRequestor(requestor);
-		// Create / Store it
+		
+		//Ask user to edit privacy policy:
+		
+		
 		return updatePrivacyPolicy(privacyPolicy);
-	}
-	@Deprecated
-	@Override
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy updatePrivacyPolicy(String privacyPolicyXml, Requestor requestor) throws PrivacyException {
-		try {
-			return RequestPolicyUtils.toRequestPolicy(updatePrivacyPolicy(privacyPolicyXml, RequestorUtils.toRequestorBean(requestor)), commManager.getIdManager());
-		} catch (InvalidFormatException e) {
-			throw new PrivacyException(e);
-		}
+		
+		
 	}
 
 
@@ -196,31 +179,7 @@ public class PrivacyPolicyManager implements IPrivacyPolicyManager {
 	public RequestPolicy inferPrivacyPolicy(PrivacyPolicyTypeConstants privacyPolicyType, Map configuration) throws PrivacyException {
 		return PrivacyPolicyUtils.inferPrivacyPolicy(privacyPolicyType, configuration);
 	}
-	@Deprecated
-	@Override
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy inferPrivacyPolicy(org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyPolicyTypeConstants privacyPolicyType, Map configuration) throws PrivacyException {
-		try {
-			return RequestPolicyUtils.toRequestPolicy(inferPrivacyPolicy(PrivacyPolicyTypeConstants.fromValue(privacyPolicyType.name().toLowerCase()), configuration), commManager.getIdManager());
-		} catch (InvalidFormatException e) {
-			throw new PrivacyException(e);
-		}
-	}
 
-	@Deprecated
-	@Override
-	public String toXMLString(org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy privacyPolicy) {
-		return PrivacyPolicyUtils.toXacmlString(RequestPolicyUtils.toRequestPolicyBean(privacyPolicy));
-	}
-
-	@Deprecated
-	@Override
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy fromXMLString(String privacyPolicy) throws PrivacyException {
-		try {
-			return RequestPolicyUtils.toRequestPolicy(PrivacyPolicyUtils.fromXacmlString(privacyPolicy), commManager.getIdManager());
-		} catch (InvalidFormatException e) {
-			throw new PrivacyException(e);
-		}
-	}
 
 
 
@@ -261,4 +220,12 @@ public class PrivacyPolicyManager implements IPrivacyPolicyManager {
 		}
 		return true;
 	}
+
+
+	@Override
+	public IPrivacyPolicyRegistryManager getPolicyRegistryManager() {
+		return policyRegistryManager;
+	}
+
+
 }

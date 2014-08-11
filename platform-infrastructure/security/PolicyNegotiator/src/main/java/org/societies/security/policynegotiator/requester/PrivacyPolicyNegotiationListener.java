@@ -26,6 +26,7 @@ package org.societies.security.policynegotiator.requester;
 
 
 import java.util.HashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.identity.Requestor;
@@ -41,6 +42,7 @@ import org.societies.api.osgi.event.EventTypes;
 import org.societies.api.osgi.event.IEventMgr;
 import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.NegotiationStatus;
+import org.societies.api.schema.identity.RequestorBean;
 
 /**
  * 
@@ -127,7 +129,7 @@ public class PrivacyPolicyNegotiationListener extends EventListener {
 			
 			if (negotiationMap.containsKey(negotiationId)) {
 
-				Requestor requestor = payload.getDetails().getRequestor();
+				RequestorBean requestor = payload.getDetails().getRequestor();
 				LOG.debug("negotiation requestor : " + requestor);
 				notifyFailure(negotiationId);
 			}

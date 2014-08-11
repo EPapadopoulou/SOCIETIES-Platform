@@ -31,6 +31,9 @@ import java.util.Date;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 
 /**
  * The PrivacyPermission class represents complete response to a RequestItem, containing the obfuscation level
@@ -55,7 +58,8 @@ public class PrivacyPermission extends ResponseItem implements Serializable
 
 	
 	public PrivacyPermission(RequestItem requestItem, Decision decision, double obfuscationLevel, Date creationDate, long validityDuration) {
-		super(requestItem, decision);
+		this.requestItem = requestItem;
+		this.decision = decision;
 		this.obfuscationLevel = obfuscationLevel;
 		this.creationDate = creationDate;
 		this.validityDuration = validityDuration;

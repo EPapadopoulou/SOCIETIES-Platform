@@ -53,13 +53,7 @@ public interface IPrivacyPolicyManager {
 	 * @throws PrivacyException
 	 */
 	public RequestPolicy getPrivacyPolicy(RequestorBean requestor) throws PrivacyException;
-	/**
-	 * Will be removed in 1.2
-	 * @see getPrivacyPolicy
-	 */
-	@Deprecated
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy getPrivacyPolicy(Requestor requestor) throws PrivacyException;
-	
+
 	/**
 	 * Retrieve a privacy policy file from a JAR
 	 * 
@@ -90,12 +84,6 @@ public interface IPrivacyPolicyManager {
 	 * @return The stored privacy policy
 	 */
 	public RequestPolicy updatePrivacyPolicy(RequestPolicy privacyPolicy) throws PrivacyException;
-	/**
-	 * Will be removed in 1.2
-	 * @see getPrivacyPolicy
-	 */
-	@Deprecated
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy updatePrivacyPolicy(org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy privacyPolicy) throws PrivacyException;
 	
 	/**
 	 * Store or update a (CIS or 3P Service) privacy policy from an XML version of it.
@@ -106,12 +94,6 @@ public interface IPrivacyPolicyManager {
 	 * @throws PrivacyException
 	 */
 	public RequestPolicy updatePrivacyPolicy(String privacyPolicy, RequestorBean requestor) throws PrivacyException;
-	/**
-	 * Will be removed in 1.2
-	 * @see getPrivacyPolicy
-	 */
-	@Deprecated
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy updatePrivacyPolicy(String privacyPolicy, Requestor requestor) throws PrivacyException;
 	
 	/**
 	 * Delete a CIS or 3P service privacy policy by the ID of the CIS or the 3P Service
@@ -133,24 +115,5 @@ public interface IPrivacyPolicyManager {
 	 */
 	@Deprecated
 	public RequestPolicy inferPrivacyPolicy(PrivacyPolicyTypeConstants privacyPolicyType, Map configuration) throws PrivacyException;
-	/**
-	 * Will be removed in 1.2
-	 * @see PrivacyPolicyUtils#inferPrivacyPolicy(PrivacyPolicyTypeConstants, Map)
-	 */
-	@Deprecated
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy inferPrivacyPolicy(org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyPolicyTypeConstants privacyPolicyType, Map configuration) throws PrivacyException;
 	
-	/**
-	 * Will be removed in 1.2
-	 * @see PrivacyPolicyUtils#toXacmlString(RequestPolicy)
-	 */
-	@Deprecated
-	public String toXMLString(org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy privacyPolicy);
-	
-	/**
-	 * Will be removed in 1.2
-	 * @see PrivacyPolicyUtils#fromXacmlString(String)
-	 */
-	@Deprecated
-	public org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy fromXMLString(String privacyPolicy) throws PrivacyException;
 }

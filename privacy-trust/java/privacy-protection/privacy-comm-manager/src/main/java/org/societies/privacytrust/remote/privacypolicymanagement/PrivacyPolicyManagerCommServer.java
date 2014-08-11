@@ -45,9 +45,9 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.privacyp
 import org.societies.api.internal.schema.privacytrust.privacyprotection.privacypolicymanagement.PrivacyPolicyManagerBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.privacypolicymanagement.PrivacyPolicyManagerBeanResult;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyPolicyTypeConstants;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestPolicyUtils;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.PrivacyPolicyTypeConstants;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 
 
 public class PrivacyPolicyManagerCommServer {
@@ -100,14 +100,10 @@ public class PrivacyPolicyManagerCommServer {
 	
 	private boolean getPrivacyPolicy(PrivacyPolicyManagerBean bean, PrivacyPolicyManagerBeanResult beanResult) {
 		try {
-			Requestor requestor = RequestorUtils.toRequestor(bean.getRequestor(), commManager.getIdManager());
-			RequestPolicy privacyPolicy = privacyPolicyManager.getPrivacyPolicy(requestor);
-			beanResult.setPrivacyPolicy(RequestPolicyUtils.toRequestPolicyBean(privacyPolicy));
+			
+			beanResult.setPrivacyPolicy(privacyPolicyManager.getPrivacyPolicy(bean.getRequestor()));
 		} catch (PrivacyException e) {
 			beanResult.setAckMessage("Error PrivacyException: "+e.getMessage());
-			return false;
-		} catch (InvalidFormatException e) {
-			beanResult.setAckMessage("Error InvalidFormatException: "+e.getMessage());
 			return false;
 		}
 		return true;
@@ -115,14 +111,9 @@ public class PrivacyPolicyManagerCommServer {
 	
 	private boolean updatePrivacyPolicy(PrivacyPolicyManagerBean bean, PrivacyPolicyManagerBeanResult beanResult) {
 		try {
-			RequestPolicy privacyPolicy = RequestPolicyUtils.toRequestPolicy(bean.getPrivacyPolicy(), commManager.getIdManager());
-			privacyPolicy = privacyPolicyManager.updatePrivacyPolicy(privacyPolicy);
-			beanResult.setPrivacyPolicy(RequestPolicyUtils.toRequestPolicyBean(privacyPolicy));
+			beanResult.setPrivacyPolicy(privacyPolicyManager.updatePrivacyPolicy(bean.getPrivacyPolicy()));
 		} catch (PrivacyException e) {
 			beanResult.setAckMessage("Error PrivacyException: "+e.getMessage());
-			return false;
-		} catch (InvalidFormatException e) {
-			beanResult.setAckMessage("Error InvalidFormatException: "+e.getMessage());
 			return false;
 		}
 		return true;
@@ -135,7 +126,7 @@ public class PrivacyPolicyManagerCommServer {
 			}
 			PrivacyPolicyTypeConstants privacyPolicyType = PrivacyPolicyTypeConstants.values()[bean.getPrivacyPolicyType()];
 			RequestPolicy privacyPolicy = privacyPolicyManager.inferPrivacyPolicy(privacyPolicyType, new HashMap());
-			beanResult.setPrivacyPolicy(RequestPolicyUtils.toRequestPolicyBean(privacyPolicy));
+			beanResult.setPrivacyPolicy(privacyPolicy);
 		} catch (PrivacyException e) {
 			beanResult.setAckMessage("Error PrivacyException: "+e.getMessage());
 			return false;

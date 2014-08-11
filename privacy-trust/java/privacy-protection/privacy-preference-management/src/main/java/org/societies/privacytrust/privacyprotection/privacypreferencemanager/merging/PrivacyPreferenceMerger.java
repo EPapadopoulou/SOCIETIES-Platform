@@ -48,19 +48,19 @@ import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
 import org.societies.api.schema.identity.RequestorBean;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
-
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
-
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.OperatorConstants;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.CtxTypes;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 
@@ -180,6 +180,7 @@ public class PrivacyPreferenceMerger {
 		//check if we're in Situation 1 (same conditions different outcomes)
 		ArrayList<SingleRule> temp = this.checkConflicts(oldRules, sr);
 		if (temp.size()>0){
+			this.logging.debug("Situation 1, conflict can't be resolved");
 			return null;
 		}
 		this.logging.debug("Not in situation 1");
@@ -286,6 +287,7 @@ public class PrivacyPreferenceMerger {
 		for (int i=0; i< oldRules.size(); i++){
 			SingleRule sr = oldRules.get(i);
 			if (sr.conflicts(newRule)){
+				this.logging.debug("single rule: "+sr.toString()+" conflicts with: "+newRule.toString());
 				oldRules.set(i, this.resolveConflict(sr, newRule));
 				return oldRules;
 			}
@@ -452,6 +454,38 @@ public class PrivacyPreferenceMerger {
 
 		ptn.add(leaf);
 		return (IPrivacyPreference) ptn.getRoot();
+	}
+
+	public PPNPrivacyPreferenceTreeModel mergePPNPreference(
+			PPNPrivacyPreferenceTreeModel newModel,
+			PPNPrivacyPreferenceTreeModel existingModel) {
+		
+		IPrivacyPreference existingPreference = existingModel.getRootPreference();
+		IPrivacyPreference newPreference = newModel.getRootPreference();
+		if (existingPreference.isLeaf()){
+			this.logging.debug("existing node does not contain context condition. merging as leaf");
+			newPreference = newPreference.getRoot();
+			IPrivacyPreference p = new PrivacyPreference();
+			p.add(newPreference);
+			p.add(existingPreference);
+			PPNPrivacyPreferenceTreeModel model = new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(), p);
+			return model;
+		}
+		
+		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
+		
+		IPrivacyPreference mergedTree = existingPreference;
+		
+		for (SingleRule sr : newSingleRules){
+			IPrivacyPreference temp = merge(mergedTree, sr);
+			if (temp==null){
+				return null;
+			}
+			mergedTree = temp;
+		}
+		
+		PPNPrivacyPreferenceTreeModel model = new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(), mergedTree);
+		return model;
 	}
 
 

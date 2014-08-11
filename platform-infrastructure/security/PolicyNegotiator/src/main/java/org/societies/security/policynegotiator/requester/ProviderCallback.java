@@ -34,10 +34,11 @@ import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.Requestor;
 import org.societies.api.identity.RequestorCis;
 import org.societies.api.identity.RequestorService;
+import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyNegotiationManager;
-import org.societies.api.internal.privacytrust.privacyprotection.negotiation.NegotiationDetails;
 import org.societies.api.internal.schema.security.policynegotiator.MethodType;
 import org.societies.api.internal.schema.security.policynegotiator.SlaBean;
+import org.societies.api.internal.schema.useragent.feedback.NegotiationDetailsBean;
 import org.societies.api.internal.security.policynegotiator.INegotiationCallback;
 import org.societies.api.internal.security.policynegotiator.INegotiationProviderCallback;
 import org.societies.api.osgi.event.EventTypes;
@@ -177,7 +178,10 @@ public class ProviderCallback implements INegotiationProviderCallback {
 		IPrivacyPolicyNegotiationManager ppn = requester.getPrivacyPolicyNegotiationManager();
 
 		int id = ValueGenerator.generateUniqueInt();
-		NegotiationDetails ppnDetails = new NegotiationDetails(provider, id);
+		NegotiationDetailsBean ppnDetails = new NegotiationDetailsBean();
+		ppnDetails.setNegotiationID(id);
+		ppnDetails.setRequestor(RequestorUtils.toRequestorBean(provider));
+		
 
 		PrivacyPolicyNegotiationInfo info = new PrivacyPolicyNegotiationInfo(finalCallback, agreementKey, fileUris, id);
 		requester.getNegotiationListener().addNegotiationInfo(info);
