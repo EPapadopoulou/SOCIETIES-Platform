@@ -29,9 +29,6 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Request
 import org.societies.privacytrust.privacyprotection.api.policy.ConditionRanges;
 import org.societies.privacytrust.privacyprotection.privacypolicy.gui.components.MockRequestPolicy;
 
-import com.javaswingcomponents.accordion.JSCAccordion;
-import com.javaswingcomponents.accordion.TabOrientation;
-
 public class PPNDialog extends JDialog implements ActionListener, WindowListener{
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
@@ -97,15 +94,14 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		gbc_lblPrivacyPolicyNegotiation.gridx = 0;
 		gbc_lblPrivacyPolicyNegotiation.gridy = 0;
 		this.getContentPane().add(lblPrivacyPolicyNegotiation, gbc_lblPrivacyPolicyNegotiation);
-		JSCAccordion accordion = new JSCAccordion();
+		Accordion accordion = new Accordion();
 		System.out.println("Size of request item list: "+this.requestItems.size());
 		for (RequestItem requestItem : this.requestItems){			
 			RequestItemPanel requestItemPanel = new RequestItemPanel(requestItem);
-			accordion.addTab("Terms of discosure of "+requestItem.getResource().getDataType(), requestItemPanel);
+			accordion.addBar("Terms of discosure of "+requestItem.getResource().getDataType(), requestItemPanel);
 			this.logging.debug("Adding tab for: "+requestItem.getResource().getDataType());
 			System.out.println("Adding tab for: "+requestItem.getResource().getDataType());
 			reqItemPanels.add(requestItemPanel);
-			accordion.setTabHeight(30);
 		}		
 
 		JScrollPane scrollPane = new JScrollPane();
@@ -118,7 +114,6 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 
 
 		scrollPane.setViewportView(accordion);
-		accordion.setTabOrientation(TabOrientation.VERTICAL);
 
 
 

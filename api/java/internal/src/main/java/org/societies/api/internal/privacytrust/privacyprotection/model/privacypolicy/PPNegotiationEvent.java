@@ -26,6 +26,7 @@ package org.societies.api.internal.privacytrust.privacyprotection.model.privacyp
 
 import java.io.Serializable;
 
+import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.useragent.feedback.NegotiationDetailsBean;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.NegotiationStatus;
 
@@ -37,11 +38,11 @@ import org.societies.api.privacytrust.privacy.model.privacypolicy.NegotiationSta
  */
 public class PPNegotiationEvent implements Serializable{
 
-	private IAgreement agreement;
+	private Agreement agreement;
 	private NegotiationStatus negotiationStatus;
 	private final NegotiationDetailsBean details;
 	
-	public PPNegotiationEvent(IAgreement agreement, NegotiationStatus negotiationStatus, NegotiationDetailsBean details){
+	public PPNegotiationEvent(Agreement agreement, NegotiationStatus negotiationStatus, NegotiationDetailsBean details){
 		this.agreement = agreement;
 		this.negotiationStatus = negotiationStatus;
 		this.details = details;
@@ -51,14 +52,14 @@ public class PPNegotiationEvent implements Serializable{
 	/**
 	 * @return the agreement
 	 */
-	public IAgreement getAgreement() {
+	public Agreement getAgreement() {
 		return agreement;
 	}
 
 	/**
 	 * @param agreement the agreement to set
 	 */
-	public void setAgreement(IAgreement agreement) {
+	public void setAgreement(Agreement agreement) {
 		this.agreement = agreement;
 	}
 

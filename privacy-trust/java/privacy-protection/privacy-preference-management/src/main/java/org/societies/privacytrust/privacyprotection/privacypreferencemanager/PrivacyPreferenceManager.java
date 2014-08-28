@@ -71,7 +71,9 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PrivateContextCache;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.PrivatePreferenceCache;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.AccessControlPreferenceCreator;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.AttrSelPreferenceCreator;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.DObfPreferenceCreator;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.IDSPreferenceCreator;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.NegotiationListener;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.PPNPreferenceMerger;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.monitoring.PrivacyPreferenceConditionMonitor;
@@ -110,10 +112,15 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 	private IDSPreferenceManager idsMgr;
 	private AttrSelPreferenceManager attrSelPrefMgr;
 	private IEventMgr eventMgr;
-	private AccessControlPreferenceCreator accCtrlPreferenceCreator;
+	
 	private AccCtrlMonitor accCtrlMonitor;
+	
+	
+	private AccessControlPreferenceCreator accCtrlPreferenceCreator;
 	private DObfPreferenceCreator dobfPreferenceCreator;
 	private PPNPreferenceMerger ppnPreferenceMerger;
+	private IDSPreferenceCreator idsPreferenceCreator;
+	private AttrSelPreferenceCreator attrSelPreferenceCreator;
 	private NegotiationListener negotiationListener;
 	private IIdentity userIdentity;
 
@@ -139,6 +146,8 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 		this.contextCache = new PrivateContextCache(ctxBroker);
 		this.accCtrlPreferenceCreator = new AccessControlPreferenceCreator(this);
 		this.ppnPreferenceMerger = new PPNPreferenceMerger(this);
+		this.idsPreferenceCreator = new IDSPreferenceCreator(this);
+		this.attrSelPreferenceCreator = new AttrSelPreferenceCreator(this);
 		negotiationListener = new NegotiationListener(this);
 		this.dobfPreferenceCreator = new DObfPreferenceCreator(this);
 		accCtrlMonitor = new AccCtrlMonitor(this);
@@ -620,9 +629,18 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 	}
 
 
-	public void setPpnPreferenceMerger(PPNPreferenceMerger ppnPreferenceMerger) {
-		this.ppnPreferenceMerger = ppnPreferenceMerger;
+
+
+	public AttrSelPreferenceCreator getAttrSelPreferenceCreator() {
+		return attrSelPreferenceCreator;
 	}
+
+
+
+	public IDSPreferenceCreator getIdsPreferenceCreator() {
+		return idsPreferenceCreator;
+	}
+
 
 
 

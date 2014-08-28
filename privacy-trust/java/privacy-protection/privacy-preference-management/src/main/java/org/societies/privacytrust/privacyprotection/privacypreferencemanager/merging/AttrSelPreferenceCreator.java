@@ -65,8 +65,6 @@ public class AttrSelPreferenceCreator {
 
 	private void createAttributeSelectionPreferences(Agreement agreement) throws InvalidFormatException, InterruptedException, ExecutionException, TrustException, MalformedCtxIdentifierException{
 
-		IIdentity userIdentity = this.privPrefMgr.getIdm().fromJid(agreement.getUserIdentity());
-
 		RequestorBean requestor = agreement.getRequestor();
 		
 		ITrustBroker trustBroker = privPrefMgr.getTrustBroker();
@@ -85,17 +83,22 @@ public class AttrSelPreferenceCreator {
 			CtxAttributeIdentifier ctxID = new CtxAttributeIdentifier(resource.getDataIdUri());
 			List<Action> actions = responseItem.getRequestItem().getActions();
 
-			AttributeSelectionPreferenceDetailsBean details = new AttributeSelectionPreferenceDetailsBean();
-			details.setAction(ActionUtils.copyOf(actions));
-			details.setRequestor(requestor);
-			details.setDataType(resource.getDataType());
+			AttributeSelectionPreferenceDetailsBean detailsSpecific = new AttributeSelectionPreferenceDetailsBean();
+			detailsSpecific.setActions(ActionUtils.copyOf(actions));
+			detailsSpecific.setRequestor(requestor);
+			detailsSpecific.setDataType(resource.getDataType());
 			
 			IPrivacyPreference preference = this.createAttrSelectionPreference(ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), trusteeID, trustValue, ctxID);
 
+			AttributeSelectionPreferenceTreeModel model = new AttributeSelectionPreferenceTreeModel(detailsSpecific, preference);
+			this.privPrefMgr.storeAttrSelPreference(detailsSpecific, model);
 			
-
-			AttributeSelectionPreferenceTreeModel model = new AttributeSelectionPreferenceTreeModel(details, preference);
-			this.privPrefMgr.storeAttrSelPreference(details, model);
+			IPrivacyPreference preference2 = this.createAttrSelectionPreference(ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), trusteeID, trustValue, ctxID);
+			AttributeSelectionPreferenceDetailsBean detailsGeneric = new AttributeSelectionPreferenceDetailsBean();
+			detailsGeneric.setActions(ActionUtils.copyOf(actions));
+			detailsGeneric.setDataType(resource.getDataType());
+			AttributeSelectionPreferenceTreeModel model2 = new AttributeSelectionPreferenceTreeModel(detailsGeneric , preference2);
+			this.privPrefMgr.storeAttrSelPreference(detailsGeneric, model2);
 		}
 
 	}

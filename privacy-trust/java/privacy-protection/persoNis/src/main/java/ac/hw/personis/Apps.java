@@ -18,9 +18,6 @@ import org.societies.api.schema.identity.RequestorServiceBean;
 import ac.hw.personis.ServicePanel.ServiceAction;
 import ac.hw.personis.event.ButtonActionListener;
 
-import com.javaswingcomponents.accordion.JSCAccordion;
-import com.javaswingcomponents.accordion.TabOrientation;
-
 public class Apps extends JInternalFrame {
 	private RequestorServiceBean hwuRequestor;
 	private RequestorServiceBean googleRequestor;

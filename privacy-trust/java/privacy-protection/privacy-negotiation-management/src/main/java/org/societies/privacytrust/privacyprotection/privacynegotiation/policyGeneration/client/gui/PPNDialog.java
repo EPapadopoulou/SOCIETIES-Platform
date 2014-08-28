@@ -1,6 +1,5 @@
 package org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui;
 
-import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -20,9 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,11 +34,6 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Request
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponsePolicy;
 import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
-import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components.MockRequestPolicy;
-
-import com.javaswingcomponents.accordion.JSCAccordion;
-import com.javaswingcomponents.accordion.TabOrientation;
-import com.seaglasslookandfeel.*;
 
 public class PPNDialog extends JDialog implements ActionListener, WindowListener{
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
@@ -122,7 +114,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		gbc_lblPrivacyPolicyNegotiation.gridx = 0;
 		gbc_lblPrivacyPolicyNegotiation.gridy = 0;
 		this.getContentPane().add(lblPrivacyPolicyNegotiation, gbc_lblPrivacyPolicyNegotiation);
-		JSCAccordion accordion = new JSCAccordion();
+		Accordion accordion = new Accordion();
 		Iterator<RequestItem> keys = this.items.keySet().iterator();
 		System.out.println("Size of request item list: "+this.items.keySet().size());
 		while (keys.hasNext()){
@@ -130,11 +122,11 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 			ResponseItem responseItem = this.items.get(requestItem);
 
 			RequestItemPanel requestItemPanel = new RequestItemPanel(requestItem, responseItem, firstRound);
-			accordion.addTab("Terms of discosure of "+requestItem.getResource().getDataType(), requestItemPanel);
+			accordion.addBar("Terms of discosure of "+requestItem.getResource().getDataType(), requestItemPanel);
 			this.logging.debug("Adding tab for: "+requestItem.getResource().getDataType());
 			System.out.println("Adding tab for: "+requestItem.getResource().getDataType());
 			reqItemPanels.add(requestItemPanel);
-			accordion.setTabHeight(30);
+			//accordion.setTabHeight(30);
 		}		
 
 		JScrollPane scrollPane = new JScrollPane();
@@ -147,7 +139,6 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 
 
 		scrollPane.setViewportView(accordion);
-		accordion.setTabOrientation(TabOrientation.VERTICAL);
 
 
 

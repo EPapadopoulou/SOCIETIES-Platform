@@ -84,11 +84,11 @@
 		</dependency>
 		<!-- Tools -->
 
-		<dependency>
+<!-- 		<dependency>
 			<groupId>com.javaswingcomponents</groupId>
 			<artifactId>framework</artifactId>
 			<version>1.2</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>com.seaglasslookandfeel</groupId>
 			<artifactId>seaglasslookandfeel</artifactId>

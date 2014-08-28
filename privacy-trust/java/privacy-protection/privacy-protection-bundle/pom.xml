@@ -121,11 +121,11 @@
 			<version>${version.pt}</version>
 		</dependency>		
 		<!-- Tools -->
-		<dependency>
+<!-- 		<dependency>
 			<groupId>com.javaswingcomponents</groupId>
 			<artifactId>framework</artifactId>
 			<version>1.2</version>
-		</dependency>		
+		</dependency>	 -->	
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>org.springframework.spring-library</artifactId>

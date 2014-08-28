@@ -11,9 +11,13 @@ public class NegotiationListener extends EventListener{
 	private AccessControlPreferenceCreator accCtrlPrefCreator;
 	private PPNPreferenceMerger ppnMerger;
 
+	private IDSPreferenceCreator idsPrefCreator;
+	
 	public NegotiationListener(PrivacyPreferenceManager ppMgr) {
 		this.accCtrlPrefCreator = ppMgr.getAccCtrlPreferenceCreator();
 		this.ppnMerger =  ppMgr.getPpnPreferenceMerger();
+		this.idsPrefCreator = ppMgr.getIdsPreferenceCreator();
+		
 		try{
 			ppMgr.getEventMgr().subscribeInternalEvent(this, new String[]{EventTypes.PRIVACY_POLICY_NEGOTIATION_EVENT,EventTypes.IDENTITY_CREATED, EventTypes.IDENTITY_SELECTED}, null);
 
@@ -33,7 +37,7 @@ public class NegotiationListener extends EventListener{
 			this.accCtrlPrefCreator.notifyNegotiationResult(event);
 			this.ppnMerger.notifyNegotiationResult(event);
 		}else if (event.geteventType().equals(EventTypes.IDENTITY_CREATED)){
-			
+			this.idsPrefCreator.notifyIdentitySelected(event);
 		}
 
 	}

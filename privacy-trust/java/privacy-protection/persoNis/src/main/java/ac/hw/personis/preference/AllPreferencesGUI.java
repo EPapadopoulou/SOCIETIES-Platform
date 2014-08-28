@@ -186,6 +186,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 		this.idsTable.setModel(idsModel);
 		this.dobfModel.refreshData(this.dobfDetailsTable.keys());
 		this.dobfTable.setModel(dobfModel);
+		//JOptionPane.showMessageDialog(this, "Refreshed Data");
 	}
 
 	private void setupData() {

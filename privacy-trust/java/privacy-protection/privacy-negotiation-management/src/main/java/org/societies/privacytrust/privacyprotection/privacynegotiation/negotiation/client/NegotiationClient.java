@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import javax.swing.JOptionPane;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.model.CtxIdentifier;
@@ -60,7 +62,9 @@ import org.societies.api.osgi.event.IEventMgr;
 import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.NegotiationStatus;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestPolicyUtils;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponseItemUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponsePolicyUtils;
 import org.societies.api.schema.identity.DataIdentifierScheme;
 import org.societies.api.schema.identity.RequestorBean;
@@ -249,8 +253,7 @@ public class NegotiationClient implements INegotiationClient {
 				this.logging.debug("Ignoring invalid response policy");
 				return;
 			}
-			this.logging
-			.debug("Checking other party's response policy against user's response policy");
+			this.logging.debug("Checking other party's response policy against user's response policy");
 			this.logging.debug("&&&&&&& Requested "+ ResponsePolicyUtils.toString(myResponsePolicy));
 			this.logging.debug("&&&&&&& Provided "+ ResponsePolicyUtils.toString(policy));
 			ClientResponseChecker checker = new ClientResponseChecker(this.policyMgr);
@@ -311,6 +314,7 @@ public class NegotiationClient implements INegotiationClient {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			JOptionPane.showMessageDialog(null, "Selected identity: "+identity);
 			return identity;
 		}else{
 			//select from identity list
@@ -333,7 +337,8 @@ public class NegotiationClient implements INegotiationClient {
 					}
 				}
 			}
-			
+			JOptionPane.showMessageDialog(null, "Selected identity: "+identity);
+
 			return identity;
 		}
 	}
@@ -541,7 +546,7 @@ public class NegotiationClient implements INegotiationClient {
 	private InternalEvent createSuccessfulNegotiationEvent(
 			AgreementEnvelope envelope) throws InvalidFormatException {
 		PPNegotiationEvent event = new PPNegotiationEvent(
-				AgreementUtils.toAgreement(envelope.getAgreement(), this.idm),
+				envelope.getAgreement(),
 				NegotiationStatus.SUCCESSFUL, details);
 		InternalEvent iEvent = new InternalEvent(
 				EventTypes.PRIVACY_POLICY_NEGOTIATION_EVENT, "",

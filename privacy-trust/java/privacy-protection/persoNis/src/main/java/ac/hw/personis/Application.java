@@ -165,8 +165,8 @@ public class Application implements WindowListener{
 		storeApps.add(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
 		installedApps = new ArrayList<String>();
 		appsPage = new Apps(helper, this.installedApps, this.storeApps);
-		appsPage.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		appsPage.setClosable(false);
+		appsPage.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+		appsPage.setClosable(true);
 		appsPage.setVisible(true);	
 		desktopPane.add(appsPage);
 		
@@ -187,7 +187,7 @@ public class Application implements WindowListener{
 			gbc_menuBar.gridy = 3;
 			frame.setJMenuBar(menuBar);
 			
-			JMenu mnNewMenu = new JMenu("Profile");
+			JMenu mnNewMenu = new JMenu("Windows");
 			menuBar.add(mnNewMenu);
 			
 			JMenuItem prefsMenuItem = new JMenuItem("Privacy Preferences");
@@ -196,11 +196,27 @@ public class Application implements WindowListener{
 				
 				@Override
 				public void actionPerformed(ActionEvent ev) {
+					//JOptionPane.showMessageDialog(frame, "Starting prefs page");
 					preferencesPage.refreshData();
 					preferencesPage.show();
+					appsPage.hide();
+					//JOptionPane.showMessageDialog(frame, "Shown page");
 				}
 			});
 			mnNewMenu.add(prefsMenuItem);
+			
+			JMenuItem appsMenuItem = new JMenuItem("Applications");
+			appsMenuItem.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					appsPage.show();
+					preferencesPage.hide();
+				}
+			});
+			
+			mnNewMenu.add(appsMenuItem);
+			
 		} catch (PropertyVetoException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -676,6 +676,7 @@ public class PrivacyPreferenceUtils {
 			return false;
 		}
 		
+	
 		if (detail1.getResource() == null) {
 			if (other.getResource() != null) {
 				logging.debug("detail1 resource is null but detail2 resource is not, false");
@@ -738,11 +739,11 @@ public class PrivacyPreferenceUtils {
 			return false;
 		}
 		AttributeSelectionPreferenceDetailsBean other = (AttributeSelectionPreferenceDetailsBean) bean2;
-		if (bean1.getAction() == null) {
-			if (other.getAction() != null) {
+		if (bean1.getActions() == null) {
+			if (other.getActions() != null) {
 				return false;
 			}
-		} else if (!ActionUtils.equal(bean1.getAction(), other.getAction())){
+		} else if (!ActionUtils.equal(bean1.getActions(), other.getActions())){
 			return false;
 		}
 		if (bean1.getRequestor() == null) {

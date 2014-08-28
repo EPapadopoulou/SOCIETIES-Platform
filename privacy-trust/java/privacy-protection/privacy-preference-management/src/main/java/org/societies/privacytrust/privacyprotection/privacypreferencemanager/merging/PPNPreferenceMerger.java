@@ -47,7 +47,7 @@ public class PPNPreferenceMerger {
 		this.logging.debug("Received event: name: "+event.geteventName()+" - type: "+event.geteventType());
 		if (event.geteventInfo() instanceof PPNegotiationEvent){
 			PPNegotiationEvent ppnEvent = (PPNegotiationEvent) event.geteventInfo();
-			Agreement agreement = AgreementUtils.toAgreementBean(ppnEvent.getAgreement());
+			Agreement agreement = ppnEvent.getAgreement();
 			this.logging.debug("Retrieved agreement from PPNegotiationEvent with "+agreement.getRequestedItems().size()+" requestItems");
 			
 			
