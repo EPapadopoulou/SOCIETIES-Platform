@@ -62,7 +62,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 	private IIdentity userIdentity;
 	private JList ctxAttributeJList;
 
-	private Logger logging = LoggerFactory.getLogger(this.getClass());
+	private Logger logging = LoggerFactory.getLogger(getClass());
 	private JList dataTypeJList;
 	private JTable identityInformationJTable;
 	private JButton btnAddSelected;
