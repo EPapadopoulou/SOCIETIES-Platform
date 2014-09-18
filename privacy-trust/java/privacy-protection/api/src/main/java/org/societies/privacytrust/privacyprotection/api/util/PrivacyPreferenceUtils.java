@@ -66,6 +66,7 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.preferen
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyPreferenceTypeConstantsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.TrustPreferenceConditionBean;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
 import org.societies.api.privacytrust.trust.model.MalformedTrustedEntityIdException;
 import org.societies.api.privacytrust.trust.model.TrustModelBeanTranslator;
@@ -363,6 +364,7 @@ public class PrivacyPreferenceUtils {
 	public static PPNPrivacyPreferenceTreeModelBean toPPNPrivacyPreferenceTreeModelBean(PPNPrivacyPreferenceTreeModel model){
 		PPNPrivacyPreferenceTreeModelBean bean = new PPNPrivacyPreferenceTreeModelBean();
 		bean.setDetails(model.getDetails());
+		
 		bean.setPref(toPPNPreferenceBean(model.getRootPreference()));
 
 		return bean;
@@ -541,7 +543,7 @@ public class PrivacyPreferenceUtils {
 	private static PrivacyConditionBean toPrivacyConditionBean(
 			PrivacyCondition condition) {
 		PrivacyConditionBean bean = new PrivacyConditionBean();
-		bean.setCondition(condition.getCondition());
+		bean.setCondition(ConditionUtils.copyOf(condition.getCondition()));
 		return bean;
 	}
 
@@ -590,8 +592,7 @@ public class PrivacyPreferenceUtils {
 		PPNPOutcomeBean bean = new PPNPOutcomeBean();
 		bean.setConfidenceLevel(outcome.getConfidenceLevel());
 		bean.setDecision(outcome.getDecision());
-
-
+		bean.setActions(ActionUtils.copyOf(outcome.getActions()));
 		return bean;
 	}
 

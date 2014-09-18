@@ -6,6 +6,8 @@ package org.societies.privacytrust.privacyprotection.privacypreferencemanager.me
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelBeanTranslator;
@@ -13,6 +15,7 @@ import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.util.RequestorUtils;
+import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.PPNegotiationEvent;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
@@ -48,6 +51,7 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.Pri
 public class IDSPreferenceCreator {
 
 	private PrivacyPreferenceManager privPrefMgr;
+	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
 	public IDSPreferenceCreator(PrivacyPreferenceManager privPrefMgr){
 		this.privPrefMgr = privPrefMgr;
@@ -56,16 +60,23 @@ public class IDSPreferenceCreator {
 
 
 	public void notifyIdentitySelected(InternalEvent event){ 
-		if (event.geteventInfo() instanceof Agreement){
-			Agreement agreement = (Agreement) event.geteventInfo();
+		
+		if (event.geteventInfo() instanceof PPNegotiationEvent){
+			this.logging.debug("event.geteventInfo is of type Agreement");
+			PPNegotiationEvent negEvent = (PPNegotiationEvent) event.geteventInfo();
 
+			
 
 			try {
-				this.createIdentitySelectionPreferences(agreement);
+				this.logging.debug("creating identity selection preference");
+				this.createIdentitySelectionPreferences(negEvent.getAgreement());
+				this.logging.debug("created identity selection preference");
 			} catch (InvalidFormatException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}else{
+			this.logging.debug("event.geteventInfo NOT of type Agreement but of: "+event.geteventInfo().getClass().getName());
 		}
 
 	}
@@ -76,6 +87,7 @@ public class IDSPreferenceCreator {
 		PrivacyPreference preference = new PrivacyPreference(outcome);
 		//TODO: create generic and specific IDS pref
 		IPrivacyPreference idsPreference = this.createIdentitySelectionPreference(agreement.getRequestor(), preference);
+		this.logging.debug("Constructed IDS creation preference");
 		//specific:
 		storeSpecific(selectedIdentity, agreement.getRequestor(), preference);
 		//generic:
@@ -87,6 +99,7 @@ public class IDSPreferenceCreator {
 		details.setAffectedIdentity(selectedIdentity.getBareJid());
 		IDSPrivacyPreferenceTreeModel model = new IDSPrivacyPreferenceTreeModel(details, idsPreference);
 		this.privPrefMgr.storeIDSPreference(details, model);
+		this.logging.debug("Stored IDS preference (generic)");
 		
 	}
 
@@ -96,6 +109,7 @@ public class IDSPreferenceCreator {
 		details.setRequestor(requestor);
 		IDSPrivacyPreferenceTreeModel model = new IDSPrivacyPreferenceTreeModel(details, idsPreference);
 		this.privPrefMgr.storeIDSPreference(details, model);
+		this.logging.debug("Stored IDS preference (specific)");
 		
 	}
 	private IPrivacyPreference createIdentitySelectionPreference(RequestorBean requestor, PrivacyPreference outcomePreference){

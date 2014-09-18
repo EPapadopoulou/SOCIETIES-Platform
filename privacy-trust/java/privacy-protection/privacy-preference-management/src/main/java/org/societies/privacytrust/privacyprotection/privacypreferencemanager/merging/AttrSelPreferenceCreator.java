@@ -3,6 +3,8 @@ package org.societies.privacytrust.privacyprotection.privacypreferencemanager.me
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
@@ -24,6 +26,7 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
@@ -35,6 +38,7 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.Pri
 public class AttrSelPreferenceCreator {
 
 	private PrivacyPreferenceManager privPrefMgr;
+	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
 	public AttrSelPreferenceCreator(PrivacyPreferenceManager privPrefMgr){
 		this.privPrefMgr = privPrefMgr;
@@ -43,7 +47,9 @@ public class AttrSelPreferenceCreator {
 		if (event.geteventInfo() instanceof Agreement){
 			Agreement agreement = (Agreement) event.geteventInfo();
 			try {
+				this.logging.debug("Creating attribute selection preferences");
 				this.createAttributeSelectionPreferences(agreement);
+				this.logging.debug("Created attribute selection preferences");
 			} catch (MalformedCtxIdentifierException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -108,6 +114,7 @@ public class AttrSelPreferenceCreator {
 		AttributeSelectionOutcome outcome = new AttributeSelectionOutcome(ctxID);
 		PrivacyPreference preference = new PrivacyPreference(outcome);
 		
+		
 		for (Condition condition : conditions){
 			PrivacyCondition privacyCondition = new PrivacyCondition(condition);
 			PrivacyPreference conditionPreference = new PrivacyPreference(privacyCondition);
@@ -119,6 +126,12 @@ public class AttrSelPreferenceCreator {
 		TrustPreferenceCondition condition = new TrustPreferenceCondition(trustValue);
 		PrivacyPreference trustPreference = new PrivacyPreference(condition);
 		trustPreference.add(preference);
+		
+		Object[] userObjectPath = preference.getUserObjectPath();
+		for (Object obj : userObjectPath){
+				this.logging.debug("preference has outcome: "+obj.toString());
+
+		}
 		
 		return preference.getRoot();
 		

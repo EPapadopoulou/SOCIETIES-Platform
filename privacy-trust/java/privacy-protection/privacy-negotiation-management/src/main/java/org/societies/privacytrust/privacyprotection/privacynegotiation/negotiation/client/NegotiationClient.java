@@ -285,11 +285,11 @@ public class NegotiationClient implements INegotiationClient {
 		for (IIdentityOption option: idOptions){
 			list.add(option.getReferenceIdentity());
 		}
-		this.privPrefMgr.evaluateIDSPreferences(agreement, list );
+		IIdentity recommendedIdentity = this.privPrefMgr.evaluateIDSPreferences(agreement, list );
 		
 		if (idOptions.size()==0){
 			//create new identity
-			IdentitySelectionWindow window = new IdentitySelectionWindow(agreement, this.ctxBroker, this.userIdentity);
+			IdentitySelectionWindow window = new IdentitySelectionWindow(agreement, this.ctxBroker, this.userIdentity, this.idS.getAllIdentities());
 			Hashtable<String, List<CtxIdentifier>> identityInformation = window.getIdentityInformation();
 			Enumeration<String> keys = identityInformation.keys();
 
@@ -304,7 +304,7 @@ public class NegotiationClient implements INegotiationClient {
 				}
 			}
 			IIdentity identity = this.idS.createIdentity(idName, ctxIDList);
-			
+			agreement.setUserIdentity(identity.getJid());
 			InternalEvent event = new InternalEvent(
 					EventTypes.IDENTITY_CREATED, "",
 					INegotiationClient.class.getName(), AgreementUtils.copyOf(agreement));
@@ -314,7 +314,7 @@ public class NegotiationClient implements INegotiationClient {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			JOptionPane.showMessageDialog(null, "Selected identity: "+identity);
+			
 			return identity;
 		}else{
 			//select from identity list
@@ -322,7 +322,8 @@ public class NegotiationClient implements INegotiationClient {
 			for (IIdentityOption option : idOptions){
 				identities.add(option.getReferenceIdentity());
 			}
-			IdentitySelectionWindow window = new IdentitySelectionWindow(identities);
+			
+			IdentitySelectionWindow window = new IdentitySelectionWindow(identities, recommendedIdentity);
 
 			IIdentity identity = window.getSelectedIdentity();
 			if(identity==null){
@@ -337,8 +338,10 @@ public class NegotiationClient implements INegotiationClient {
 					}
 				}
 			}
-			JOptionPane.showMessageDialog(null, "Selected identity: "+identity);
+			
 
+			
+			
 			return identity;
 		}
 	}

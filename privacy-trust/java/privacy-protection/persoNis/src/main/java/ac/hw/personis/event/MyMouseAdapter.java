@@ -30,6 +30,7 @@ public class MyMouseAdapter extends MouseAdapter {
 	}
 	public void mousePressed( MouseEvent e )
 	{
+		JOptionPane.showMessageDialog(null, "Mouse clicked");
 		// Left mouse click
 		if ( SwingUtilities.isLeftMouseButton( e ) )
 		{

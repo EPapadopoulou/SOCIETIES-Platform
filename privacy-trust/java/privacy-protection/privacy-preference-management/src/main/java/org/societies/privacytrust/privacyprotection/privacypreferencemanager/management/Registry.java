@@ -488,6 +488,7 @@ public class Registry implements Serializable{
 	}
 
 	private String requestorToString(RequestorBean requestor){
+		if (requestor!=null){
 		StringBuilder sb  = new StringBuilder();
 		sb.append("ID: "+requestor.getRequestorId());
 		sb.append("\t");
@@ -499,6 +500,9 @@ public class Registry implements Serializable{
 		}
 		
 		return sb.toString();
+		}
+
+		return "Requestor not specified";
 	}
 	public String toString(){
 		
@@ -517,6 +521,7 @@ public class Registry implements Serializable{
 		sb.append("\n-- IDS Registry --\n");
 		while (idsList.hasMoreElements()){
 			IDSPreferenceDetailsBean detail = idsList.nextElement();
+			
 			sb.append("\nRequestor: "+requestorToString(detail.getRequestor()));
 			sb.append("\nAffected Identity: "+detail.getAffectedIdentity());
 			sb.append("\nLocated In: "+this.idsMappings.get(detail).toString());

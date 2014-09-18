@@ -9,9 +9,10 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxIdentifier;
-import org.societies.privacytrust.privacyprotection.privacynegotiation.Logger;
 
 /**
  * @author PUMA
@@ -24,7 +25,7 @@ public class IdentityInformationTableModel extends AbstractTableModel  implement
 	 */
 	private static final long serialVersionUID = 1L;
 	List<CtxAttribute> ctxAttributes;
-	private Logger logging = new Logger(this.getClass().getName());
+    private Logger logging = LoggerFactory.getLogger(this.getClass());
 	public IdentityInformationTableModel(){
 		this.ctxAttributes = new ArrayList<CtxAttribute>();
 	}

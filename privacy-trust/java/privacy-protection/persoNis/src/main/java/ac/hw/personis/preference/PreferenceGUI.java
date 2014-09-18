@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
@@ -94,6 +95,7 @@ public class PreferenceGUI extends JDialog implements ActionListener{
 				getRootPane().setDefaultButton(okButton);
 			}
 		}
+		
 	}
 
 	@Override

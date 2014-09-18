@@ -25,13 +25,21 @@
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.TrustPreferenceCondition;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.OperatorConstants;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPOutcome;
 
 
 /**
@@ -77,13 +85,64 @@ public class SingleRule{
 	public String toString(){
 		String ret = "";
 		for (int i=0; i<this.conditions.size(); i++){
-			ret = ret + " + "+ this.conditions.get(i).toString();
+			ret = ret + " + "+ toStringCondition(this.conditions.get(i));
 		}
-		ret = ret + " > "+this.outcome.toString();
+		ret = ret + " > "+this.toStringOutcome(this.outcome);
 
 		return ret;
 	}
 
+	private String toStringCondition(IPrivacyPreferenceCondition condition){
+		if (condition instanceof ContextPreferenceCondition){
+			return "ContextCondition: "+condition.getType()+" == "+((ContextPreferenceCondition) condition).getValue();
+		}
+		
+		if (condition instanceof PrivacyCondition){
+			return "PrivacyCondition: "+((PrivacyCondition) condition).getCondition().getConditionConstant()+" == "+((PrivacyCondition) condition).getCondition().getValue();
+		}
+		
+		if (condition instanceof TrustPreferenceCondition){
+			return "TrustCondition: trust =="+((TrustPreferenceCondition) condition).getTrustThreshold();
+		}
+		
+		return "condition type not recognised";
+	}
+	
+	private String toStringOutcome(IPrivacyOutcome outcome){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Outcome: ");
+		if (outcome instanceof PPNPOutcome){
+			sb.append(((PPNPOutcome) outcome).getDecision().toString());
+			sb.append("(");
+			for (Action action : ((PPNPOutcome) outcome).getActions()){
+				sb.append(action.getActionConstant()+", ");
+				
+			}
+			int c = sb.lastIndexOf(", ");
+			if (c>-1){
+				sb.delete(c, c+1);
+			}
+			sb.append(")");
+			
+		}else
+		
+		if (outcome instanceof AccessControlOutcome){
+			sb.append(((AccessControlOutcome) outcome).getEffect().toString());
+		}else
+		
+		if (outcome instanceof IdentitySelectionPreferenceOutcome){
+			sb.append("Select identity: "+((IdentitySelectionPreferenceOutcome) outcome).getIdentity());
+		}else
+		
+		if (outcome instanceof AttributeSelectionOutcome){
+			sb.append("Use ctxID: "+((AttributeSelectionOutcome) outcome).getCtxID().getUri());
+		}else
+		
+		if (outcome instanceof DObfOutcome){
+			sb.append("Apply DOBF level "+((DObfOutcome) outcome).getObfuscationLevel());
+		}
+		return sb.toString();
+	}
 	public boolean hasCondition(IPrivacyPreferenceCondition pc){
 
 		/*		
@@ -175,5 +234,7 @@ public class SingleRule{
 		return this.hasSameConditions(sr);
 
 	}
+	
+	
 }
 

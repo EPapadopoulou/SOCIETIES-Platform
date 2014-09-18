@@ -12,6 +12,7 @@ import javax.swing.ComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListDataListener;
@@ -32,6 +33,7 @@ public class IdentitySelectionGUIDialog extends JDialog implements ActionListene
 	private JFrame frame;
 	private JButton okButton;
 	private IIdentity identity;
+	private IIdentity recommendedIdentity;
 
 	/**
 	 * Launch the application.
@@ -44,7 +46,7 @@ public class IdentitySelectionGUIDialog extends JDialog implements ActionListene
 			identities.add(ideliza);
 			identities.add(idAnonymous);
 			JFrame frame  = new JFrame();
-			IdentitySelectionGUIDialog dialog = new IdentitySelectionGUIDialog(frame, identities);	
+			IdentitySelectionGUIDialog dialog = new IdentitySelectionGUIDialog(frame, identities, ideliza);	
 			IIdentity selectedIdentity = dialog.getSelectedIdentity();
 			System.out.println("Got Identity: "+selectedIdentity.getJid());
 		} catch (Exception e) {
@@ -54,12 +56,14 @@ public class IdentitySelectionGUIDialog extends JDialog implements ActionListene
 
 	/**
 	 * Create the dialog.
+	 * @param recommendedIdentity 
 	 */
-	public IdentitySelectionGUIDialog(JFrame frame, List<IIdentity> identities) {
+	public IdentitySelectionGUIDialog(JFrame frame, List<IIdentity> identities, IIdentity recommendedIdentity) {
 		super(frame,"Identity Selection", true);
 		this.frame = frame;
 
 		this.identities = identities;
+		this.recommendedIdentity = recommendedIdentity;
 		setBounds(100, 100, 450, 300);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -76,13 +80,29 @@ public class IdentitySelectionGUIDialog extends JDialog implements ActionListene
 		cmbIdentities = new JComboBox(model);
 		cmbIdentities.setSelectedIndex(0);
 		cmbIdentities.setEditable(false);
-		cmbIdentities.setBounds(15, 91, 385, 43);
+		cmbIdentities.setBounds(15, 80, 385, 43);
 		contentPanel.add(cmbIdentities);
 
 		JButton btnCreateNew = new JButton("Create New Identity");
 		btnCreateNew.setBounds(264, 145, 136, 48);
 		btnCreateNew.addActionListener(this);
 		contentPanel.add(btnCreateNew);
+		
+		JButton btnSuggest = new JButton("Get recommended identity");
+		btnSuggest.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (IdentitySelectionGUIDialog.this.recommendedIdentity==null){
+					JOptionPane.showMessageDialog(IdentitySelectionGUIDialog.this, "According to your preferences and your previous \n"
+							+ "activity none of your existing identities\n can be recommended for use in this case \nhence the system recommends that you create a new identity.");
+				}else{
+					JOptionPane.showMessageDialog(IdentitySelectionGUIDialog.this, "According to your preferences and your previous \n"
+							+ "activity, it is recommended to use your "+IdentitySelectionGUIDialog.this.recommendedIdentity.getBareJid()+" identity");
+					cmbIdentities.setSelectedItem(IdentitySelectionGUIDialog.this.recommendedIdentity);
+				}
+			}
+		});
+		btnSuggest.setBounds(15, 145, 188, 48);
+		contentPanel.add(btnSuggest);
 		{
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));

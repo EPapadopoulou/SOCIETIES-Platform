@@ -19,16 +19,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.identity.Requestor;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
 import org.societies.api.internal.servicelifecycle.ServiceModelUtils;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
+import org.societies.api.schema.identity.DataIdentifierScheme;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.identity.RequestorCisBean;
 import org.societies.api.schema.identity.RequestorServiceBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
@@ -52,6 +56,7 @@ import javax.swing.ScrollPaneConstants;
 public class AllPreferencesGUI extends JInternalFrame {
 	private PersonisHelper personisHelper;
 	private Hashtable<String, IDSPreferenceDetailsBean> idsDetailsTable;
+	private Hashtable<String, AttributeSelectionPreferenceDetailsBean> attrSelDetailsTable;
 	private Hashtable<String, DObfPreferenceDetailsBean> dobfDetailsTable;
 	private Hashtable<String, AccessControlPreferenceDetailsBean> accDetailsTable;
 	private Hashtable<String, PPNPreferenceDetailsBean> ppnDetailsTable;
@@ -64,6 +69,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 	private DetailTableModel ppnModel;
 	private DetailTableModel accModel;
 	private DetailTableModel idsModel;
+	private DetailTableModel attrModel;
 	private DetailTableModel dobfModel;
 
 	/**
@@ -125,6 +131,8 @@ public class AllPreferencesGUI extends JInternalFrame {
 
 		scrollPane_acc.setViewportView(accTable);
 
+		
+		
 		JPanel panel_IDS = new JPanel();
 		getContentPane().add(panel_IDS);
 		panel_IDS.setLayout(new BoxLayout(panel_IDS, BoxLayout.Y_AXIS));
@@ -134,6 +142,8 @@ public class AllPreferencesGUI extends JInternalFrame {
 
 		idsModel = new DetailTableModel(this.idsDetailsTable.keys());
 		idsTable = new JTable(idsModel);
+		idsTable.addMouseListener(new MyMouseAdapter(idsTable, this, PrivacyPreferenceTypeConstants.IDENTITY_SELECTION));
+		
 		JScrollPane scrollPane_ids = new JScrollPane(idsTable);
 		scrollPane_ids.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		panel_IDS.add(scrollPane_ids);
@@ -141,6 +151,9 @@ public class AllPreferencesGUI extends JInternalFrame {
 
 		scrollPane_ids.setViewportView(idsTable);
 
+		
+		
+		
 		JPanel panel_ATTR = new JPanel();
 		getContentPane().add(panel_ATTR);
 		panel_ATTR.setLayout(new BoxLayout(panel_ATTR, BoxLayout.Y_AXIS));
@@ -148,14 +161,20 @@ public class AllPreferencesGUI extends JInternalFrame {
 		JLabel lblAttributeSelectionPreferences = new JLabel("Attribute Selection Preferences");
 		panel_ATTR.add(lblAttributeSelectionPreferences);
 
-		JScrollPane scrollPane_attr = new JScrollPane();
+		attrModel = new DetailTableModel(this.attrSelDetailsTable.keys());
+		attrTable = new JTable(attrModel);
+		attrTable.addMouseListener(new MyMouseAdapter(attrTable, this, PrivacyPreferenceTypeConstants.ATTRIBUTE_SELECTION));
+		
+		JScrollPane scrollPane_attr = new JScrollPane(attrTable);
 		scrollPane_attr.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		panel_ATTR.add(scrollPane_attr);
 
-		//DetailTableModel attrModel = new DetailTableModel(Collections.list(this.attrDetailsTable.keys()));
-		attrTable = new JTable(/*attrModel*/);
+
 		scrollPane_attr.setViewportView(attrTable);
 
+		
+		
+		
 		JPanel panel_DOBF = new JPanel();
 		getContentPane().add(panel_DOBF);
 		panel_DOBF.setLayout(new BoxLayout(panel_DOBF, BoxLayout.Y_AXIS));
@@ -164,7 +183,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 		panel_DOBF.add(lblDataObfuscationPreferences);
 
 		dobfModel = new DetailTableModel(this.dobfDetailsTable.keys());
-
+		
 		dobfTable = new JTable(dobfModel);
 		JScrollPane scrollPane_dobf = new JScrollPane(dobfTable);
 		scrollPane_dobf.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -184,6 +203,8 @@ public class AllPreferencesGUI extends JInternalFrame {
 		this.accTable.setModel(accModel);
 		this.idsModel.refreshData(this.idsDetailsTable.keys());
 		this.idsTable.setModel(idsModel);
+		this.attrModel.refreshData(this.attrSelDetailsTable.keys());
+		this.attrTable.setModel(attrModel);
 		this.dobfModel.refreshData(this.dobfDetailsTable.keys());
 		this.dobfTable.setModel(dobfModel);
 		//JOptionPane.showMessageDialog(this, "Refreshed Data");
@@ -244,6 +265,18 @@ public class AllPreferencesGUI extends JInternalFrame {
 		}
 
 
+		List<AttributeSelectionPreferenceDetailsBean> attrSelPreferenceDetails = privacyPreferenceManager.getAttrSelPreferenceDetails();
+		logging.debug("Found "+attrSelPreferenceDetails.size()+" attrSel details");
+		attrSelDetailsTable = new Hashtable<String, AttributeSelectionPreferenceDetailsBean>();
+		
+		for (AttributeSelectionPreferenceDetailsBean bean: attrSelPreferenceDetails){
+			Resource resource = new Resource();
+			resource.setDataType(bean.getDataType());
+			resource.setScheme(DataIdentifierScheme.CONTEXT);
+			String title = this.getTitleString(bean.getRequestor(), resource, false);
+			title = title + "\tActions: "+bean.getActions();
+			attrSelDetailsTable.put(title, bean);
+		}
 		//privacyPreferenceManager.getAttrSelPreferenceDetails();
 
 	}
@@ -265,7 +298,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 		sb.append(resource.getDataType());
 
 		if (printCtxID){
-			sb.append("ID:"+resource.getDataIdUri());
+			sb.append("\tID:"+resource.getDataIdUri());
 		}
 
 		return sb.toString();
@@ -314,6 +347,10 @@ public class AllPreferencesGUI extends JInternalFrame {
 			idsGui.setVisible(true);
 			break;
 		case ATTRIBUTE_SELECTION:
+			AttributeSelectionPreferenceDetailsBean attrDetailsBean = this.attrSelDetailsTable.get(id);
+			AttributeSelectionPreferenceTreeModel attrSelPrefModel = this.personisHelper.getPrivacyPreferenceManager().getAttrSelPreference(attrDetailsBean);
+			PreferenceGUI attrGui = new PreferenceGUI(attrSelPrefModel.getRootPreference());
+			attrGui.setVisible(true);
 			break;
 		case DATA_OBFUSCATION:
 			DObfPreferenceDetailsBean dobfDetailsBean = this.dobfDetailsTable.get(id);

@@ -37,6 +37,7 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.preferen
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPOutcome;
@@ -105,13 +106,15 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 			}else if (this.userObject instanceof AccessControlOutcome){
 				sb.append("Access: ");
 				sb.append(((AccessControlOutcome) userObject).getEffect());
-				sb.append("Action: ");
 			}else if (this.userObject instanceof IdentitySelectionPreferenceOutcome){
 				sb.append("Use identity: ");
 				sb.append(((IdentitySelectionPreferenceOutcome) userObject).getIdentity().getBareJid());
 			}else if (this.userObject instanceof DObfOutcome){
 				sb.append("Apply level: ");
 				sb.append(((DObfOutcome) userObject).getObfuscationLevel());
+			}else if (this.userObject instanceof AttributeSelectionOutcome){
+				sb.append("Use attribute: ");
+				sb.append(((AttributeSelectionOutcome) userObject).getCtxID().toUriString());
 			}
 		}
 		

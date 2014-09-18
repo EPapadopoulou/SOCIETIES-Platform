@@ -34,11 +34,16 @@ import org.slf4j.LoggerFactory;
 import org.societies.api.context.CtxException;
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxIdentifier;
+import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.IndividualCtxEntity;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.context.broker.ICtxBroker;
+import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyNegotiationManager;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
+import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager;
+import org.societies.privacytrust.privacyprotection.privacynegotiation.PrivacyPolicyNegotiationManager;
 
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
@@ -71,17 +76,24 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 	private IdentityInformationTableModel identityInfoModel;
 	private IndividualCtxEntity person;
 	private JScrollPane scrollPane;
+	private JButton btnPersonalise;
+	private List<IIdentity> allIdentities;
+	private IPrivacyPolicyNegotiationManager negManager;
+	private IPrivacyPreferenceManager privacyPreferenceManager;
 
 
 	/**
 	 * Create the dialog.
 	 */
-	public IdentityCreationGUIDialog(JFrame frame, Agreement agreement, ICtxBroker ctxBroker, IIdentity userId) {
+	public IdentityCreationGUIDialog(JFrame frame, Agreement agreement, PrivacyPolicyNegotiationManager negManager, IIdentity userId, List<IIdentity> allIdentities) {
 		super(frame, "Identity Creation", true);
 		this.frame = frame;
 		this.agreement = agreement;
-		this.ctxBroker = ctxBroker;
+		this.negManager = negManager;
+		this.ctxBroker = negManager.getCtxBroker();
+		privacyPreferenceManager = negManager.getPrivacyPreferenceManager();
 		userIdentity = userId;
+		this.allIdentities = allIdentities;
 		setup();
 
 		setBounds(100, 100, 631, 676);
@@ -100,7 +112,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 		txtIdentityName.setColumns(10);
 
 		JPanel panel = new JPanel();
-		panel.setBounds(10, 84, 270, 328);
+		panel.setBounds(10, 74, 270, 328);
 		contentPanel.add(panel);
 		panel.setLayout(null);
 
@@ -116,7 +128,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 		panel.add(dataTypeJList);
 
 		JPanel panel_1 = new JPanel();
-		panel_1.setBounds(336, 84, 270, 212);
+		panel_1.setBounds(336, 74, 270, 212);
 		contentPanel.add(panel_1);
 		panel_1.setLayout(null);
 
@@ -131,16 +143,16 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 
 		btnCreate = new JButton("Create new attribute");
 		btnCreate.addActionListener(this);
-		btnCreate.setBounds(336, 316, 270, 36);
+		btnCreate.setBounds(336, 363, 270, 36);
 		contentPanel.add(btnCreate);
 
 		btnAddSelected = new JButton("Add selected attribute");
 		btnAddSelected.addActionListener(this);
-		btnAddSelected.setBounds(336, 376, 270, 36);
+		btnAddSelected.setBounds(336, 299, 270, 36);
 		contentPanel.add(btnAddSelected);
 		{
 			JPanel buttonPane = new JPanel();
-			buttonPane.setBounds(0, 594, 665, 45);
+			buttonPane.setBounds(0, 594, 615, 45);
 			contentPanel.add(buttonPane);
 			{
 				okButton = new JButton("OK");
@@ -158,10 +170,15 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 		identityInfoModel = new IdentityInformationTableModel();
 
 		scrollPane = new JScrollPane();
-		scrollPane.setBounds(10, 449, 596, 124);
+		scrollPane.setBounds(10, 468, 596, 124);
 		contentPanel.add(scrollPane);
 		identityInformationJTable = new JTable(identityInfoModel);
 		scrollPane.setViewportView(identityInformationJTable);
+
+		btnPersonalise = new JButton("Get recommended attributes");
+		btnPersonalise.setBounds(336, 421, 270, 36);
+		btnPersonalise.addActionListener(this);
+		contentPanel.add(btnPersonalise);
 	}
 
 	private void setup(){
@@ -206,16 +223,23 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 	public void actionPerformed(ActionEvent event) {
 
 		if (event.getSource().equals(this.okButton)){
+
 			if (this.txtIdentityName.getText()==null || this.txtIdentityName.getText().isEmpty()){
 				JOptionPane.showMessageDialog(this, "Please enter a name for your new identity", "Identity name missing", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
-			
+
+			for (IIdentity id : this.allIdentities){
+				if (id.getBareJid().equalsIgnoreCase(this.txtIdentityName.getText())){
+					JOptionPane.showMessageDialog(this, "You already have an identity with the same name please select a different name for your new identity", "Identity name already exists", JOptionPane.ERROR_MESSAGE, null);
+					return;
+				}
+			}
 			if (this.dataTypes.size()!=this.identityInfoModel.getRowCount()){
 				JOptionPane.showMessageDialog(this, "You haven't added all the required data", "Setup not complete", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
-			
+
 			List<CtxIdentifier> ctxIDs = this.identityInfoModel.getValues();
 			this.identitiesTable = new Hashtable<String, List<CtxIdentifier>>();
 			identitiesTable.put(txtIdentityName.getText(), ctxIDs);
@@ -247,6 +271,32 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 				JOptionPane.showMessageDialog(this, "You must enter a value", "Error creating attribute", JOptionPane.INFORMATION_MESSAGE);
 			}else{
 				createCtxAttribute(dataType, value);
+			}
+		}else if (event.getSource().equals(this.btnPersonalise)){
+
+			Hashtable<Resource, CtxIdentifier> recommendedAttributes = this.privacyPreferenceManager.evaluateAttributeSelectionPreferences(agreement);
+			if (this.identityInformationJTable.getModel().getRowCount()==0){
+				Enumeration<CtxIdentifier> ctxIDs = recommendedAttributes.elements();
+				while (ctxIDs.hasMoreElements()){
+					CtxIdentifier ctxID = ctxIDs.nextElement();
+					try {
+						CtxAttribute ctxAttr = (CtxAttribute) this.ctxBroker.retrieve(ctxID).get();
+						this.identityInfoModel.addAttribute(ctxAttr);
+						this.identityInformationJTable.setModel(identityInfoModel);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CtxException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				}
+			}else{
+				
 			}
 		}
 
@@ -353,6 +403,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 			List<CtxAttribute> list = dataTable.get(selectedDataType);
 			myListModel = new MyListModel(list);
 			this.ctxAttributeJList.setModel(myListModel);
+
 		}
 
 	}

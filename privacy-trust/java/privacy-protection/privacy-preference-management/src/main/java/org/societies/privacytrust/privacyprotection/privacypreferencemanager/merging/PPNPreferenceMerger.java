@@ -22,6 +22,7 @@ import org.societies.api.privacytrust.trust.model.MalformedTrustedEntityIdExcept
 import org.societies.api.privacytrust.trust.model.TrustedEntityId;
 import org.societies.api.privacytrust.trust.model.TrustedEntityType;
 import org.societies.api.schema.identity.RequestorBean;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
@@ -73,11 +74,13 @@ public class PPNPreferenceMerger {
 					details.setResource(responseItem.getRequestItem().getResource());
 					
 					PPNPrivacyPreferenceTreeModel ppnPreference = this.privacyPreferenceManager.getPPNPreference(details);
+					
 					PPNPrivacyPreferenceTreeModel model = null;
 					if (ppnPreference==null){
 						this.logging.debug("Creating new PPN preference");
 						 model = createPPNPreference(requestor,responseItem);
 					}else{
+						
 						this.logging.debug("Merging PPN preference");
 						model = mergePPNPreference(requestor, responseItem, ppnPreference);
 					}
@@ -119,6 +122,7 @@ public class PPNPreferenceMerger {
 		RequestItem requestItem = RequestItemUtils.copyOf(responseItem.getRequestItem());		
 		PPNPOutcome outcome = new PPNPOutcome(responseItem.getDecision(), requestItem.getActions());		
 		PrivacyPreference outcomePreference = new PrivacyPreference(outcome);
+		this.logging.debug("##$$@ Creating preference with outcome: "+this.toStringOutcome(outcome));
 		PrivacyPreference preference = this.createConditionPreferences(requestItem.getConditions(), outcomePreference);		
 		PPNPreferenceDetailsBean details = new PPNPreferenceDetailsBean();
 		details.setRequestor(RequestorUtils.copyOf(requestor));
@@ -128,6 +132,25 @@ public class PPNPreferenceMerger {
 		PPNPrivacyPreferenceTreeModel model  = new PPNPrivacyPreferenceTreeModel(details, preference);
 		return model;
 		
+	}
+	
+	private String toStringOutcome(PPNPOutcome outcome){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Outcome: ");
+			sb.append(((PPNPOutcome) outcome).getDecision().toString());
+			sb.append("(");
+			for (Action action : ((PPNPOutcome) outcome).getActions()){
+				sb.append(action.getActionConstant()+", ");
+				
+			}
+			int c = sb.lastIndexOf(", ");
+			if (c>-1){
+				sb.delete(c, c+1);
+			}
+			sb.append(")");
+			
+		
+		return sb.toString();
 	}
 	
 	

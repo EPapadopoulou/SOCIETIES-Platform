@@ -92,6 +92,12 @@ public class AttributeSelectionOutcome extends IPrivacyOutcome implements Serial
 		AttributeSelectionOutcome outcome = new AttributeSelectionOutcome(ctxID);
 		outcome.setConfidenceLevel(getConfidenceLevel());
 		return outcome;
-		
 	}
+
+	@Override
+	public String toString() {
+		return "AttributeSelectionOutcome [ctxID=" + ctxID.getUri() + "]";
+	}
+	
+	
 }

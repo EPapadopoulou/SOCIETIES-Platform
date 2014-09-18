@@ -49,10 +49,11 @@ public class IdentitySelectionWindow {
 	/**
 	 * Create the application.
 	 * @param identities 
+	 * @param recommendedIdentity 
 	 */
-	public IdentitySelectionWindow(List<IIdentity> identities) {
+	public IdentitySelectionWindow(List<IIdentity> identities, IIdentity recommendedIdentity) {
 		initialize();
-		idsDialog = new IdentitySelectionGUIDialog(frame, identities);
+		idsDialog = new IdentitySelectionGUIDialog(frame, identities, recommendedIdentity);
 	}
 
 	public IIdentity getSelectedIdentity(){
@@ -62,9 +63,9 @@ public class IdentitySelectionWindow {
 	}
 	
 	
-	public IdentitySelectionWindow(Agreement agreement, ICtxBroker ctxBroker, IIdentity userId){
+	public IdentitySelectionWindow(Agreement agreement, ICtxBroker ctxBroker, IIdentity userId, List<IIdentity> list){
 		initialize();
-		idcDialog = new IdentityCreationGUIDialog(frame, agreement, ctxBroker, userId);
+		idcDialog = new IdentityCreationGUIDialog(frame, agreement, ctxBroker, userId, list);
 	}
 
 	/**

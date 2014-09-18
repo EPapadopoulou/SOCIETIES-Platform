@@ -139,7 +139,7 @@ public class PreferenceRetriever {
 			
 			if (obj instanceof AttributeSelectionPreferenceTreeModelBean){
 				this.logging.debug("Returning attrSel preference");
-				return PrivacyPreferenceUtils.toAccCtrlPreferenceTreeModel((AccessControlPreferenceTreeModelBean) obj, idMgr);
+				return PrivacyPreferenceUtils.toAttSelPreferenceTreeModel((AttributeSelectionPreferenceTreeModelBean) obj, idMgr);
 			}
 
 		}

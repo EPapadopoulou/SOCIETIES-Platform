@@ -69,8 +69,7 @@ public class IdentitySelection implements IIdentitySelection {
 	private static final String HAS_IDENTITY_INFORMATION = "has_Identity_Information";
 	private static final String IDENTITY_INFORMATION = "identity_Information";
 
-	private static Logger logging = LoggerFactory
-			.getLogger(IdentitySelection.class);
+	private static Logger logging = LoggerFactory.getLogger(IdentitySelection.class);
 
 	private ICtxBroker ctxBroker;
 
@@ -338,6 +337,12 @@ public class IdentitySelection implements IIdentitySelection {
 	public void setCommsMgr(ICommManager commsMgr) {
 		this.commsMgr = commsMgr;
 		idManager = this.commsMgr.getIdManager();
+	}
+
+	@Override
+	public List<IIdentity> getAllIdentities() {
+		// TODO Auto-generated method stub
+		return this.identities;
 	}
 
 

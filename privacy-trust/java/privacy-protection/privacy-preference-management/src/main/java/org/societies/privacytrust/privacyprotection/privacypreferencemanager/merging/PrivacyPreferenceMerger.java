@@ -472,7 +472,10 @@ public class PrivacyPreferenceMerger {
 			return model;
 		}
 		
+		
 		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
+		
+		this.logging.debug(" [Merging] new tree is: "+newSingleRules.toString()+" and old tree is: "+this.convertToSingleRules(existingPreference).toString());
 		
 		IPrivacyPreference mergedTree = existingPreference;
 		

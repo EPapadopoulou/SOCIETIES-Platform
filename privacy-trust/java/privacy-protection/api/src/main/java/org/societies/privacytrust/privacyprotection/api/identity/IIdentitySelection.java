@@ -34,4 +34,6 @@ public interface IIdentitySelection {
 	public IIdentity createIdentity(String name, List<CtxIdentifier> ctxIDs);
 	
 	public List<CtxIdentifier> getLinkedAttributes(IIdentity identity);
+	
+	public List<IIdentity> getAllIdentities();
 }
