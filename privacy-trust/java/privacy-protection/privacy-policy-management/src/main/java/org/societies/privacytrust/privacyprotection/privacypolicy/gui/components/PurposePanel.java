@@ -32,13 +32,6 @@ public class PurposePanel extends JPanel {
 		gbc_textArea.gridy = 0;
 		add(textArea, gbc_textArea);
 		
-		//remove following 4 lines
-		purpose +="Your location will be tracked to offer you services nearby";
-		purpose +="Your location will be tracked to offer you services nearby";
-		purpose +="Your location will be tracked to offer you services nearby";
-		purpose +="Your location will be tracked to offer you services nearby";
-		String label = "<html>"+purpose+"</html>";
-		
 
 		
 
@@ -46,7 +39,9 @@ public class PurposePanel extends JPanel {
 	}
 
 	public String getPurpose() {
+		
 		return this.textArea.getText();
+		
 	}
 
 

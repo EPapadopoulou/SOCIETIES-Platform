@@ -24,6 +24,7 @@
  */
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference;
 
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.Stage;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
 
@@ -39,6 +40,8 @@ public abstract class IPrivacyOutcome {
 	private int confidenceLevel = 50;
 	
 	private boolean askUser = true;
+
+	private Stage currentStage = Stage.START;
 	
 	public abstract PrivacyPreferenceTypeConstants getOutcomeType();
 	
@@ -73,5 +76,9 @@ public abstract class IPrivacyOutcome {
 		if (confidenceLevel != other.confidenceLevel)
 			return false;
 		return true;
+	}
+	
+	public void updateConfidenceLevel(boolean positive){
+		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
 	}
 }

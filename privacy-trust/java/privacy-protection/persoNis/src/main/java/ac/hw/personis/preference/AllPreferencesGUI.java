@@ -29,6 +29,7 @@ import org.societies.api.schema.identity.DataIdentifierScheme;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.identity.RequestorCisBean;
 import org.societies.api.schema.identity.RequestorServiceBean;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlPreferenceTreeModel;
@@ -52,6 +53,10 @@ import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.JButton;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class AllPreferencesGUI extends JInternalFrame {
 	private PersonisHelper personisHelper;
@@ -95,6 +100,12 @@ public class AllPreferencesGUI extends JInternalFrame {
 		this.personisHelper = personisHelper;
 		this.setupData();
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+		
+		JPanel buttonsPanel = new JPanel();
+		getContentPane().add(buttonsPanel);
+		
+		JButton btnDeleteAllPreferences = new JButton("Delete all preferences");
+		buttonsPanel.add(btnDeleteAllPreferences);
 
 		JPanel panelPPN = new JPanel();
 		getContentPane().add(panelPPN);
@@ -112,6 +123,20 @@ public class AllPreferencesGUI extends JInternalFrame {
 
 
 		scrollPane_ppn.setViewportView(ppnTable);
+		
+		JButton btnDeleteAllPpn = new JButton("Delete all PPN preferences");
+		btnDeleteAllPpn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				boolean deletePPNPreferences = AllPreferencesGUI.this.personisHelper.getPrivacyPreferenceManager().deletePPNPreferences();
+				if (deletePPNPreferences){
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "All PPN preferences deleted");
+				}else{
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occurred and not all PPN preferences could be deleted");
+				}
+				AllPreferencesGUI.this.refreshData();
+			}
+		});
+		panelPPN.add(btnDeleteAllPpn);
 
 		JPanel panel_ACC = new JPanel();
 		getContentPane().add(panel_ACC);
@@ -130,6 +155,20 @@ public class AllPreferencesGUI extends JInternalFrame {
 
 
 		scrollPane_acc.setViewportView(accTable);
+		
+		JButton btnDeleteAllAccctrl = new JButton("Delete all AccCtrl preferences");
+		btnDeleteAllAccctrl.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				boolean deleteAccCtrlPreferences = AllPreferencesGUI.this.personisHelper.getPrivacyPreferenceManager().deleteAccCtrlPreferences();
+				if (deleteAccCtrlPreferences){
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "All AccCtrl preferences deleted");
+				}else{
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occurred and not all AccCtrl preferences could be deleted");
+				}
+				refreshData();
+			}
+		});
+		panel_ACC.add(btnDeleteAllAccctrl);
 
 		
 		
@@ -150,6 +189,21 @@ public class AllPreferencesGUI extends JInternalFrame {
 
 
 		scrollPane_ids.setViewportView(idsTable);
+		
+		JButton btnDeleteAllIds = new JButton("Delete all IDS preferences");
+		btnDeleteAllIds.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				boolean deleteIDSPreferences = AllPreferencesGUI.this.personisHelper.getPrivacyPreferenceManager().deleteIDSPreferences();
+				if (deleteIDSPreferences){
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "All IDS preferences deleted");
+					
+				}else{
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occurred and not all IDS preferences could be deleted");
+				}
+				refreshData();
+			}
+		});
+		panel_IDS.add(btnDeleteAllIds);
 
 		
 		
@@ -171,6 +225,20 @@ public class AllPreferencesGUI extends JInternalFrame {
 
 
 		scrollPane_attr.setViewportView(attrTable);
+		
+		JButton btnDeleteAllAttrsel = new JButton("Delete all AttrSel preferences");
+		btnDeleteAllAttrsel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				boolean deleteAttSelPreferences = AllPreferencesGUI.this.personisHelper.getPrivacyPreferenceManager().deleteAttSelPreferences();
+				if (deleteAttSelPreferences){
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "All AttrSel preferences deleted");
+				}else{
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occured and not all AttrSel preferences could be deleted");
+				}
+				refreshData();
+			}
+		});
+		panel_ATTR.add(btnDeleteAllAttrsel);
 
 		
 		
@@ -190,6 +258,22 @@ public class AllPreferencesGUI extends JInternalFrame {
 		panel_DOBF.add(scrollPane_dobf);
 
 		scrollPane_dobf.setViewportView(dobfTable);
+		
+		JButton btnDeleteAllDobf = new JButton("Delete all DObf preferences");
+		btnDeleteAllDobf.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				boolean deleteDObfPreferences = AllPreferencesGUI.this.personisHelper.getPrivacyPreferenceManager().deleteDObfPreferences();
+				if (deleteDObfPreferences){
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "All DObf preferences deleted");
+					
+				}
+				else{
+					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occured and not all DObf preferences could be deleted");
+				}
+				refreshData();
+			}
+		});
+		panel_DOBF.add(btnDeleteAllDobf);
 		this.pack();
 
 	}
@@ -221,7 +305,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 		ppnDetailsTable = new Hashtable<String, PPNPreferenceDetailsBean>();
 
 		for (PPNPreferenceDetailsBean bean : ppnPreferenceDetails){
-			String title = this.getTitleString(bean.getRequestor(), bean.getResource(), false);
+			String title = this.getPPNTitleString(bean.getRequestor(), bean.getResource(), bean.getCondition(), false);
 			ppnDetailsTable.put(title, bean);
 		}
 
@@ -293,17 +377,41 @@ public class AllPreferencesGUI extends JInternalFrame {
 				sb.append(ServiceModelUtils.serviceResourceIdentifierToString(((RequestorServiceBean) requestor).getRequestorServiceId()));
 			}
 		}
-		sb.append("\tResource: ");
+		sb.append("\t Resource: ");
 		sb.append(resource.getScheme()+"://");
 		sb.append(resource.getDataType());
 
 		if (printCtxID){
-			sb.append("\tID:"+resource.getDataIdUri());
+			sb.append("\t ID:"+resource.getDataIdUri());
 		}
 
 		return sb.toString();
 	}
 
+	private String getPPNTitleString(RequestorBean requestor, Resource resource, ConditionConstants cc, boolean printCtxID){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Requestor: ");
+		if (requestor instanceof RequestorServiceBean){
+			if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getGoogleRequestor().getRequestorServiceId())){
+				sb.append(PersonisHelper.GOOGLE_VENUE_FINDER);
+			}else if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getHwuRequestor().getRequestorServiceId())){
+				sb.append(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
+			}else{
+				sb.append(ServiceModelUtils.serviceResourceIdentifierToString(((RequestorServiceBean) requestor).getRequestorServiceId()));
+			}
+		}
+		sb.append("\t Resource: ");
+		sb.append(resource.getScheme()+"://");
+		sb.append(resource.getDataType());
+
+		if (printCtxID){
+			sb.append("\t ID:"+resource.getDataIdUri());
+		}
+
+		sb.append("\t Condition: ");
+		sb.append(cc);
+		return sb.toString();
+	}
 	private String getIDSString(RequestorBean requestor, String identity){
 		StringBuilder sb = new StringBuilder();
 		sb.append("Requestor: ");
@@ -317,7 +425,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 			}
 		}
 
-		sb.append("\tIdentity: "+identity);
+		sb.append("\t Identity: "+identity);
 
 		return sb.toString();
 	}

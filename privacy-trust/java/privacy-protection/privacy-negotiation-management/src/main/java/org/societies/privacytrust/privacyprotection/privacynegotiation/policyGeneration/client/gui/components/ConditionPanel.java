@@ -4,11 +4,14 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
@@ -21,48 +24,88 @@ import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
+import com.alee.laf.separator.WebSeparator;
+
 public class ConditionPanel extends JPanel {
 	private JComboBox comboBox;
 	private Condition requestedCondition;
 	private Condition suggestedCondition;
 	private boolean firstRound;
+	private Logger logging = LoggerFactory.getLogger(this.getClass());
+	private JLabel lblIcon;
 
 	/**
 	 * Create the panel.
 	 * @param firstRound 
 	 */
 	public ConditionPanel(Condition requestedCondition, Condition suggestedCondition, boolean firstRound) {
+		this.firstRound = firstRound;
 		this.requestedCondition = requestedCondition;
 		this.suggestedCondition = suggestedCondition;
 		this.firstRound = firstRound;
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{55, 374, 0};
-		gridBagLayout.rowHeights = new int[]{30, 0};
-		gridBagLayout.columnWeights = new double[]{1.0, 0.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{1.0, Double.MIN_VALUE};
-		setLayout(gridBagLayout);
+		setLayout(null);
+		setBounds(0, 0, 650, 25);
 
 		JLabel lblNewLabel = new JLabel(ConditionConstantsFriendly.getFriendlyName(requestedCondition.getConditionConstant()));
-		GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
-		gbc_lblNewLabel.anchor = GridBagConstraints.WEST;
-		gbc_lblNewLabel.insets = new Insets(0, 0, 0, 5);
-		gbc_lblNewLabel.gridx = 0;
-		gbc_lblNewLabel.gridy = 0;
-		add(lblNewLabel, gbc_lblNewLabel);
+		lblNewLabel.setBounds(2, 0, 380, 20);
+		add(lblNewLabel);
 
 		comboBox = new JComboBox(PrivacyConditionsConstantValues.getValues(requestedCondition.getConditionConstant()));
-
-		GridBagConstraints gbc_comboBox = new GridBagConstraints();
-		gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
-		gbc_comboBox.gridx = 1;
-		gbc_comboBox.gridy = 0;
-		add(comboBox, gbc_comboBox);
+		comboBox.setBounds(390, 0, 220, 20);
+		add(comboBox);
 
 
+		
 		comboBox.setSelectedItem(requestedCondition.getValue());
+		logging.debug("I set the selectedItem to: "+requestedCondition.getValue()+" and the combobox is displaying: "+comboBox.getSelectedItem().toString());
 		comboBox.setEnabled(firstRound);
+		
+		WebSeparator webSeparator = new WebSeparator(0);
+		webSeparator.setDrawSideLines(false);
+		webSeparator.setBounds(0, 22, 650, 3);
+		add(webSeparator);
+		
+		lblIcon = new JLabel();
+		if (!firstRound){
+			if (requestedCondition.getValue().equalsIgnoreCase(suggestedCondition.getValue())){
+				lblIcon.setIcon(createCheckImageIcon());
+			}else{
+				lblIcon.setIcon(createWarningImageIcon());
+			}
+		}
+		lblIcon.setBounds(625, 1, 23, 23);
+		add(lblIcon);
 
+	}
+	
+	private ImageIcon createWarningImageIcon() {
+		java.net.URL imgURL = getClass().getResource("/images/warning.png");
+		if (imgURL!=null){
+			return new ImageIcon(imgURL);
+		}else{
+			this.logging.error("Can't find warning image");
+			return null;
+		}
+	}
 
+	private ImageIcon createCheckImageIcon() {
+		java.net.URL imgURL = getClass().getResource("/images/check.png");
+		if (imgURL!=null){
+			return new ImageIcon(imgURL);
+		}else{
+			this.logging.error("Can't find warning image");
+			return null;
+		}
+	}
+
+	private ImageIcon createLeftArrowImageIcon() {
+		java.net.URL imgURL = getClass().getResource("/images/left_arrow_galazio_23.png");
+		if (imgURL!=null){
+			return new ImageIcon(imgURL);
+		}else{
+			this.logging.error("Can't find warning image");
+			return null;
+		}
 	}
 
 	public void applyPersonalisation() {
@@ -87,13 +130,14 @@ public class ConditionPanel extends JPanel {
 				comboBox.setSelectedItem(PrivacyConditionsConstantValues.getBetterConditionValue(requestedCondition.getConditionConstant()));
 				
 			}
-
+			this.lblIcon.setIcon(this.createLeftArrowImageIcon());
 		}
 	}
 
 	public void resetChanges(){
 
 		comboBox.setSelectedItem(this.requestedCondition.getValue());
+		this.lblIcon.setIcon(null);
 
 	}
 
@@ -134,6 +178,4 @@ public class ConditionPanel extends JPanel {
 
 		return equal;
 		 */	}
-
-
 }

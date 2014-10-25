@@ -57,7 +57,7 @@ public class ButtonActionListener implements ActionListener{
 			}
 		}else if (event.getActionCommand().equalsIgnoreCase("LAUNCH")){
 			if (RequestorUtils.equals(requestor, this.personisHelper.getGoogleRequestor())){
-				GoogleMapsService service = new GoogleMapsService();
+				GoogleMapsService service = new GoogleMapsService(this.personisHelper);
 				service.setVisible(true);
 			}else if (RequestorUtils.equals(requestor, personisHelper.getHwuRequestor())){
 				JOptionPane.showMessageDialog(personisHelper.getApplication().getAppsPage(), "Not implemented yet");

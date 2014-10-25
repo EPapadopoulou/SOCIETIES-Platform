@@ -16,8 +16,9 @@ import org.societies.api.context.model.CtxIdentifier;
 
 /**
  * @author PUMA
- *
+ * this class is now deprecated. Use IIdentitySelection component
  */
+@Deprecated
 public class IdentityInformationTableModel extends AbstractTableModel  implements TableModel{
 
 	/**
@@ -25,7 +26,7 @@ public class IdentityInformationTableModel extends AbstractTableModel  implement
 	 */
 	private static final long serialVersionUID = 1L;
 	List<CtxAttribute> ctxAttributes;
-    private Logger logging = LoggerFactory.getLogger(this.getClass());
+	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	public IdentityInformationTableModel(){
 		this.ctxAttributes = new ArrayList<CtxAttribute>();
 	}
@@ -103,7 +104,7 @@ public class IdentityInformationTableModel extends AbstractTableModel  implement
 	}
 
 	public List<CtxIdentifier> getValues() {
-		
+
 		List<CtxIdentifier> list = new ArrayList<CtxIdentifier>();
 		for (CtxAttribute ctxAttr : this.ctxAttributes){
 			list.add(ctxAttr.getId());

@@ -90,30 +90,16 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		this.items = items;
 		this.logging.debug(printDetails());
 
-		//We create a new instance of the UI
-		//AccordionUI newUI = (AccordionUI) SeaGlassLookAndFeel.createUI(accordion);
-
-		//We set the UI
-		//accordion.setUI(newUI);
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{1008, 0};	
-		//gridBagLayout.rowHeights = new int[]{730, 0, 0};
-		gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 1.0, 0.0};
-		this.getContentPane().setLayout(gridBagLayout);
-
 		if (firstRound){
 			message = "<html>You are negotiating with "+getFriendlyNameOfProvider(negDetails.getRequestor())+ ". "
 					+ "The information provided below presents the terms and conditions that will apply when you disclose data "
 					+ "to "+getFriendlyNameOfService(negDetails.getRequestor())+". Configure usage per your needs and then click Continue to proceed with the negotiation.</html>";
 		}
+		getContentPane().setLayout(null);
+		getContentPane().setBounds(0, 0, 820, 735);
 		lblPrivacyPolicyNegotiation = new JLabel(message);
-		GridBagConstraints gbc_lblPrivacyPolicyNegotiation = new GridBagConstraints();
-		gbc_lblPrivacyPolicyNegotiation.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblPrivacyPolicyNegotiation.insets = new Insets(20, 50, 20, 50);
-		gbc_lblPrivacyPolicyNegotiation.gridx = 0;
-		gbc_lblPrivacyPolicyNegotiation.gridy = 0;
-		this.getContentPane().add(lblPrivacyPolicyNegotiation, gbc_lblPrivacyPolicyNegotiation);
+		lblPrivacyPolicyNegotiation.setBounds(50, 2, 704, 50);
+		this.getContentPane().add(lblPrivacyPolicyNegotiation);
 		Accordion accordion = new Accordion();
 		Iterator<RequestItem> keys = this.items.keySet().iterator();
 		System.out.println("Size of request item list: "+this.items.keySet().size());
@@ -130,49 +116,27 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		}		
 
 		JScrollPane scrollPane = new JScrollPane();
-		GridBagConstraints gbc_scrollPane = new GridBagConstraints();
-		gbc_scrollPane.fill = GridBagConstraints.BOTH;
-		gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
-		gbc_scrollPane.gridx = 0;
-		gbc_scrollPane.gridy = 1;
-		this.getContentPane().add(scrollPane, gbc_scrollPane);
+		scrollPane.setBounds(0, 54, 800, 600);
+		this.getContentPane().add(scrollPane);
 
 
 		scrollPane.setViewportView(accordion);
 
 
-
 		JPanel panel = new JPanel();
-		GridBagConstraints gbc_panel = new GridBagConstraints();
-		gbc_panel.anchor = GridBagConstraints.SOUTH;
-		gbc_panel.fill = GridBagConstraints.HORIZONTAL;
-		gbc_panel.gridx = 0;
-		gbc_panel.gridy = 2;
-		this.getContentPane().add(panel, gbc_panel);
-		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{466, 75, 0};
-		gbl_panel.rowHeights = new int[]{23, 0, 0};
-		gbl_panel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gbl_panel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		panel.setLayout(gbl_panel);
+		panel.setBounds(0, 660, 800, 36);
+		panel.setLayout(null);
+		this.getContentPane().add(panel);
 
 		btnCancel = new JButton("Cancel ");
-		GridBagConstraints gbc_btnCancel = new GridBagConstraints();
+		btnCancel.setBounds(20, 5, 85, 23);
 		btnCancel.addActionListener(this);
-		gbc_btnCancel.anchor = GridBagConstraints.WEST;
-		gbc_btnCancel.insets = new Insets(5, 20, 5, 20);
-		gbc_btnCancel.gridx = 0;
-		gbc_btnCancel.gridy = 0;
-		panel.add(btnCancel, gbc_btnCancel);
+		panel.add(btnCancel);
 
 		btnContinue = new JButton("Continue");
-		GridBagConstraints gbc_btnContinue = new GridBagConstraints();
+		btnContinue.setBounds(699, 5, 85, 23);
 		btnContinue.addActionListener(this);
-		gbc_btnContinue.insets = new Insets(5, 20, 5, 20);
-		gbc_btnContinue.anchor = GridBagConstraints.NORTHEAST;
-		gbc_btnContinue.gridx = 1;
-		gbc_btnContinue.gridy = 0;
-		panel.add(btnContinue, gbc_btnContinue);
+		panel.add(btnContinue);
 		this.getRootPane().setDefaultButton(btnContinue);
 
 		//this.getContentPane().validate();
@@ -286,7 +250,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		}*/
 		//frame = new JDialog();
 		//frame = new JDialog(null,"Privacy Policy Negotiation form");
-		this.setBounds(100, 100, 820, 1100);
+		this.setBounds(100, 100, 820, 735);
 		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 	}
 

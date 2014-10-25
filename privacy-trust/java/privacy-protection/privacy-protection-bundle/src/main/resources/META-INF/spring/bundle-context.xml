@@ -38,6 +38,8 @@
 		<property name="privacyPolicyNegotiationManager" ref="privacyPolicyNegotiationManager"></property>
 		<property name="privacyPolicyManager" ref="privacyPolicyManager"></property>
 		<property name="privacyPreferenceManager" ref="privacyPreferenceManager"></property>
+		<property name="privacyAgreementManager" ref="privacyAgreementManager"></property>
+		<property name="identitySelection" ref="identitySelection"></property>
 		</bean>
 	<!-- ## Privacy Data Management Configuration ## -->
 
@@ -244,6 +246,7 @@
 		init-method="init">
 		<property name="ctxBroker" ref="ctxBroker"></property>
 		<property name="commsMgr" ref="commManager"></property>		
+		<property name="privacyPreferenceManager" ref="privacyPreferenceManager"></property>
 	</bean>
 
 

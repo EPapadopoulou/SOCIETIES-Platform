@@ -87,4 +87,6 @@ public interface IIdentityManager {
 	 * @return
 	 */
 	INetworkNode getDomainAuthorityNode();
+	
+	public IIdentity addAlias(String alias);
 }

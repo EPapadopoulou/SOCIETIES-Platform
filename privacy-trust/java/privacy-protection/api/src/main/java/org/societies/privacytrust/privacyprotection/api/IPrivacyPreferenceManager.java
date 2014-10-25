@@ -289,4 +289,37 @@ public interface IPrivacyPreferenceManager {
 	 */
 	public boolean deleteAttSelPreference(AttributeSelectionPreferenceDetailsBean details);
 	
+	/**
+	 * Method to delete all existing PPN preference models
+	 * @return			true if successfully deleted, false otherwise
+	 */
+	public boolean deletePPNPreferences();
+	
+	/**
+	 * Method to delete all the IDS preferences
+	 * @return			true if successfully deleted, false otherwise
+	 */
+	public boolean deleteIDSPreferences();
+	
+	/**
+	 * Method to delete all the Dobf preferences
+	 * @return			true if successfully deleted, false otherwise
+	 */
+	public boolean deleteDObfPreferences();
+	
+	/**
+	 * Method to delete all the Access control preferences 
+	 * @return			true if successfully deleted, false otherwise
+	 */
+	public boolean deleteAccCtrlPreferences();
+
+	/**
+	 * Method to delete all the attribute selection preferences
+	 * @return			true if successfully deleted, false otherwise
+	 */
+	public boolean deleteAttSelPreferences();
+	
+	
+		
+	
 }

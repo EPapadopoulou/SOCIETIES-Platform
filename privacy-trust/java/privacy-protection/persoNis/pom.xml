@@ -95,7 +95,7 @@
 			<artifactId>framework</artifactId>
 			<version>1.2</version>
 		</dependency> -->
-		<dependency>
+<!-- 		<dependency>
 			<groupId>com.seaglasslookandfeel</groupId>
 			<artifactId>seaglasslookandfeel</artifactId>
 			<version>0.1.7.3</version>
@@ -105,7 +105,7 @@
 			<groupId>com.weblookandfeel</groupId>
 			<artifactId>web-look-and-feel</artifactId>
 			<version>1.4.1</version>
-		</dependency>
+		</dependency> -->
 <!-- 		<dependency>
 			<groupId>de.sciss</groupId>
 			<artifactId>weblaf</artifactId>

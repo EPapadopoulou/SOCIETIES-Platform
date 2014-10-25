@@ -85,12 +85,12 @@ public class ConditionUtils {
 	public static String toXmlString(Condition condition){
 		StringBuilder sb = new StringBuilder();
 		if (null != condition) {
-			sb.append("\n<Condition>\n");
-			sb.append("\t<Attribute AttributeId=\"urn:oasis:names:tc:xacml:1.0:action:condition-id\" DataType=\""+condition.getConditionConstant().getClass().getName()+"\">\n");
-			sb.append("\t\t<AttributeValue DataType=\""+condition.getConditionConstant().name()+"\">"+condition.getValue()+"</AttributeValue>\n");
-			sb.append("\t</Attribute>\n");
-			sb.append("\t<optional>"+condition.isOptional()+"</optional>\n");
-			sb.append("</Condition>");
+			sb.append("\t\t<Condition>\n");
+			sb.append("\t\t\t<Attribute AttributeId=\"urn:oasis:names:tc:xacml:1.0:action:condition-id\" DataType=\""+condition.getConditionConstant().getClass().getName()+"\">\n");
+			sb.append("\t\t\t\t<AttributeValue DataType=\""+condition.getConditionConstant().name()+"\">"+condition.getValue()+"</AttributeValue>\n");
+			sb.append("\t\t\t</Attribute>\n");
+			sb.append("\t\t\t<optional>"+condition.isOptional()+"</optional>\n");
+			sb.append("\t\t</Condition>");
 		}
 		return sb.toString();
 	}

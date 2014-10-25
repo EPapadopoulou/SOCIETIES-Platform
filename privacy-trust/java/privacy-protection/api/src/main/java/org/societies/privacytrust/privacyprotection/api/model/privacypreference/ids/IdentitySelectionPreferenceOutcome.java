@@ -26,6 +26,11 @@ package org.societies.privacytrust.privacyprotection.api.model.privacypreference
 
 
 import org.societies.api.identity.IIdentity;
+import org.societies.api.identity.IIdentityManager;
+import org.societies.api.identity.InvalidFormatException;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSOutcomeBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.Stage;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ConfidenceCalculator;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
@@ -40,10 +45,20 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 public class IdentitySelectionPreferenceOutcome extends IPrivacyOutcome{
 
 	private boolean shouldUseIdentity;
-	private IIdentity userIdentity; 
-
+	private IIdentity userIdentity;
+	private Stage currentStage; 
+	private int confidenceLevel;
+	
 	public IdentitySelectionPreferenceOutcome(IIdentity userIdentity) {
 		this.userIdentity = userIdentity;
+		this.confidenceLevel = 50;
+		this.currentStage = Stage.START;
+		
+	}
+	public IdentitySelectionPreferenceOutcome(IDSOutcomeBean bean, IIdentityManager idMgr) throws InvalidFormatException {
+		this.userIdentity = idMgr.fromJid(bean.getUserIdentity());
+		this.confidenceLevel = bean.getConfidenceLevel();
+		this.currentStage = bean.getCurrentStage();
 	}
 	/*
 	 * (non-Javadoc)
@@ -120,6 +135,16 @@ public class IdentitySelectionPreferenceOutcome extends IPrivacyOutcome{
 	public void setShouldUseIdentity(boolean shouldUseIdentity) {
 		this.shouldUseIdentity = shouldUseIdentity;
 	}
+	public Stage getCurrentStage() {
+		// TODO Auto-generated method stub
+		return this.currentStage;
+	}
+	public int getConfidenceLevel() {
+		return confidenceLevel;
+	}
 
+	public void updateConfidenceLevel(boolean positive){
+		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
+	}
 }
 

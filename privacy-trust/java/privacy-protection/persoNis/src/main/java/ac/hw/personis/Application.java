@@ -25,25 +25,31 @@ import javax.swing.WindowConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.util.RequestorUtils;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.schema.identity.RequestorBean;
 
 import ac.hw.personis.dataInit.DataInitialiser;
+import ac.hw.personis.dataInit.IdentitiesViewer;
+import ac.hw.personis.dataInit.ProfileEditor;
 import ac.hw.personis.preference.AllPreferencesGUI;
 
 public class Application implements WindowListener{
 
-	private JFrame frame;
+	private JFrame frmPersonismEvaluationTool;
 	private Apps appsPage;
 	private JDesktopPane desktopPane;
 	//private HomeFrame homeFrame;
 	private PersonisHelper helper;
-    private Logger logging = LoggerFactory.getLogger(this.getClass());
-    private JButton btnGoHome;
+	private Logger logging = LoggerFactory.getLogger(this.getClass());
+	private JButton btnGoHome;
 	private AllPreferencesGUI preferencesPage;
 	private List<String> installedApps;
 	private List<String> storeApps;
-	
+	private IdentitiesViewer idViewer;
+	private String userName;
+
 	/**
 	 * Launch the application.
 	 */
@@ -53,7 +59,7 @@ public class Application implements WindowListener{
 			public void run() {
 				try {
 					Application window = new Application(new PersonisHelper());
-					window.frame.setVisible(true);
+					window.frmPersonismEvaluationTool.setVisible(true);
 					String current = new java.io.File( "." ).getCanonicalPath();
 					System.out.println("Current dir:"+current);
 					String currentDir = System.getProperty("user.dir");
@@ -79,18 +85,22 @@ public class Application implements WindowListener{
 	 */
 	private void initialize() {
 
-		
-		frame = new JFrame();
+
+		frmPersonismEvaluationTool = new JFrame();
+		frmPersonismEvaluationTool.setTitle("PersoNISM Evaluation Tool");
 		//centers the window on startup
-		frame.setLocationRelativeTo(null);
-		frame.setBounds(100, 100, 957, 749);
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		frame.addWindowListener(this);
-		
-    	DataInitialiser initialiser = new DataInitialiser(helper.getCtxBroker(), helper.getCommsMgr().getIdManager().getThisNetworkNode(), this.frame);
-    	if (!initialiser.dataExists()){
-    		boolean initialised = initialiser.isInitialised();
-    	}
+		frmPersonismEvaluationTool.setLocationRelativeTo(null);
+		frmPersonismEvaluationTool.setBounds(100, 100, 957, 749);
+		frmPersonismEvaluationTool.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frmPersonismEvaluationTool.addWindowListener(this);
+
+		DataInitialiser initialiser = new DataInitialiser(helper.getCtxBroker(), helper.getCommsMgr().getIdManager().getThisNetworkNode(), this.frmPersonismEvaluationTool);
+		if (!initialiser.dataExists()){
+			boolean initialised = initialiser.isInitialised();
+		}else{
+			this.userName = initialiser.getUserName();
+			initialiser.dispose();
+		}
 
 		btnGoHome = new JButton();
 		btnGoHome.setActionCommand("home");
@@ -99,7 +109,7 @@ public class Application implements WindowListener{
 		gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 0};
 		gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
 		gridBagLayout.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE};
-		frame.getContentPane().setLayout(gridBagLayout);
+		frmPersonismEvaluationTool.getContentPane().setLayout(gridBagLayout);
 
 		JPanel topPanel = new JPanel();
 		GridBagConstraints gbc_topPanel = new GridBagConstraints();
@@ -107,7 +117,7 @@ public class Application implements WindowListener{
 		gbc_topPanel.fill = GridBagConstraints.BOTH;
 		gbc_topPanel.gridx = 0;
 		gbc_topPanel.gridy = 0;
-		frame.getContentPane().add(topPanel, gbc_topPanel);
+		frmPersonismEvaluationTool.getContentPane().add(topPanel, gbc_topPanel);
 		GridBagLayout gbl_topPanel = new GridBagLayout();
 		gbl_topPanel.columnWidths = new int[]{0, 0, 0};
 		gbl_topPanel.rowHeights = new int[]{0, 0, 0};
@@ -134,7 +144,7 @@ public class Application implements WindowListener{
 		gbc_panel_4.gridy = 0;
 		topPanel.add(panel_4, gbc_panel_4);
 
-		JLabel lblHelloUser = new JLabel("Hello, user");
+		JLabel lblHelloUser = new JLabel("Hello, "+userName);
 		panel_4.add(lblHelloUser);
 
 		JPanel bottomPanel = new JPanel();
@@ -143,7 +153,7 @@ public class Application implements WindowListener{
 		gbc_bottomPanel.fill = GridBagConstraints.BOTH;
 		gbc_bottomPanel.gridx = 0;
 		gbc_bottomPanel.gridy = 2;
-		frame.getContentPane().add(bottomPanel, gbc_bottomPanel);
+		frmPersonismEvaluationTool.getContentPane().add(bottomPanel, gbc_bottomPanel);
 		GridBagLayout gbl_bottomPanel = new GridBagLayout();
 		gbl_bottomPanel.columnWidths = new int[]{0};
 		gbl_bottomPanel.rowHeights = new int[]{0};
@@ -157,72 +167,145 @@ public class Application implements WindowListener{
 		gbc_desktopPane.fill = GridBagConstraints.BOTH;
 		gbc_desktopPane.gridx = 0;
 		gbc_desktopPane.gridy = 1;
-		frame.getContentPane().add(desktopPane, gbc_desktopPane);
+		frmPersonismEvaluationTool.getContentPane().add(desktopPane, gbc_desktopPane);
 
 
-		this.storeApps = new ArrayList<String>();
-		storeApps.add(PersonisHelper.GOOGLE_VENUE_FINDER);
-		storeApps.add(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
-		installedApps = new ArrayList<String>();
+		this.storeApps = this.helper.getStoreApps();
+
+		installedApps = this.helper.getInstalledApps();
 		appsPage = new Apps(helper, this.installedApps, this.storeApps);
-		appsPage.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+		appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		appsPage.setClosable(true);
 		appsPage.setVisible(true);	
 		desktopPane.add(appsPage);
-		
-		
-		preferencesPage = new AllPreferencesGUI(helper);
-		preferencesPage.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-		preferencesPage.setClosable(true);
-		preferencesPage.setVisible(true);
-		desktopPane.add(preferencesPage);
-		
-		
+
 		try {
 			appsPage.setMaximum(true);
-			preferencesPage.setMaximum(true);
 			JMenuBar menuBar = new JMenuBar();
 			GridBagConstraints gbc_menuBar = new GridBagConstraints();
 			gbc_menuBar.gridx = 0;
 			gbc_menuBar.gridy = 3;
-			frame.setJMenuBar(menuBar);
-			
-			JMenu mnNewMenu = new JMenu("Windows");
-			menuBar.add(mnNewMenu);
+			frmPersonismEvaluationTool.setJMenuBar(menuBar);
+
+			JMenu menuNavigation = new JMenu("Navigation");
+			menuBar.add(menuNavigation);
+			JMenu menuData = new JMenu("My Data");
+			menuBar.add(menuData);
 			
 			JMenuItem prefsMenuItem = new JMenuItem("Privacy Preferences");
 			prefsMenuItem.setActionCommand("preferences");
 			prefsMenuItem.addActionListener(new ActionListener() {
-				
+
 				@Override
 				public void actionPerformed(ActionEvent ev) {
+					//JOptionPane.showMessageDialog(frame, "Frames: "+desktopPane.getAllFrames().length);
 					//JOptionPane.showMessageDialog(frame, "Starting prefs page");
-					preferencesPage.refreshData();
-					preferencesPage.show();
-					appsPage.hide();
+					if (preferencesPage!=null){
+						preferencesPage.dispose();
+					}
+					preferencesPage = new AllPreferencesGUI(helper);
+					//preferencesPage.refreshData();
+					preferencesPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+					preferencesPage.setClosable(true);
+					preferencesPage.setVisible(true);
+					desktopPane.add(preferencesPage);
+					try {
+						preferencesPage.setMaximum(true);
+						preferencesPage.setSelected(true);
+					} catch (PropertyVetoException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
 					//JOptionPane.showMessageDialog(frame, "Shown page");
 				}
 			});
-			mnNewMenu.add(prefsMenuItem);
-			
+			menuData.add(prefsMenuItem);
+
 			JMenuItem appsMenuItem = new JMenuItem("Applications");
 			appsMenuItem.addActionListener(new ActionListener() {
-				
+
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					appsPage.show();
-					preferencesPage.hide();
+					//JOptionPane.showMessageDialog(frame, "Frames: "+desktopPane.getAllFrames().length);
+					if (appsPage!=null){
+						appsPage.dispose();
+					}
+					appsPage = new Apps(helper, installedApps, storeApps);
+					appsPage.setVisible(true);
+					appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+					appsPage.setClosable(true);
+
+					desktopPane.add(appsPage);
+					try {
+						appsPage.setMaximum(true);
+						appsPage.setSelected(true);
+					} catch (PropertyVetoException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			});
+
+			menuNavigation.add(appsMenuItem);
+
+			JMenuItem identitiesMenuItem = new JMenuItem("Identities viewer");
+			identitiesMenuItem.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					if (idViewer!=null){
+						idViewer.dispose();
+					}
+					idViewer = new IdentitiesViewer(helper);
+					idViewer.setVisible(true);
+					idViewer.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+					idViewer.setClosable(true);
+					desktopPane.add(idViewer);
+					try {
+						idViewer.setSelected(true);
+					} catch (PropertyVetoException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				}
+			});
+
+			menuData.add(identitiesMenuItem);
 			
-			mnNewMenu.add(appsMenuItem);
-			
+			JMenuItem profileMenuItem = new JMenuItem("Profile Information");
+			profileMenuItem.addActionListener(new ActionListener() {
+				
+				private ProfileEditor profileEditor;
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					if (profileEditor!=null){
+						profileEditor.dispose();
+					}
+					profileEditor = new ProfileEditor(helper);
+					profileEditor.setVisible(true);
+					profileEditor.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+					profileEditor.setClosable(true);
+					desktopPane.add(profileEditor);
+					try {
+						profileEditor.setSelected(true);
+					} catch (PropertyVetoException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					
+				}
+			});
+			menuData.add(profileMenuItem);
 		} catch (PropertyVetoException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
+
+
 	}
 
 	public Apps getAppsPage() {
@@ -235,11 +318,11 @@ public class Application implements WindowListener{
 
 
 	public JFrame getFrame() {
-		return frame;
+		return frmPersonismEvaluationTool;
 	}
 
 	public void setFrame(JFrame frame) {
-		this.frame = frame;
+		this.frmPersonismEvaluationTool = frame;
 	}
 
 	@Override
@@ -307,9 +390,16 @@ public class Application implements WindowListener{
 		this.preferencesPage = preferencesPage;
 	}
 
-	public void notifySuccessfulNegotiation(RequestorBean requestor) {
+	public void notifySuccessfulNegotiation(RequestorBean requestor, Agreement agreement) {
 		int i = 0;
+		try {
+			helper.negotiationCompleted(agreement);
+		} catch (InvalidFormatException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		if (RequestorUtils.equals(requestor, this.helper.getGoogleRequestor())){
+
 			this.installedApps.add(PersonisHelper.GOOGLE_VENUE_FINDER);
 			this.storeApps.remove(PersonisHelper.GOOGLE_VENUE_FINDER);
 			this.logging.debug("step: "+(i++));
@@ -317,11 +407,12 @@ public class Application implements WindowListener{
 			//this.appsPage.dispose();
 			this.appsPage = new Apps(helper, installedApps, storeApps);
 			this.logging.debug("step: "+(i++));
-			this.appsPage.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+			this.appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 			this.logging.debug("step: "+(i++));
 			this.logging.debug("step: "+(i++));
-			JOptionPane.showMessageDialog(this.frame, "Google Venue Finder successfully installed");
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.GOOGLE_VENUE_FINDER+" successfully installed");
 		}else if (RequestorUtils.equals(requestor, this.helper.getHwuRequestor())){
+
 			this.installedApps.add(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
 			this.storeApps.remove(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
 			this.logging.debug("step: "+(i++));
@@ -329,13 +420,28 @@ public class Application implements WindowListener{
 			//this.appsPage.dispose();
 			this.appsPage = new Apps(helper, installedApps, storeApps);
 			this.logging.debug("step: "+(i++));
-			this.appsPage.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+			this.appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 			this.logging.debug("step: "+(i++));
 			this.logging.debug("step: "+(i++));
-			JOptionPane.showMessageDialog(this.frame, "HWU Campus Guide successfully installed");
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.HWU_CAMPUS_GUIDE_APP+" successfully installed");
+		}else if (RequestorUtils.equals(requestor, this.helper.getBbcRequestor())){
+
+			this.installedApps.add(PersonisHelper.BBC_NEWS_APP);
+			this.storeApps.remove(PersonisHelper.BBC_NEWS_APP);
+			this.appsPage = new Apps(helper, installedApps, storeApps);
+			this.appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.BBC_NEWS_APP+" successfully installed");
+		}else if (RequestorUtils.equals(requestor, this.helper.getItunesRequestor())){
+
+			this.installedApps.add(PersonisHelper.ITUNES_MUSIC_APP);
+			this.storeApps.remove(PersonisHelper.ITUNES_MUSIC_APP);
+			this.appsPage = new Apps(helper, installedApps, storeApps);
+			this.appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.ITUNES_MUSIC_APP+" successfully installed");
+
 		}
 
-		
+
 		this.logging.debug("step: "+(i++));
 		this.appsPage.setVisible(true);
 		this.logging.debug("step: "+(i++));
@@ -346,23 +452,26 @@ public class Application implements WindowListener{
 			this.logging.debug("step: "+(i++));
 			this.appsPage.setMaximum(true);
 			this.logging.debug("step: "+(i++));
-			
+
 		} catch (PropertyVetoException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		
 	}
-	
-	
+
+
 	public void notifyFailedNegotiation(RequestorBean requestor) {
 		if (requestor.getRequestorId().equals(this.helper.getGoogleRequestor().getRequestorId())){
-			JOptionPane.showMessageDialog(this.frame, "Negotiation with "+PersonisHelper.GOOGLE_VENUE_FINDER+" failed.");
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, "Negotiation with "+PersonisHelper.GOOGLE_VENUE_FINDER+" failed.");
 		}else if (requestor.getRequestorId().equals(this.helper.getHwuRequestor().getRequestorId())){
-			JOptionPane.showMessageDialog(this.frame, "Negotiation with "+PersonisHelper.HWU_CAMPUS_GUIDE_APP+" failed.");
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, "Negotiation with "+PersonisHelper.HWU_CAMPUS_GUIDE_APP+" failed.");
+		}else if (RequestorUtils.equals(requestor, this.helper.getBbcRequestor())){
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, "Negotiation with "+PersonisHelper.BBC_NEWS_APP+" failed.");
+		}else if (RequestorUtils.equals(requestor, this.helper.getItunesRequestor())){
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, "Negotiation with "+PersonisHelper.ITUNES_MUSIC_APP+" failed.");
 		}
-		
+
 	}
 
 }

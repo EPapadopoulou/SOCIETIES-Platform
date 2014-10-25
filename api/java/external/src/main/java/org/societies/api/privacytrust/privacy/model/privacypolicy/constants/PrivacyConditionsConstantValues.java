@@ -43,7 +43,7 @@ public class PrivacyConditionsConstantValues {
     private static final List<String> timeValuesAsList = Arrays.asList(timeValues);
     
     private static final String[] boolValues = new String[]{"yes", "no"};
-    private static final String[] shareValues = new String[]{"No sharing","CIS Administrator", "All CIS members", "affiliated services", "anyone"};
+    private static final String[] shareValues = new String[]{"No sharing", "affiliated services", "3rd parties", "anyone"};
     private static final List<String> shareValuesAsList = Arrays.asList(shareValues);
     
     public static String getBetterDataRetention(String value1, String value2) throws PrivacyException{

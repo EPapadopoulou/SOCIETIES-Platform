@@ -24,6 +24,9 @@
  */
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf;
 
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfOutcomeBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.Stage;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ConfidenceCalculator;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
@@ -39,22 +42,38 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 public class DObfOutcome extends IPrivacyOutcome implements IDObfAction {
 
 	private double obfuscationLevel;
+	private Stage currentStage;
+	private int confidenceLevel;
 
 	public DObfOutcome(double obfuscationLevel){
 		this.obfuscationLevel = obfuscationLevel;
+		this.confidenceLevel = 50;
+		this.currentStage = Stage.START;
 	}
 
-	public void finalize() throws Throwable {
 
+	public DObfOutcome (DObfOutcomeBean bean){
+		this.obfuscationLevel = bean.getObfuscationLevel();
+		this.confidenceLevel = bean.getConfidenceLevel();
+		this.currentStage = bean.getCurrentStage();
 	}
-
-
 	public PrivacyPreferenceTypeConstants getOutcomeType(){
 		return PrivacyPreferenceTypeConstants.DATA_OBFUSCATION;
 	}
 
 	public double getObfuscationLevel(){
 		return obfuscationLevel;
+	}
+
+	public Stage getCurrentStage() {
+		return this.currentStage;
+	}
+
+	public int getConfidenceLevel() {
+		return confidenceLevel;
+	}
+	public void updateConfidenceLevel(boolean positive){
+		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
 	}
 
 }

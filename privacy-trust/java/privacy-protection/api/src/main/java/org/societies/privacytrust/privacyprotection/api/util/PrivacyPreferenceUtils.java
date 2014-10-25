@@ -37,6 +37,7 @@ import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.util.RequestorUtils;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccCtrlMappings;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlOutcomeBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
@@ -65,6 +66,7 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.preferen
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyPreferenceConditionBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyPreferenceTypeConstantsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.TrustPreferenceConditionBean;
+import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
@@ -105,8 +107,49 @@ public class PrivacyPreferenceUtils {
 	 * FROM BEAN TO OBJECT METHODS
 	 */
 
+	public static PPNPreferenceDetailsBean copyOf(PPNPreferenceDetailsBean details){
+		
+		PPNPreferenceDetailsBean bean = new PPNPreferenceDetailsBean();
+		bean.setCondition(details.getCondition());
+		bean.setRequestor(RequestorUtils.copyOf(details.getRequestor()));
+		bean.setResource(ResourceUtils.copyOf(details.getResource()));
+		return bean;
+	}
 
-	public static PPNPrivacyPreferenceTreeModel toPPNPrivacyPreferenceTreeModel(PPNPrivacyPreferenceTreeModelBean bean, IIdentityManager idMgr) throws MalformedCtxIdentifierException {
+	public static AccessControlPreferenceDetailsBean copyOf(AccessControlPreferenceDetailsBean details){
+		
+		AccessControlPreferenceDetailsBean bean = new AccessControlPreferenceDetailsBean();
+		bean.setAction(ActionUtils.copyOf(details.getAction()));
+		bean.setRequestor(RequestorUtils.copyOf(details.getRequestor()));
+		bean.setResource(ResourceUtils.copyOf(details.getResource()));
+		return bean;
+	}
+	
+	public static IDSPreferenceDetailsBean copyOf(IDSPreferenceDetailsBean details){
+	
+		IDSPreferenceDetailsBean bean = new IDSPreferenceDetailsBean();
+		bean.setRequestor(RequestorUtils.copyOf(details.getRequestor()));
+		bean.setAffectedIdentity(details.getAffectedIdentity());
+		return bean;
+	}
+	
+	public static AttributeSelectionPreferenceDetailsBean copyOf(AttributeSelectionPreferenceDetailsBean details){
+		
+		AttributeSelectionPreferenceDetailsBean bean = new AttributeSelectionPreferenceDetailsBean();
+		bean.setRequestor(RequestorUtils.copyOf(details.getRequestor()));
+		bean.setActions(ActionUtils.copyOf(details.getActions()));
+		bean.setDataType(details.getDataType());
+		return bean;
+	}
+	
+	public static DObfPreferenceDetailsBean copyOf(DObfPreferenceDetailsBean details){
+		
+		DObfPreferenceDetailsBean bean = new DObfPreferenceDetailsBean();
+		bean.setRequestor(RequestorUtils.copyOf(details.getRequestor()));
+		bean.setResource(ResourceUtils.copyOf(details.getResource()));
+		return bean;
+	}
+	public static PPNPrivacyPreferenceTreeModel toPPNPrivacyPreferenceTreeModel(PPNPrivacyPreferenceTreeModelBean bean, IIdentityManager idMgr) throws MalformedCtxIdentifierException, PrivacyException {
 
 		return new PPNPrivacyPreferenceTreeModel(bean.getDetails(), toPPNPrivacyPreference(bean.getPref(), idMgr));
 	}
@@ -155,7 +198,7 @@ public class PrivacyPreferenceUtils {
 
 
 
-	public static PrivacyPreference toPPNPrivacyPreference(PPNPreferenceBean bean, IIdentityManager idMgr) throws MalformedCtxIdentifierException {
+	public static PrivacyPreference toPPNPrivacyPreference(PPNPreferenceBean bean, IIdentityManager idMgr) throws MalformedCtxIdentifierException, PrivacyException {
 
 
 		if (bean.getCondition()!=null){
@@ -171,7 +214,7 @@ public class PrivacyPreferenceUtils {
 
 		if (bean.getOutcome()!=null){
 
-			return new PrivacyPreference(toPPNOutcome(bean.getOutcome(), idMgr));
+			return new PrivacyPreference(toPPNOutcome(bean.getOutcome()));
 		}
 
 		PrivacyPreference preference = new PrivacyPreference();
@@ -228,7 +271,7 @@ public class PrivacyPreferenceUtils {
 		}
 
 		if (bean.getOutcome()!=null){
-			return new PrivacyPreference(toDObfOutcome(bean.getOutcome(), idMgr));
+			return new PrivacyPreference(toDObfOutcome(bean.getOutcome()));
 		}
 
 		PrivacyPreference preference = new PrivacyPreference();
@@ -267,36 +310,43 @@ public class PrivacyPreferenceUtils {
 
 		return preference;
 	}
+	@Deprecated
 	public static IPrivacyOutcome toPPNOutcome(
-			PPNPOutcomeBean bean, IIdentityManager idMgr)  {
-		return new PPNPOutcome(bean.getDecision(), bean.getActions());
+			PPNPOutcomeBean bean)  {
+		return new PPNPOutcome(bean);
 
 
 	}
 
+	@Deprecated
 	public static IdentitySelectionPreferenceOutcome toIDSOutcome(
 			IDSOutcomeBean bean, IIdentityManager idMgr) throws InvalidFormatException {
-		IdentitySelectionPreferenceOutcome outcome = new IdentitySelectionPreferenceOutcome(idMgr.fromJid(bean.getUserIdentity()));
-		outcome.setShouldUseIdentity(bean.isShouldUseIdentity());
+		IdentitySelectionPreferenceOutcome outcome = new IdentitySelectionPreferenceOutcome(bean, idMgr);
+		
+		
 		return outcome;
 	}
 
-	public static DObfOutcome toDObfOutcome(DObfOutcomeBean bean, IIdentityManager idMgr){
-		return new DObfOutcome(bean.getObfuscationLevel());
+	@Deprecated
+	public static DObfOutcome toDObfOutcome(DObfOutcomeBean bean){
+		DObfOutcome dObfOutcome = new DObfOutcome(bean);
+		
+		return dObfOutcome;
 
 	}
 
+	@Deprecated
 	public static AccessControlOutcome toAccessControlOutcome(AccessControlOutcomeBean bean, IIdentityManager idMgr) {
-		AccessControlOutcome outcome = new AccessControlOutcome(bean.getEffect());
-		outcome.setConfidenceLevel(bean.getConfidenceLevel());
+		AccessControlOutcome outcome = new AccessControlOutcome(bean);
 		return outcome;
 	}
 
+	@Deprecated
 	public static AttributeSelectionOutcome toAttributeSelectionOutcome(AttributeSelectionOutcomeBean bean, IIdentityManager idmgr) throws MalformedCtxIdentifierException {
-		AttributeSelectionOutcome outcome = new AttributeSelectionOutcome(CtxModelBeanTranslator.getInstance().fromCtxIdentifierBean(bean.getCtxID()));
-		outcome.setConfidenceLevel(bean.getConfidenceLevel());
+		AttributeSelectionOutcome outcome = new AttributeSelectionOutcome(bean);
 		return outcome;
 	}
+	
 	public static PrivacyOutcomeConstants toPrivacyOutcomeConstant(
 			PrivacyOutcomeConstantsBean bean) {
 		if (bean.compareTo(PrivacyOutcomeConstantsBean.ALLOW)==0){
@@ -591,8 +641,8 @@ public class PrivacyPreferenceUtils {
 	public static PPNPOutcomeBean toPPNPOutcomeBean(PPNPOutcome outcome) {
 		PPNPOutcomeBean bean = new PPNPOutcomeBean();
 		bean.setConfidenceLevel(outcome.getConfidenceLevel());
-		bean.setDecision(outcome.getDecision());
-		bean.setActions(ActionUtils.copyOf(outcome.getActions()));
+		bean.setCondition(outcome.getCondition());
+		bean.setCurrentStage(outcome.getCurrentStage());
 		return bean;
 	}
 
@@ -600,6 +650,8 @@ public class PrivacyPreferenceUtils {
 		IDSOutcomeBean bean = new IDSOutcomeBean();
 		bean.setUserIdentity(outcome.getIdentity().getJid());
 		bean.setShouldUseIdentity(outcome.isShouldUseIdentity());
+		bean.setConfidenceLevel(outcome.getConfidenceLevel());
+		bean.setCurrentStage(outcome.getCurrentStage());
 		return bean;
 	}
 
@@ -607,15 +659,15 @@ public class PrivacyPreferenceUtils {
 		DObfOutcomeBean bean = new DObfOutcomeBean();
 		bean.setConfidenceLevel(outcome.getConfidenceLevel());
 		bean.setObfuscationLevel(outcome.getObfuscationLevel());
-		bean.setType(PrivacyPreferenceTypeConstantsBean.DATA_OBFUSCATION);
+		bean.setCurrentStage(outcome.getCurrentStage());
 		return bean;
 	}
 
 	public static AccessControlOutcomeBean toAccessControlOutcomeBean(AccessControlOutcome outcome){
 		AccessControlOutcomeBean bean = new AccessControlOutcomeBean();
 		bean.setConfidenceLevel(outcome.getConfidenceLevel());
+		bean.setCurrentStage(outcome.getCurrentStage());
 		bean.setEffect(outcome.getEffect());
-		bean.setType(PrivacyPreferenceTypeConstantsBean.ACCESS_CONTROL);
 		return bean;
 
 	}
@@ -623,6 +675,7 @@ public class PrivacyPreferenceUtils {
 			AttributeSelectionOutcome outcome) {
 		AttributeSelectionOutcomeBean bean = new AttributeSelectionOutcomeBean();
 		bean.setConfidenceLevel(outcome.getConfidenceLevel());
+		bean.setCurrentStage(outcome.getCurrentStage());
 		bean.setCtxID((CtxAttributeIdentifierBean) CtxModelBeanTranslator.getInstance().fromCtxIdentifier(outcome.getCtxID()));
 		return bean;
 	}
@@ -685,6 +738,16 @@ public class PrivacyPreferenceUtils {
 			}
 		} else if (!ResourceUtils.equal(detail1.getResource(), other.getResource())){
 			logging.debug("detail1 resource not equal to detail2 resource, false");
+			return false;
+		}
+		
+		if (detail1.getCondition()==null){
+			if (other.getCondition()!=null){
+				logging.debug("detail1 conditionConstant is null but detail2 conditionConstant is not, false");
+				return false;
+			}
+		}else if (!detail1.getCondition().equals(other.getCondition())){
+			logging.debug("detail1 conditionConstant and detail2 conditionConstant not equal, false");
 			return false;
 		}
 		logging.debug("returning true, if/then stmts not caught differences");
@@ -796,27 +859,41 @@ public class PrivacyPreferenceUtils {
 
 	public static boolean equals(IDSPreferenceDetailsBean bean1, Object bean2){
 		if (bean1 == bean2) {
+			logging.debug("1");
 			return true;
 		}
 		if (bean2 == null) {
+			logging.debug("2");
 			return false;
 		}
+		
+		if (bean1 == null){
+			logging.debug("3");
+			return false;
+		}
+		
 		if (!(bean2 instanceof IDSPreferenceDetailsBean)) {
+			logging.debug("4");
 			return false;
 		}
 		IDSPreferenceDetailsBean other = (IDSPreferenceDetailsBean) bean2;
+		
 		if (bean1.getAffectedIdentity() == null) {
 			if (other.getAffectedIdentity() != null) {
+				logging.debug("5");
 				return false;
 			}
-		} else if (!bean1.getAffectedIdentity().equals(other.getAffectedIdentity())) {
+		} else if (!bean1.getAffectedIdentity().equalsIgnoreCase(other.getAffectedIdentity())) {
+			logging.debug("6");
 			return false;
 		}
 		if (bean1.getRequestor() == null) {
 			if (other.getRequestor() != null) {
+				logging.debug("7");
 				return false;
 			}
 		} else if (!RequestorUtils.equals(bean1.getRequestor(), other.getRequestor())){
+			logging.debug("8");
 			return false;
 		}
 		return true;
@@ -840,6 +917,8 @@ public class PrivacyPreferenceUtils {
 		builder.append(ResourceUtils.toString(bean.getResource()));
 		builder.append(", getRequestor()=");
 		builder.append(RequestorUtils.toString(bean.getRequestor()));
+		builder.append(", getConditionConstant()=");
+		builder.append(bean.getCondition());
 		builder.append("]");
 		return builder.toString();
 	}
@@ -859,6 +938,18 @@ public class PrivacyPreferenceUtils {
 		builder.append(ResourceUtils.toString(bean.getResource()));
 		builder.append(", getRequestor()=");
 		builder.append(RequestorUtils.toString(bean.getRequestor()));
+		builder.append("]");
+		return builder.toString();
+	}
+	
+	public static String toString(AttributeSelectionPreferenceDetailsBean bean){
+		StringBuilder builder = new StringBuilder();
+		builder.append("AttributeSelectionPreferenceDetailsBean [getDataType()=");
+		builder.append(bean.getDataType());
+		builder.append(", getRequestor()=");
+		builder.append(RequestorUtils.toString(bean.getRequestor()));
+		builder.append(", getActions()=");
+		builder.append(ActionUtils.toString(bean.getActions()));
 		builder.append("]");
 		return builder.toString();
 	}

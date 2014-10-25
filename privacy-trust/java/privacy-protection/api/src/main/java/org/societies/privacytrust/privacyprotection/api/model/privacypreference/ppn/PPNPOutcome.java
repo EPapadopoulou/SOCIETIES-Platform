@@ -25,13 +25,14 @@
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.DecisionUtils;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPOutcomeBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.Stage;
+import org.societies.api.privacytrust.privacy.model.PrivacyException;
+import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ConfidenceCalculator;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
@@ -41,23 +42,26 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  */
 public class PPNPOutcome extends IPrivacyOutcome implements Serializable{
 
-	private Decision decision;
 	private int confidenceLevel;
-	private  List<Action> actions = new ArrayList<Action>();
+	private final Condition condition;
+	private Stage currentStage;
 	
-	public PPNPOutcome(Decision decision, List<Action> actions) {
-		this.actions = actions;
-		this.decision = decision;
+	public PPNPOutcome(Condition condition) throws PrivacyException {
+		if (condition.getValue()==null){
+			throw new PrivacyException("Condition value cannot be null in new PPNPOutcome object");
+		}
+		if (!PrivacyConditionsConstantValues.getValuesAsList(condition.getConditionConstant()).contains(condition.getValue())){
+			throw new PrivacyException("Condition value for condition type: "+condition.getConditionConstant()+" is not valid: "+condition.getValue());
+		}
+		this.condition = condition;
+		this.currentStage = Stage.START;
+		this.confidenceLevel = 50;
 	}
 
-
-	public Decision getDecision() {
-		return decision;
-	}
-
-
-	public void setDecision(Decision decision) {
-		this.decision = decision;
+	public PPNPOutcome(PPNPOutcomeBean bean){
+		this.condition = bean.getCondition();
+		this.confidenceLevel = bean.getConfidenceLevel();
+		this.currentStage = bean.getCurrentStage();
 	}
 	
 	
@@ -65,24 +69,21 @@ public class PPNPOutcome extends IPrivacyOutcome implements Serializable{
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("PPNPOutcome [decision=");
-		builder.append(DecisionUtils.toXmlString(decision));
+		builder.append(ConditionUtils.toXmlString(condition));
 		builder.append("]");
 		return builder.toString();
 	}
-
-
-
 
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((actions == null) ? 0 : actions.hashCode());
 		result = prime * result
-				+ ((decision == null) ? 0 : decision.hashCode());
+				+ ((condition == null) ? 0 : condition.hashCode());
 		return result;
 	}
+
 
 
 	@Override
@@ -97,19 +98,16 @@ public class PPNPOutcome extends IPrivacyOutcome implements Serializable{
 			return false;
 		}
 		PPNPOutcome other = (PPNPOutcome) obj;
-		if (actions == null) {
-			if (other.actions != null) {
+		if (condition == null) {
+			if (other.condition != null) {
 				return false;
 			}
-		}else if (!ActionUtils.equals(actions, other.actions)){
-			return false;
-		}
-					
-		if (!DecisionUtils.equals(decision,other.decision)) {
+		} else if (!ConditionUtils.equal(condition, obj)) {
 			return false;
 		}
 		return true;
 	}
+
 
 
 	public int getConfidenceLevel() {
@@ -128,12 +126,21 @@ public class PPNPOutcome extends IPrivacyOutcome implements Serializable{
 	}
 
 
-	public List<Action> getActions() {
-		return actions;
+	public Condition getCondition() {
+		return condition;
 	}
 
 
 
-	
+	public Stage getCurrentStage() {
+		// TODO Auto-generated method stub
+		return this.currentStage;
+	}
+
+
+
+	public void updateConfidenceLevel(boolean positive){
+		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
+	}
 	
 }

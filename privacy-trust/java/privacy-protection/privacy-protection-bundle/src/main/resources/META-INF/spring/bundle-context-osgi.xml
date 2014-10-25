@@ -21,8 +21,7 @@
 			<value>org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyManagerInternal</value>
 		</osgi:interfaces>
 	</osgi:service>
-
-
+	
 
 	<osgi:service ref="privacyPolicyManagerRemote"
 		interface="org.societies.api.internal.privacytrust.privacyprotection.remote.IPrivacyPolicyManagerRemote" />
@@ -44,8 +43,10 @@
 
 	<osgi:service ref="privacyPreferenceManager"
 		interface="org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager" />
-
-
+		
+	<osgi:service ref="identitySelection" 
+		interface="org.societies.api.internal.privacytrust.privacyprotection.identity.IIdentityMapper"/>
+		
 	<!-- Needed references -->
 
 	<osgi:reference id="dataSource" interface="javax.sql.DataSource" />

@@ -10,6 +10,7 @@ import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
+import org.societies.privacytrust.privacyprotection.privacynegotiation.PrivacyPolicyNegotiationManager;
 
 public class IdentitySelectionWindow {
 
@@ -48,9 +49,9 @@ public class IdentitySelectionWindow {
 
 	/**
 	 * Create the application.
-	 * @param identities 
-	 * @param recommendedIdentity 
+	 * this class is now deprecated. Use IIdentitySelection component
 	 */
+	@Deprecated
 	public IdentitySelectionWindow(List<IIdentity> identities, IIdentity recommendedIdentity) {
 		initialize();
 		idsDialog = new IdentitySelectionGUIDialog(frame, identities, recommendedIdentity);
@@ -63,9 +64,9 @@ public class IdentitySelectionWindow {
 	}
 	
 	
-	public IdentitySelectionWindow(Agreement agreement, ICtxBroker ctxBroker, IIdentity userId, List<IIdentity> list){
+	public IdentitySelectionWindow(Agreement agreement, PrivacyPolicyNegotiationManager negManager, IIdentity userId, List<IIdentity> list){
 		initialize();
-		idcDialog = new IdentityCreationGUIDialog(frame, agreement, ctxBroker, userId, list);
+		idcDialog = new IdentityCreationGUIDialog(frame, agreement, negManager, userId, list);
 	}
 
 	/**

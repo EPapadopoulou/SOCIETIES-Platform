@@ -95,10 +95,14 @@ public class TrustBroker implements org.societies.api.privacytrust.trust.ITrustB
 			if (entityId==null){
 				return new AsyncResult<Double>(0.0);
 			}
-			if (entityId.contains("google")){
-				return new AsyncResult<Double>(70.0);
-			}else if (entityId.contains("hwu")){
+			if (entityId.toLowerCase().contains("google")){
+				return new AsyncResult<Double>(45.0);
+			}else if (entityId.toLowerCase().contains("hwu")){
 				return new AsyncResult<Double>(80.0);
+			}else if (entityId.toLowerCase().contains("bbc")){
+				return new AsyncResult<Double>(75.0);
+			}else if (entityId.toLowerCase().contains("itunes")){
+				return new AsyncResult<Double>(60.0);
 			}else{
 				return new AsyncResult<Double>(50.0);
 			}

@@ -10,15 +10,15 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.model.pr
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionPreferenceTreeModel;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.PrivatePreferenceCache;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.cache.PreferenceCache;
 
 public class AttrSelPreferenceManager {
 
 	private final static Logger logging = LoggerFactory.getLogger(AttrSelPreferenceManager.class);
 	private PrivacyPreferenceManager privPrefMgr;
-	private PrivatePreferenceCache prefCache;
+	private PreferenceCache prefCache;
 
-	public AttrSelPreferenceManager(PrivacyPreferenceManager privPrefMgr, PrivatePreferenceCache prefCache){
+	public AttrSelPreferenceManager(PrivacyPreferenceManager privPrefMgr, PreferenceCache prefCache){
 		this.privPrefMgr = privPrefMgr;
 		this.prefCache = prefCache;
 	}
@@ -44,6 +44,10 @@ public class AttrSelPreferenceManager {
 	public AttributeSelectionPreferenceTreeModel getAttrSelPreference(
 			AttributeSelectionPreferenceDetailsBean details) {
 		return this.prefCache.getAttrSelPreference(details);
+	}
+
+	public boolean deleteAttSelPreferences() {
+		return this.prefCache.removeAttSelPreferences();
 	}
 
 

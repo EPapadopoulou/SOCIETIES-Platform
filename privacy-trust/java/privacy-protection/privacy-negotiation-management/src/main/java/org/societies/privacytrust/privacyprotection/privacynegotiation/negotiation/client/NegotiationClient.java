@@ -37,6 +37,8 @@ import javax.swing.JOptionPane;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.societies.api.context.model.CtxAttributeIdentifier;
+import org.societies.api.context.model.CtxEntityIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.util.SerialisationHelper;
 import org.societies.api.identity.IIdentity;
@@ -44,6 +46,7 @@ import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.internal.context.broker.ICtxBroker;
+import org.societies.api.internal.context.model.CtxIDChanger;
 import org.societies.api.internal.privacytrust.privacyprotection.INegotiationAgent;
 import org.societies.api.internal.privacytrust.privacyprotection.INegotiationClient;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyManager;
@@ -288,22 +291,27 @@ public class NegotiationClient implements INegotiationClient {
 		IIdentity recommendedIdentity = this.privPrefMgr.evaluateIDSPreferences(agreement, list );
 		
 		if (idOptions.size()==0){
+			
 			//create new identity
-			IdentitySelectionWindow window = new IdentitySelectionWindow(agreement, this.ctxBroker, this.userIdentity, this.idS.getAllIdentities());
-			Hashtable<String, List<CtxIdentifier>> identityInformation = window.getIdentityInformation();
+			Hashtable<String, List<CtxIdentifier>> identityInformation = this.idS.showIdentityCreationGUI(agreement);
+			
 			Enumeration<String> keys = identityInformation.keys();
 
 			String idName = keys.nextElement();
 			List<CtxIdentifier> ctxIDList = identityInformation.get(idName);
 
+			IIdentity identity = this.idS.createIdentity(idName, ctxIDList);
+
+			
 			for (CtxIdentifier ctxID : ctxIDList){
+				CtxIdentifier newCtxID = CtxIDChanger.changeOwner(identity.getBareJid(), (CtxAttributeIdentifier) ctxID);
+				this.logging.debug("Replaced owner in ctxID:"+newCtxID.getOwnerId()+" full ID: "+newCtxID.getUri());
 				for (ResponseItem item : agreement.getRequestedItems()){
-					if (item.getRequestItem().getResource().getDataType().equalsIgnoreCase(ctxID.getType())){
-						item.getRequestItem().getResource().setDataIdUri(ctxID.getUri());
+					if (item.getRequestItem().getResource().getDataType().equalsIgnoreCase(newCtxID.getType())){
+						item.getRequestItem().getResource().setDataIdUri(newCtxID.getUri());
 					}
 				}
 			}
-			IIdentity identity = this.idS.createIdentity(idName, ctxIDList);
 			agreement.setUserIdentity(identity.getJid());
 			InternalEvent event = new InternalEvent(
 					EventTypes.IDENTITY_CREATED, "",
@@ -323,9 +331,8 @@ public class NegotiationClient implements INegotiationClient {
 				identities.add(option.getReferenceIdentity());
 			}
 			
-			IdentitySelectionWindow window = new IdentitySelectionWindow(identities, recommendedIdentity);
-
-			IIdentity identity = window.getSelectedIdentity();
+			
+			IIdentity identity = this.idS.showIdentitySelectionGUI(identities, recommendedIdentity);
 			if(identity==null){
 				return selectIdentity(new ArrayList<IIdentityOption>(), agreement);
 			}

@@ -33,31 +33,19 @@ public class ConditionsPanel extends JPanel {
 		this.respItem = respItem;
 		this.firstRound = firstRound;
 
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{0, 0};
-		gridBagLayout.rowHeights = new int[]{0, 0};
-		gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{1.0, Double.MIN_VALUE};
+		setLayout(null);
 
-		setLayout(gridBagLayout);
-
+		setBounds(0, 0, 650, 200);
 		JPanel panel = new JPanel();
-		GridBagConstraints gbc_panel = new GridBagConstraints();
-		gbc_panel.anchor = GridBagConstraints.WEST;
-		gbc_panel.fill = GridBagConstraints.VERTICAL;
-		gbc_panel.gridx = 0;
-		gbc_panel.gridy = 0;
-		add(panel, gbc_panel);
+		panel.setBounds(0, 0, 650, 200);
+		add(panel);
 
 
 
 
-		panel.setLayout(new GridBagLayout());
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.weightx = 1;
-		gbc.gridx = 0;
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
+		int yAxis = 0;
 		List<ConditionConstants> conList = new ArrayList<ConditionConstants>();
 		for (ConditionConstants con : ConditionConstants.values()){
 			conList.add(con);
@@ -80,8 +68,9 @@ public class ConditionsPanel extends JPanel {
 			}
 			ConditionPanel conPanel = new ConditionPanel(condition, suggestedCondition, firstRound);
 
-
-			panel.add(conPanel, gbc);
+			conPanel.setBounds(0, yAxis, 650, 28);
+			yAxis+=28;
+			panel.add(conPanel);
 
 			conditionPanels.add(conPanel);
 			for (ConditionConstants con : conList){
@@ -106,7 +95,9 @@ public class ConditionsPanel extends JPanel {
 				}
 			}
 			ConditionPanel conPanel = new ConditionPanel(condition, suggestedCondition, firstRound);
-			panel.add(conPanel, gbc);
+			conPanel.setBounds(0, yAxis, 650, 28);
+			yAxis+=28;
+			panel.add(conPanel);
 			conditionPanels.add(conPanel);
 		}
 	}

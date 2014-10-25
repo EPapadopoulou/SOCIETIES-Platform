@@ -77,6 +77,11 @@ public class CtxEntityIdentifier extends CtxIdentifier {
 		
 		super(str);
 	}
+	
+	@Override
+	public void setOwnerId(String value) {
+		super.setOwnerId(value);
+	}
 
 	/** 
 	 * Formats the string representation of a context entity identifier as follows:

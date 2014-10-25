@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,8 +72,10 @@ import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.context.model.CtxAssociationTypes;
 import org.societies.api.internal.context.model.CtxAttributeTypes;
 import org.societies.api.internal.context.model.CtxEntityTypes;
+import org.societies.api.internal.context.model.CtxIDChanger;
 import org.societies.api.internal.logging.IPerformanceMessage;
 import org.societies.api.internal.logging.PerformanceMessage;
+import org.societies.api.internal.privacytrust.privacyprotection.identity.IIdentityMapper;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacyassessment.IPrivacyLogAppender;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
 import org.societies.context.api.community.db.ICommunityCtxDBMgr;
@@ -118,6 +121,7 @@ public class InternalCtxBroker implements ICtxBroker {
 	/** to define a dedicated Logger for Performance Testing */
 	private static Logger PERF_LOG = LoggerFactory.getLogger("PerformanceMessage");
 
+	private Hashtable<String, List<CtxIdentifier>> linkedAttributes = new Hashtable<String, List<CtxIdentifier>>(); 
 	/** The event topics to create for local CSSs and CISs */
 	public static final String[] EVENT_TOPICS = new String[] {
 		CtxChangeEventTopic.CREATED,
@@ -195,6 +199,7 @@ public class InternalCtxBroker implements ICtxBroker {
 	/** The ICtxAccessController service reference. */
 	@Autowired(required=true)
 	private ICtxAccessController ctxAccessController;
+
 
 	/**
 	 * Instantiates the platform Context Broker in Spring.
@@ -697,13 +702,33 @@ public class InternalCtxBroker implements ICtxBroker {
 
 		final List<CtxIdentifier> result = new ArrayList<CtxIdentifier>();
 
+
 		if (this.isLocalId(target)) {
 			final Set<String> types = new HashSet<String>();
 			types.add(type);
 			// L O C A L
 			if (IdentityType.CIS != target.getType()) { 
+				//Eliza edit: adding URI masquerading and linked attributes check
+
 				// U S E R
-				result.addAll(this.userCtxDBMgr.lookup(target.getBareJid(), modelType, types));
+				IIdentity userID = this.commMgr.getIdManager().getThisNetworkNode();
+				if (userID.getBareJid().equalsIgnoreCase(target.getBareJid())){
+					result.addAll(this.userCtxDBMgr.lookup(target.getBareJid(), modelType, types));
+				}else{
+					List<CtxIdentifier> attributeList = this.linkedAttributes.get(target.getJid());
+					Set<CtxIdentifier> lookup = this.userCtxDBMgr.lookup(userID.getBareJid(), modelType, types);
+					for (CtxIdentifier ctxIdentifier : lookup){
+						LOG.debug("linkedAttributes={}", attributeList);
+						CtxAttributeIdentifier maskedCtxIdentifier = CtxIDChanger.changeOwner(target.getBareJid(), (CtxAttributeIdentifier) ctxIdentifier);
+
+						if (attributeList.contains(maskedCtxIdentifier)){
+							LOG.debug("LinkeDAttributes contains "+maskedCtxIdentifier.getUri());
+							result.add(maskedCtxIdentifier);
+						}else{
+							LOG.debug("LinkeDAttributes does not contain "+maskedCtxIdentifier.getUri());
+						}
+					}
+				}
 			} else { 
 				// C O M M U N I T Y
 				result.addAll(this.communityCtxDBMgr.lookup(target.getBareJid(), modelType, types));
@@ -1120,7 +1145,7 @@ public class InternalCtxBroker implements ICtxBroker {
 	public Future<List<CtxAttribute>> retrieveFuture(
 			CtxAttributeIdentifier attrId, Date date) throws CtxException {
 
-	LOG.debug("retrieveFuture internal method ");
+		LOG.debug("retrieveFuture internal method ");
 		final Requestor requestor = this.getLocalRequestor();
 		return this.retrieveFuture(requestor, attrId,date );
 	}
@@ -1666,6 +1691,7 @@ public class InternalCtxBroker implements ICtxBroker {
 	@Async
 	public Future<CtxModelObject> retrieve(final Requestor requestor,
 			final CtxIdentifier ctxId) throws CtxException {
+		String targetOwnerID = ctxId.getOwnerId();
 
 		if (requestor == null) {
 			throw new NullPointerException("requestor can't be null");
@@ -1683,21 +1709,50 @@ public class InternalCtxBroker implements ICtxBroker {
 
 		// Log with Privacy Log Appender
 		this.logRequest(requestor, target);
+		IIdentity userID = this.commMgr.getIdManager().getThisNetworkNode();
 
 		if (this.isLocalId(target)) { // L O C A L
 
 			// Check if access control is required.
 			if(!requestor.equals(this.getLocalRequestor())) {
+
+				//Eliza edit: check that ctxID is linked to this identity
+				List<CtxIdentifier> linkedAttributeList = this.linkedAttributes.get(targetOwnerID);
+				if (linkedAttributeList==null){
+					throw new CtxBrokerException("Requestor: "+requestor.getRequestorId().getBareJid()+" is not allowed to access "+ctxId.getUri());
+				}
+
+				boolean linked = false;
+				for (CtxIdentifier linkedAttr : linkedAttributeList){
+					if (linkedAttr.getUri().equals(ctxId.getUri())){
+						linked = true;
+						break;
+					}
+				}
+
+				if (!linked){
+					throw new CtxBrokerException("Requestor: "+requestor.getRequestorId().getBareJid()+" is not allowed to access "+ctxId.getUri()+" with targetID: "+targetOwnerID);
+				}
+
+
+				//replace the alias identity with the true identity because context only uses the true identity
+
+				//We do the check permission with the real identity 
 				// Check READ permission
-				this.ctxAccessController.checkPermission(requestor, ctxId, 
+				this.ctxAccessController.checkPermission(requestor, CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId),
 						ActionConstants.READ);
+
+
+
 			}
 			// No CtxAccessControlException thrown implies READ access has been granted
 
 			if (IdentityType.CIS != target.getType()) { // U S E R
+				//Eliza edit: first check that the CtxID is in the list of linkedAttributes for this identity after replacing the target with the user's ID.
 
 				if (ctxId instanceof CtxAttributeIdentifier) { // I N F E R E N C E
-					result = this.inferUserAttribute((CtxAttributeIdentifier) ctxId);
+					result = this.inferUserAttribute(CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
+
 				} else {
 					result = this.userCtxDBMgr.retrieve(ctxId);
 				}	
@@ -1936,7 +1991,7 @@ public class InternalCtxBroker implements ICtxBroker {
 				targetMap.get(target).add(remoteCtxId);
 			}
 			LOG.debug("retrieve: targetMap={}", targetMap);
-			
+
 			// Perform remote retrieve operation(s) asynchronously
 			final List<RetrieveAllCtxCallback> callbacks = 
 					new ArrayList<RetrieveAllCtxCallback>(targetMap.size());
@@ -2423,8 +2478,8 @@ public class InternalCtxBroker implements ICtxBroker {
 		return new AsyncResult<CtxEntityIdentifier>(result);
 	}
 
-	
-	
+
+
 	@Override
 	@Async
 	public Future<List<CtxAttribute>> retrieveFuture(Requestor requestor,
@@ -2436,9 +2491,9 @@ public class InternalCtxBroker implements ICtxBroker {
 		if (attrId == null) {
 			throw new NullPointerException("ctxId can't be null");
 		}
-		
+
 		LOG.debug("retrieveFuture: attrId={}, date={}", attrId, date);
-		
+
 		final IIdentity target = this.extractIIdentity(attrId);
 
 		this.logRequest(null, target);
@@ -2457,7 +2512,7 @@ public class InternalCtxBroker implements ICtxBroker {
 				result.add(this.communityCtxInferenceMgr.predictContext(attrId, date));
 			}
 		}else { // R E M O T E
-		
+
 			final RetrieveFutureCtxCallback callback = new RetrieveFutureCtxCallback();
 			this.ctxBrokerClient.retrieveFuture(requestor, attrId, date, callback); 
 			synchronized (callback) {
@@ -2465,7 +2520,7 @@ public class InternalCtxBroker implements ICtxBroker {
 					callback.wait();
 					if (callback.getException() == null) {
 						result = callback.getResult();
-						
+
 					} else { 
 						throw callback.getException();
 					}					
@@ -2481,7 +2536,7 @@ public class InternalCtxBroker implements ICtxBroker {
 	}
 
 
-	
+
 	@Override
 	@Async
 	public Future<List<CtxAttribute>> retrieveFuture(Requestor requestor,
@@ -2507,8 +2562,8 @@ public class InternalCtxBroker implements ICtxBroker {
 		LOG.debug("retrieveFuture: result={}", result);
 		return new AsyncResult<List<CtxAttribute>>(result);
 	}
-		
-	
+
+
 	@Override
 	public Future<List<CtxHistoryAttribute>> retrieveHistory(
 			Requestor requestor, CtxAttributeIdentifier attrId,
@@ -2841,5 +2896,19 @@ public class InternalCtxBroker implements ICtxBroker {
 		CtxAttribute ctxAttribute = this.userCtxInferenceMgr.inheritContext(ctxAttrID);
 
 		return ctxAttribute;
+	}
+
+	@Override
+	public void setLinkedAttributes(Hashtable<String, List<CtxIdentifier>> table) {
+		this.linkedAttributes = table;
+
+	}
+
+	@Override
+	public void addIdentityLinkedAttributes(String identity,
+			List<CtxIdentifier> attributeIdentifiers) {
+		LOG.debug("AddIdentityLinkedAttributes: "+identity+" identifiers: {}", attributeIdentifiers);
+		this.linkedAttributes.put(identity, attributeIdentifiers);
+
 	}
 }

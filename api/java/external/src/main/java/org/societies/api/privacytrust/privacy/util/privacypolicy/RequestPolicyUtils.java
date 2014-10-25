@@ -80,10 +80,10 @@ public class RequestPolicyUtils {
 	public static String toXmlString(RequestPolicy requestPolicy){
 		StringBuilder sb = new StringBuilder();
 		if (null != requestPolicy) {
-			sb.append("<RequestPolicy>");
+			sb.append("<RequestPolicy>\n");
 			sb.append(RequestorUtils.toXmlString(requestPolicy.getRequestor()));
 			sb.append(RequestItemUtils.toXmlString(requestPolicy.getRequestItems()));
-			sb.append("</RequestPolicy>");
+			sb.append("</RequestPolicy>\n");
 		}
 		return sb.toString();
 	}

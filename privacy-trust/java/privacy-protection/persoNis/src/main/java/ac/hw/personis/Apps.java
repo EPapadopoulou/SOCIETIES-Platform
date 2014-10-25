@@ -19,16 +19,26 @@ import ac.hw.personis.ServicePanel.ServiceAction;
 import ac.hw.personis.event.ButtonActionListener;
 
 public class Apps extends JInternalFrame {
+	private Logger logging = LoggerFactory.getLogger(this.getClass());
+	
 	private RequestorServiceBean hwuRequestor;
 	private RequestorServiceBean googleRequestor;
+	private RequestorServiceBean bbcRequestor;
+	private RequestorServiceBean itunesRequestor;
+	
 	private PersonisHelper personisHelper;
 	private Accordion accordion_StoreApps;
+	private Accordion accordion_InstalledApps;
+	
 	private ServicePanel googleServicePanel;
 	private ServicePanel hwuServicePanel;
-	private Accordion accordion_InstalledApps;
-	private Logger logging = LoggerFactory.getLogger(this.getClass());
+	private ServicePanel bbcServicePanel;
+	private ServicePanel itunesServicePanel;
+	
 	private ButtonActionListener googleListener;
 	private ButtonActionListener hwuListener;
+	private ButtonActionListener bbcListener;
+	private ButtonActionListener itunesListener;
 
 	/**
 	 * Create the frame.
@@ -40,6 +50,8 @@ public class Apps extends JInternalFrame {
 		this.personisHelper = personisHelper;
 		this.googleRequestor = personisHelper.getGoogleRequestor();
 		this.hwuRequestor = personisHelper.getHwuRequestor();
+		bbcRequestor = personisHelper.getBbcRequestor();
+		itunesRequestor = personisHelper.getItunesRequestor();
 		//this.addInternalFrameListener(new MyInternalFrameListener(personisHelper.getApplication()));
 		setBounds(100, 100, 839, 577);
 		GridBagLayout gridBagLayout = new GridBagLayout();
@@ -73,7 +85,7 @@ public class Apps extends JInternalFrame {
 		panel.add(lblMyInstalledApps, gbc_lblMyInstalledApps);
 
 		accordion_InstalledApps = new Accordion();
-		
+
 		GridBagConstraints gbc_accordion_InstalledApps = new GridBagConstraints();
 		gbc_accordion_InstalledApps.fill = GridBagConstraints.BOTH;
 		gbc_accordion_InstalledApps.gridx = 0;
@@ -98,7 +110,7 @@ public class Apps extends JInternalFrame {
 		panel_1.add(lblAppsFromPersonis, gbc_lblAppsFromPersonis);
 
 		accordion_StoreApps = new Accordion();
-		
+
 
 		GridBagConstraints gbc_accordion_StoreApps = new GridBagConstraints();
 		gbc_accordion_StoreApps.fill = GridBagConstraints.BOTH;
@@ -111,12 +123,14 @@ public class Apps extends JInternalFrame {
 			googleServicePanel = new ServicePanel(PersonisHelper.GOOGLE_VENUE_FINDER,this.googleRequestor, this.personisHelper, ServiceAction.INSTALL, googleListener);
 			accordion_StoreApps.addBar(PersonisHelper.GOOGLE_VENUE_FINDER, googleServicePanel);
 			logging.debug("Added tab for:"+ServiceModelUtils.serviceResourceIdentifierToString(this.googleRequestor.getRequestorServiceId()));
-		}else{
+		}else {
 			googleListener = new ButtonActionListener(this.personisHelper, this.googleRequestor);
 			googleServicePanel = new ServicePanel(PersonisHelper.GOOGLE_VENUE_FINDER,this.googleRequestor, this.personisHelper, ServiceAction.LAUNCH, googleListener);
 			accordion_InstalledApps.addBar(PersonisHelper.GOOGLE_VENUE_FINDER, googleServicePanel);
 			logging.debug("Added tab for:"+ServiceModelUtils.serviceResourceIdentifierToString(this.googleRequestor.getRequestorServiceId()));
 		}
+
+
 
 		if (storeApps.contains(PersonisHelper.HWU_CAMPUS_GUIDE_APP)){
 			hwuListener = new ButtonActionListener(this.personisHelper, this.hwuRequestor);
@@ -128,7 +142,31 @@ public class Apps extends JInternalFrame {
 			hwuServicePanel = new ServicePanel(PersonisHelper.HWU_CAMPUS_GUIDE_APP,this.hwuRequestor, this.personisHelper, ServiceAction.LAUNCH, hwuListener);
 			accordion_InstalledApps.addBar(PersonisHelper.HWU_CAMPUS_GUIDE_APP, hwuServicePanel);	
 			logging.debug("Added tab for:"+ServiceModelUtils.serviceResourceIdentifierToString(this.hwuRequestor.getRequestorServiceId()));
+		}
 
+		if (storeApps.contains(PersonisHelper.BBC_NEWS_APP)){
+			bbcListener = new ButtonActionListener(this.personisHelper, this.bbcRequestor);
+			bbcServicePanel = new ServicePanel(PersonisHelper.BBC_NEWS_APP, this.bbcRequestor, this.personisHelper, ServiceAction.INSTALL, bbcListener);
+			accordion_StoreApps.addBar(PersonisHelper.BBC_NEWS_APP, bbcServicePanel);
+			logging.debug("Added tab for:"+ServiceModelUtils.serviceResourceIdentifierToString(this.bbcRequestor.getRequestorServiceId()));
+		}else{
+			bbcListener = new ButtonActionListener(this.personisHelper, this.bbcRequestor);
+			bbcServicePanel = new ServicePanel(PersonisHelper.BBC_NEWS_APP, this.bbcRequestor, this.personisHelper, ServiceAction.LAUNCH, bbcListener);
+			accordion_InstalledApps.addBar(PersonisHelper.BBC_NEWS_APP, bbcServicePanel);
+			logging.debug("Added tab for:"+ServiceModelUtils.serviceResourceIdentifierToString(this.bbcRequestor.getRequestorServiceId()));
+		}
+
+
+		if (storeApps.contains(PersonisHelper.ITUNES_MUSIC_APP)){
+			itunesListener = new ButtonActionListener(this.personisHelper, this.itunesRequestor);
+			itunesServicePanel = new ServicePanel(PersonisHelper.ITUNES_MUSIC_APP, this.itunesRequestor, this.personisHelper, ServiceAction.INSTALL, itunesListener);
+			accordion_StoreApps.addBar(PersonisHelper.ITUNES_MUSIC_APP, itunesServicePanel);
+			logging.debug("Added tab for:"+ServiceModelUtils.serviceResourceIdentifierToString(this.itunesRequestor.getRequestorServiceId()));
+		}else{
+			itunesListener = new ButtonActionListener(this.personisHelper, this.itunesRequestor);
+			itunesServicePanel = new ServicePanel(PersonisHelper.ITUNES_MUSIC_APP, this.itunesRequestor, this.personisHelper, ServiceAction.LAUNCH, itunesListener);
+			accordion_InstalledApps.addBar(PersonisHelper.ITUNES_MUSIC_APP, itunesServicePanel);
+			logging.debug("Added tab for:"+ServiceModelUtils.serviceResourceIdentifierToString(this.itunesRequestor.getRequestorServiceId()));
 		}
 
 	}

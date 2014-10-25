@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -91,6 +92,7 @@ public class ClientResponseChecker {
 		}
 		Hashtable<ResponseItem, ResponseItem> table = new Hashtable<ResponseItem, ResponseItem>();
 
+		HashMap<RequestItem, ResponseItem> requestResponseMap = new HashMap<RequestItem, ResponseItem>();
 		//align user's response item to provider's request item
 		for (ResponseItem myItem : myPolicy.getResponseItems()){
 			for (ResponseItem providerItem : providerPolicy.getResponseItems()){
@@ -100,7 +102,6 @@ public class ClientResponseChecker {
 			}
 		}
 
-		List<ResponseItem> itemsNotMatching = new ArrayList<ResponseItem>();
 		// -- Check every ResponseItems		
 		for (ResponseItem myItem : myPolicy.getResponseItems()){
 			LOG.info("Requested item \""+myItem.getRequestItem().getResource().getDataType()+"\"...");
@@ -123,17 +124,17 @@ public class ClientResponseChecker {
 			if (providerItem.getRequestItem()==null){
 				JOptionPane.showMessageDialog(null, "provideritem.getRequestItem(); is null");
 			}
-			
-			
+
+
 			if (actionsMatch(myItem.getRequestItem().getActions(), providerItem.getRequestItem().getActions())){
 				if (!(conditionsMatch(myItem.getRequestItem().getConditions(), providerItem.getRequestItem().getConditions()))){
-					itemsNotMatching.add(providerItem);
+					requestResponseMap.put(providerItem.getRequestItem(), myItem);					
 				}
 			}else{
-				itemsNotMatching.add(providerItem);
+				requestResponseMap.put(providerItem.getRequestItem(), myItem);
 			}
 		}
-		if (itemsNotMatching.size()==0){
+		if (requestResponseMap.size()==0){
 
 			for (ResponseItem item: providerPolicy.getResponseItems()){
 				item.setDecision(Decision.PERMIT);
@@ -142,22 +143,15 @@ public class ClientResponseChecker {
 			return providerPolicy;
 		}
 
-		RequestPolicy tempPolicy = new RequestPolicy();
-		tempPolicy.setRequestor(myPolicy.getRequestor());
-		tempPolicy.setRequestItems(new ArrayList<RequestItem>());
-		for (ResponseItem item : itemsNotMatching){
-			tempPolicy.getRequestItems().add(item.getRequestItem());
-		}
-
-
-		HashMap<RequestItem, ResponseItem> evaluatePPNPreferences = negotiationManager.getPrivacyPreferenceManager().evaluatePPNPreferences(tempPolicy);
-
 		NegotiationDetailsBean negDetails = new NegotiationDetailsBean();
 
 		negDetails.setRequestor(myPolicy.getRequestor());
 		StringBuilder sb = new StringBuilder();
-		for (ResponseItem item: itemsNotMatching){
-			sb.append(item.getRequestItem().getResource().getDataType());
+
+		Iterator<RequestItem> iterator = requestResponseMap.keySet().iterator();
+		while(iterator.hasNext()){
+			RequestItem item = iterator.next();
+			sb.append(item.getResource().getDataType());
 			sb.append(", ");
 		}
 		try{
@@ -166,7 +160,7 @@ public class ClientResponseChecker {
 			e.printStackTrace();
 		}
 		String message = "<html>The terms and conditions you requested for the data items: "+sb.toString()+" from the provider were not entirely acceptable. The provider has suggested alternatives. If you accept the alternatives provided, you can continue to install the service. Otherwise, the negotiation will fail. </html>";
-		PPNWindow window = new PPNWindow(negDetails, evaluatePPNPreferences, false, message);
+		PPNWindow window = new PPNWindow(negDetails, requestResponseMap, false, message);
 		ResponsePolicy userResponsePolicy = window.getResponsePolicy();
 		for (ResponseItem item : userResponsePolicy.getResponseItems()){
 			if (item.getDecision().equals(Decision.DENY)){

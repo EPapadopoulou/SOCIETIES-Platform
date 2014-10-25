@@ -27,6 +27,7 @@ package org.societies.privacytrust.privacyprotection.privacypreferencemanager.ma
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -98,6 +99,26 @@ public class PreferenceStorer {
 
 	}
 
+	public void deletePreferences(Enumeration<CtxAttributeIdentifier> ids){
+		while (ids.hasMoreElements()){
+			try {
+				CtxIdentifier ctxID = ids.nextElement();
+				CtxModelObject ctxModelObject = ctxBroker.remove(ctxID).get();
+				if (ctxModelObject==null){
+					this.logging.debug("Could not delete preference with id: "+ctxID.toString()+". ID doesn't exist in DB.");
+				}
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (CtxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
 
 	public boolean storeExisting(CtxIdentifier id, PrivacyPreferenceTreeModelBean p){
 		this.logging.debug("Request to store preference to id:"+id.toUriString());
@@ -144,7 +165,9 @@ public class PreferenceStorer {
 			if (associations.size()==0){
 				this.logging.debug(CtxTypes.HAS_PRIVACY_PREFERENCES+" association doesn't exist in DB. Creating it");
 				//create association and child entity
+				
 				CtxAssociation association = ctxBroker.createAssociation(userId, CtxTypes.HAS_PRIVACY_PREFERENCES).get();
+				association.setParentEntity(personEntity.getId());
 				CtxEntity preferenceEntity = ctxBroker.createEntity(CtxTypes.PRIVACY_PREFERENCE).get();
 				association.addChildEntity(preferenceEntity.getId());
 				association = (CtxAssociation) ctxBroker.update(association).get();
@@ -171,7 +194,7 @@ public class PreferenceStorer {
 					ctxAttribute = (CtxAttribute) ctxBroker.update(ctxAttribute).get();
 					return ctxAttribute.getId();
 				}else{
-					this.logging.debug(CtxTypes.PRIVACY_PREFERENCE+" found in DB.");
+					this.logging.debug(CtxTypes.PRIVACY_PREFERENCE+" entity found in DB.");
 					//store the attribute
 					CtxEntity preferenceEntity = (CtxEntity) ctxBroker.retrieve(childEntityIDs.iterator().next()).get();
 					CtxAttribute ctxAttribute = ctxBroker.createAttribute(preferenceEntity.getId(), key).get();
@@ -198,41 +221,6 @@ public class PreferenceStorer {
 		return null;
 	}
 
-	public void storeRegistry(Registry registry) throws PrivacyException{
-		this.logging.debug("Storing registry");
-		IIdentity userId = this.idMgr.getThisNetworkNode();
-		try {
-			IndividualCtxEntity personEntity = this.ctxBroker.retrieveIndividualEntity(userId).get();
-			
-			Set<CtxAttribute> attributes = personEntity.getAttributes(CtxTypes.PRIVACY_PREFERENCE_REGISTRY);
-			if (attributes.size()==0){
-				this.logging.debug("Registry not found in DB, storing registry in new attribute");
-				CtxAttribute attr = ctxBroker.createAttribute(personEntity.getId(), CtxTypes.PRIVACY_PREFERENCE_REGISTRY).get();
-				//RegistryBean bean = registry.toRegistryBean();
-				attr.setBinaryValue(SerialisationHelper.serialise(registry));
-				ctxBroker.update(attr).get();
-				return;
-			}
-			
-			this.logging.debug("Registry found in DB. Updating ctx attribute.");
-			CtxAttribute ctxAttribute = attributes.iterator().next();
-			ctxAttribute.setBinaryValue(SerialisationHelper.serialise(registry));
-			ctxAttribute = (CtxAttribute) ctxBroker.update(ctxAttribute).get();
-			
-		} catch (CtxException e) {
-			this.logging.debug("Exception while storing PreferenceRegistry to DB for private DPI");
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
+
 }
 

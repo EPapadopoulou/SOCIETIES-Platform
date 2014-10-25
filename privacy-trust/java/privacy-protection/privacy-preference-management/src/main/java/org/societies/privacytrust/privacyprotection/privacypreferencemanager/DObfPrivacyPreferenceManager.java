@@ -40,8 +40,7 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PreferenceEvaluator;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PrivateContextCache;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.PrivatePreferenceCache;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.DObfPreferenceCreator;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.cache.PreferenceCache;
 
 /**
  * @author Eliza
@@ -50,12 +49,12 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.mer
 public class DObfPrivacyPreferenceManager {
 
 	
-	private PrivatePreferenceCache prefCache;
+	private PreferenceCache prefCache;
 	private final PrivateContextCache contextCache;
 	private ITrustBroker trustBroker;
 	private IIdentity userIdentity;
 	
-	public DObfPrivacyPreferenceManager(PrivatePreferenceCache prefCache, PrivateContextCache contextCache, ITrustBroker trustBroker, IIdentity userIdentity){
+	public DObfPrivacyPreferenceManager(PreferenceCache prefCache, PrivateContextCache contextCache, ITrustBroker trustBroker, IIdentity userIdentity){
 		this.prefCache = prefCache;
 		this.contextCache = contextCache;
 		this.trustBroker = trustBroker;
@@ -115,6 +114,9 @@ public class DObfPrivacyPreferenceManager {
 		}
 		
 		throw new PrivacyException("DObfPreferenceDetailsBean parameter did not match DObfPrivacyPreferenceTreeModel.getDetails()");		
+	}
+	public boolean deleteDObfPreferences() {
+		return this.prefCache.removeDObfPreferences();
 	}
 
 }

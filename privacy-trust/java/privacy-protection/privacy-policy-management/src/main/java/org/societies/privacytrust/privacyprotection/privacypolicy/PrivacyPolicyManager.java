@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -48,6 +49,7 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Privacy
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyRegistryManager;
+import org.societies.privacytrust.privacyprotection.api.policy.ConditionRanges;
 import org.societies.privacytrust.privacyprotection.privacypolicy.gui.PPNWindow;
 
 /**
@@ -134,6 +136,23 @@ public class PrivacyPolicyManager implements IPrivacyPolicyManagerInternal {
 		return privacyPolicy;
 	}
 
+	@Override
+	public RequestPolicy updatePrivacyPolicy(RequestPolicy privacyPolicy, Hashtable<String, ConditionRanges> ranges) throws PrivacyException {
+		// -- Verify
+		if (null == privacyPolicy) {
+			throw new PrivacyException("The privacy policy to update is empty.");
+		}
+		if (null == privacyPolicy.getRequestor() || null == privacyPolicy.getRequestor().getRequestorId()) {
+			throw new PrivacyException("Not enought information to update a privacy policy. Requestor needed.");
+		}
+		// Dependency injection not ready
+		if (!isDepencyInjectionDone()) {
+			throw new PrivacyException("[Dependency Injection] PrivacyPolicyManager not ready");
+		}
+
+		policyRegistryManager.updatePrivacyPolicy(privacyPolicy.getRequestor(), privacyPolicy, ranges);
+		return privacyPolicy;
+	}
 
 	@Override
 	public RequestPolicy updatePrivacyPolicy(String privacyPolicyXml, RequestorBean requestor) throws PrivacyException {

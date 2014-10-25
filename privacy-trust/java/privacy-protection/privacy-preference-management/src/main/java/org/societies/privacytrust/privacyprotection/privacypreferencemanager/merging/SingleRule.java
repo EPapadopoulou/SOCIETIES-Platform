@@ -27,6 +27,7 @@ package org.societies.privacytrust.privacyprotection.privacypreferencemanager.me
 import java.util.ArrayList;
 import java.util.List;
 
+import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
@@ -49,7 +50,6 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 public class SingleRule{
 	private ArrayList<IPrivacyPreferenceCondition> conditions;
 	private IPrivacyOutcome outcome;
-	private int confidence;
 
 	public SingleRule(){
 		this.conditions = new ArrayList<IPrivacyPreferenceCondition>();
@@ -70,16 +70,6 @@ public class SingleRule{
 	public IPrivacyOutcome getOutcome() {
 		return outcome;
 	}
-
-
-	public void setConfidence(int confidence) {
-		this.confidence = confidence;
-	}
-
-	public int getConfidence() {
-		return confidence;
-	}
-
 
 
 	public String toString(){
@@ -112,20 +102,8 @@ public class SingleRule{
 		StringBuilder sb = new StringBuilder();
 		sb.append("Outcome: ");
 		if (outcome instanceof PPNPOutcome){
-			sb.append(((PPNPOutcome) outcome).getDecision().toString());
-			sb.append("(");
-			for (Action action : ((PPNPOutcome) outcome).getActions()){
-				sb.append(action.getActionConstant()+", ");
-				
-			}
-			int c = sb.lastIndexOf(", ");
-			if (c>-1){
-				sb.delete(c, c+1);
-			}
-			sb.append(")");
-			
-		}else
-		
+			sb.append(ConditionUtils.toString(((PPNPOutcome) outcome).getCondition()));
+		}else		
 		if (outcome instanceof AccessControlOutcome){
 			sb.append(((AccessControlOutcome) outcome).getEffect().toString());
 		}else

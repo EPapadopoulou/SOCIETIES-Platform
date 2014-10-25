@@ -163,12 +163,12 @@ public class ActionUtils {
 	public static String toXmlString(Action action){
 		StringBuilder sb = new StringBuilder();
 		if (null != action) {
-			sb.append("\n<Action>\n");
-			sb.append("\t<Attribute AttributeId=\"urn:oasis:names:tc:xacml:1.0:action:action-id\" DataType=\""+action.getActionConstant().getClass().getName()+"\">\n");
-			sb.append("\t\t<AttributeValue>"+action.getActionConstant().name()+"</AttributeValue>\n");
-			sb.append("\t</Attribute>\n");
-			sb.append("\t<optional>"+action.isOptional()+"</optional>\n");
-			sb.append("</Action>");
+			sb.append("\t\t<Action>\n");
+			sb.append("\t\t\t<Attribute AttributeId=\"urn:oasis:names:tc:xacml:1.0:action:action-id\" DataType=\""+action.getActionConstant().getClass().getName()+"\">\n");
+			sb.append("\t\t\t\t<AttributeValue>"+action.getActionConstant().name()+"</AttributeValue>\n");
+			sb.append("\t\t\t</Attribute>\n");
+			sb.append("\t\t\t<optional>"+action.isOptional()+"</optional>\n");
+			sb.append("\t\t</Action>");
 		}
 		return sb.toString();
 	}

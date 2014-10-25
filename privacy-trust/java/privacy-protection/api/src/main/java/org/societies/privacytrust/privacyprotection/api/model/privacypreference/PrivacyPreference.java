@@ -94,14 +94,8 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 		}else if (this.isLeaf()){
 			sb.append("Then: ");
 			if (this.userObject instanceof PPNPOutcome){
-				sb.append("Decision: ");
-				sb.append(((PPNPOutcome) userObject).getDecision());
-				sb.append(" (Actions: ");
-				List<ActionConstants> actionList = new ArrayList<ActionConstants>();
-				for (Action action : ((PPNPOutcome) userObject).getActions()){
-					actionList.add(action.getActionConstant());
-				}
-				sb.append(actionList);
+				sb.append("Condition: ");
+				sb.append(((PPNPOutcome) userObject).getCondition().getConditionConstant()+" = "+((PPNPOutcome) userObject).getCondition().getValue());
 				sb.append(")");
 			}else if (this.userObject instanceof AccessControlOutcome){
 				sb.append("Access: ");

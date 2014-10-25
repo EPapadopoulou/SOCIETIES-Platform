@@ -60,7 +60,9 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.OperatorConstants;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPrivacyPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.util.PrivacyPreferenceUtils;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.CtxTypes;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 
@@ -188,7 +190,7 @@ public class PrivacyPreferenceMerger {
 		//check if we're in Situation 2 (100% match)
 		temp = this.checkMatches(oldRules, sr);
 		if (temp.size()>0){
-			//return createTree(temp);
+			//the confidence level of the matching outcome has been updated in the SingleRule. This should be reflected in the tree by reference
 			return oldTree;
 		}
 		this.logging.debug("Not in Situation 2");
@@ -223,7 +225,8 @@ public class PrivacyPreferenceMerger {
 
 			SingleRule sr = oldRules.get(i);
 			if (sr.equals(newRule)){
-				oldRules.set(i, this.increaseConfidenceLevel(sr));
+				sr.getOutcome().updateConfidenceLevel(true);
+				oldRules.set(i, sr);
 				return oldRules;
 			}
 		}
@@ -435,14 +438,14 @@ public class PrivacyPreferenceMerger {
 		logging.debug("AFTER REMOVAL: "+sr.toString());
 		IPrivacyPreference leaf = new PrivacyPreference(sr.getOutcome());
 		for (int i = 0; i< sr.getConditions().size(); i++){
-			ContextPreferenceCondition pc = (ContextPreferenceCondition) ptn.getUserObject();
+			/*ContextPreferenceCondition pc = (ContextPreferenceCondition) ptn.getUserObject();
 			if (null==pc){
 				logging.debug("weird");
 			}
 			if (sr.getConditions().get(i) == null){
 				logging.debug("even weirder");
 			}
-
+			*/
 			//log("pc: "+pc.toString());
 			logging.debug("sr con: "+sr.getConditions().get(i).toString());
 			IPrivacyPreference temp = new PrivacyPreference(sr.getConditions().get(i));
@@ -464,7 +467,14 @@ public class PrivacyPreferenceMerger {
 		IPrivacyPreference newPreference = newModel.getRootPreference();
 		if (existingPreference.isLeaf()){
 			this.logging.debug("existing node does not contain context condition. merging as leaf");
-			newPreference = newPreference.getRoot();
+			if (newPreference.isLeaf()){
+				PPNPOutcome newOutcome = (PPNPOutcome) newPreference.getOutcome();
+				PPNPOutcome existingOutcome = (PPNPOutcome) existingPreference.getOutcome();
+				if (newOutcome.equals(existingOutcome)){
+					existingOutcome.updateConfidenceLevel(true);
+					return existingModel;
+				}
+			}
 			IPrivacyPreference p = new PrivacyPreference();
 			p.add(newPreference);
 			p.add(existingPreference);

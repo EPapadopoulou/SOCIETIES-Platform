@@ -16,26 +16,15 @@ public class PurposePanel extends JPanel {
 	 * Create the panel.
 	 */
 	public PurposePanel(String purpose) {
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{0, 0};
-		gridBagLayout.rowHeights = new int[]{0, 0};
-		gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{1.0, Double.MIN_VALUE};
-		setLayout(gridBagLayout);
-		
-		//remove following 4 lines
-		purpose +="Your location will be tracked to offer you services nearby";
-		purpose +="Your location will be tracked to offer you services nearby";
-		purpose +="Your location will be tracked to offer you services nearby";
-		purpose +="Your location will be tracked to offer you services nearby";
+
 		String label = "<html>"+purpose+"</html>";
-		
+		setLayout(null);
+
+		setBounds(0,0, 645, 26);
 		JLabel purposeLbl = new JLabel(label);
-		GridBagConstraints gbc_jlabel = new GridBagConstraints();
-		gbc_jlabel.fill = GridBagConstraints.BOTH;
-		gbc_jlabel.gridx = 0;
-		gbc_jlabel.gridy = 0;
-		add(purposeLbl, gbc_jlabel);
+		purposeLbl.setBounds(0, 0, 640, 25);
+
+		add(purposeLbl);
 		
 
 		

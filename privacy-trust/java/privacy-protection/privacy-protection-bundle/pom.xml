@@ -132,7 +132,7 @@
 			<type>libd</type>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>com.seaglasslookandfeel</groupId>
 			<artifactId>seaglasslookandfeel</artifactId>
 			<version>0.1.7.3</version>
@@ -141,7 +141,7 @@
 			<groupId>com.weblookandfeel</groupId>
 			<artifactId>web-look-and-feel</artifactId>
 			<version>1.4.1</version>
-		</dependency>		
+		</dependency>		 -->
 	</dependencies>
 
 	<build>
@@ -171,7 +171,6 @@
 							javax.swing,
 							com.alee.laf,
 							com.alee.laf.separator,
-							com.seaglasslookandfeel;resolution:=optional,
 							javax.swing.event;resolution:=optional,
 							*;resolution:=optional
 						</Import-Package> <!-- Added org.societies.identity import because of Privacy policy serialization -->

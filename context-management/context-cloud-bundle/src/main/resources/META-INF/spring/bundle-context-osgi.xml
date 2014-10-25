@@ -46,7 +46,7 @@
 		cardinality="0..1" timeout="100" />
 	<osgi:reference id="dataSource" 
 	    interface="javax.sql.DataSource" />
-
+	    
 	<!-- event mgr -->
 	<osgi:reference id="eventManager"
 		interface="org.societies.api.osgi.event.IEventMgr" 

@@ -39,6 +39,7 @@ import org.societies.api.context.CtxException;
 import org.societies.api.context.model.CtxAssociation;
 import org.societies.api.context.model.CtxAssociationIdentifier;
 import org.societies.api.context.model.CtxAttribute;
+import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxEntity;
 import org.societies.api.context.model.CtxEntityIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
@@ -48,14 +49,17 @@ import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.IdentityType;
 import org.societies.api.internal.context.broker.ICtxBroker;
+import org.societies.api.internal.context.model.CtxIDChanger;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.osgi.event.EventTypes;
 import org.societies.api.osgi.event.IEventMgr;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
+import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager;
 import org.societies.privacytrust.privacyprotection.api.identity.IIdentityOption;
 import org.societies.privacytrust.privacyprotection.api.identity.IIdentitySelection;
-import org.societies.privacytrust.privacyprotection.api.identity.IdentityImpl;
+import org.societies.privacytrust.privacyprotection.identity.gui.IdentityCreationGUIDialog;
+import org.societies.privacytrust.privacyprotection.identity.gui.IdentityWindow;
 
 /**
  * To manage identity selection between the multiple identities of the user
@@ -72,20 +76,15 @@ public class IdentitySelection implements IIdentitySelection {
 	private static Logger logging = LoggerFactory.getLogger(IdentitySelection.class);
 
 	private ICtxBroker ctxBroker;
-
-	private List<IIdentity> identities;
-
 	private ICommManager commsMgr;
-
-	
+	private IIdentityManager idManager;	
+	private IPrivacyPreferenceManager privacyPreferenceManager;
+	private List<IIdentity> identities;
 	private Hashtable<IIdentity, List<CtxIdentifier>> identityMappings;
-
 	private IIdentity userIdentity;
-
-	private IIdentityManager idManager;
-
 	private IndividualCtxEntity person;
 	private CtxEntityIdentifier identity_Information_EntityID;
+	private boolean initialised;
 
 	public IdentitySelection() {
 		this.identities = new ArrayList<IIdentity>();
@@ -95,6 +94,12 @@ public class IdentitySelection implements IIdentitySelection {
 
 	public void init() {
 		this.userIdentity = idManager.getThisNetworkNode();
+		this.initialised = false;
+		this.initialiseAfterContext();
+	}
+
+	public void initialiseAfterContext(){
+		this.logging.debug("Lazy Initialisation -  IdentitySelection component");
 		try {
 
 			person = this.ctxBroker.retrieveIndividualEntity(userIdentity)
@@ -122,13 +127,19 @@ public class IdentitySelection implements IIdentitySelection {
 								.iterator().next();
 						if (identityMappingsAttribute.getBinaryValue()!=null){
 							this.identityMappings = (Hashtable<IIdentity, List<CtxIdentifier>>) SerialisationHelper.deserialise(identityMappingsAttribute.getBinaryValue(), this.getClass().getClassLoader());
+							
 						}
 						if (this.identityMappings != null) {
+							Hashtable<String, List<CtxIdentifier>> forCtxBroker = new Hashtable<String, List<CtxIdentifier>>();
 							Enumeration<IIdentity> keys = this.identityMappings
 									.keys();
 							while (keys.hasMoreElements()) {
-								this.identities.add(keys.nextElement());
+								IIdentity id = keys.nextElement();
+								this.identities.add(this.idManager.addAlias(id.getIdentifier()));
+								forCtxBroker.put(id.getBareJid(), this.identityMappings.get(id));
+								
 							}
+							ctxBroker.setLinkedAttributes(forCtxBroker);
 						}
 					}
 
@@ -159,9 +170,8 @@ public class IdentitySelection implements IIdentitySelection {
 		if (this.identities == null) {
 			this.identities = new ArrayList<IIdentity>();
 		}
-		
+		this.initialised = true;
 	}
-
 	private void setupContext() {
 		try {
 			CtxAssociation ctxAssociation = this.ctxBroker.createAssociation(
@@ -243,6 +253,9 @@ public class IdentitySelection implements IIdentitySelection {
 	 */
 	@Override
 	public List<IIdentityOption> processIdentityContext(Agreement agreement) {
+		if (!this.initialised){
+			this.initialiseAfterContext();
+		}
 		List<IIdentityOption> identityList = new ArrayList<IIdentityOption>();
 
 		List<ResponseItem> agreedResources = agreement.getRequestedItems();
@@ -263,12 +276,14 @@ public class IdentitySelection implements IIdentitySelection {
 				for (CtxIdentifier ctxID : list) {
 					// if resource data type is found in the mappings list, set
 					// data type found
-					if (resource.getDataType().equals(ctxID.getType())) {
+					if (resource.getDataType().equalsIgnoreCase(ctxID.getType())) {
+						this.logging.debug("Identity: "+identity.getBareJid()+" has item: "+resource.getDataType());						
 						found = true;
 						break;
 					}
 				}
 				if (!found) {
+					this.logging.debug("Identity: "+identity.getBareJid()+" does not have item: "+resource.getDataType());
 					isIdentityValid = false;
 					break;
 				}
@@ -298,22 +313,37 @@ public class IdentitySelection implements IIdentitySelection {
 	@Override
 	public IIdentityOption evaluateLinkability(IIdentity remoteEntity,
 			IIdentity userOwnedEntity, Resource dataToBeReleased) {
+		if (!this.initialised){
+			this.initialiseAfterContext();
+		}
 		return new IdentityOption(userOwnedEntity);
 	}
 
 	@Override
 	public IIdentity createIdentity(String name, List<CtxIdentifier> idList) {
-		IdentityImpl impl = new IdentityImpl(IdentityType.CSS, name,
-				this.userIdentity.getDomain());
-
-		this.identityMappings.put(impl, idList);
+		if (!this.initialised){
+			this.initialiseAfterContext();
+		}
+		
+		IIdentity impl = this.idManager.addAlias(name);
+		List<CtxIdentifier> newList = new ArrayList<CtxIdentifier>();
+		for (CtxIdentifier ctxID : idList){
+			CtxIdentifier newCtxID =CtxIDChanger.changeOwner(impl.getBareJid(), (CtxAttributeIdentifier) ctxID);
+			newList.add(newCtxID);
+		}
+		logging.debug("Creating new identity"+impl.getBareJid()+" with context list: {}", newList);
+		this.identityMappings.put(impl, newList);
 		this.identities.add(impl);
+		this.ctxBroker.addIdentityLinkedAttributes(impl.getBareJid(), newList);
 		this.storeIdentityMappings();
 		return impl;
 	}
 
 	@Override
 	public List<CtxIdentifier> getLinkedAttributes(IIdentity identity) {
+		if (!this.initialised){
+			this.initialiseAfterContext();
+		}
 		if (this.identityMappings.containsKey(identity)){
 			return this.identityMappings.get(identity);
 		}
@@ -341,8 +371,31 @@ public class IdentitySelection implements IIdentitySelection {
 
 	@Override
 	public List<IIdentity> getAllIdentities() {
+		if (!this.initialised){
+			this.initialiseAfterContext();
+		}
 		// TODO Auto-generated method stub
 		return this.identities;
+	}
+
+	public IPrivacyPreferenceManager getPrivacyPreferenceManager() {
+		return privacyPreferenceManager;
+	}
+
+	public void setPrivacyPreferenceManager(IPrivacyPreferenceManager privacyPreferenceManager) {
+		this.privacyPreferenceManager = privacyPreferenceManager;
+	}
+
+	@Override
+	public Hashtable<String, List<CtxIdentifier>> showIdentityCreationGUI(Agreement agreement) {
+		IdentityWindow window = new IdentityWindow(agreement, this, userIdentity, this.identities);
+		return window.getIdentityInformation();
+	}
+
+	@Override
+	public IIdentity showIdentitySelectionGUI(List<IIdentity> identities, IIdentity recommendedIdentity) {
+		IdentityWindow window = new IdentityWindow(identities, recommendedIdentity);
+		return window.getSelectedIdentity();
 	}
 
 

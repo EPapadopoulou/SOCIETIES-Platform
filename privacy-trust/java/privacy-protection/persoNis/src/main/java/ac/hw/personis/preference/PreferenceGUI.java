@@ -50,7 +50,7 @@ public class PreferenceGUI extends JDialog implements ActionListener{
 			Action action = new Action();
 			action.setActionConstant(ActionConstants.READ);
 			actions.add(action );
-			IPrivacyOutcome outcome = new PPNPOutcome(Decision.PERMIT, actions);
+			IPrivacyOutcome outcome = new PPNPOutcome(condition);
 			PrivacyPreference outcomeNode = new PrivacyPreference(outcome);
 			conditionNode.add(outcomeNode);
 			PreferenceGUI dialog = new PreferenceGUI(conditionNode);

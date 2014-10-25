@@ -26,7 +26,10 @@ package org.societies.privacytrust.privacyprotection.api.model.privacypreference
 
 import java.io.Serializable;
 
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlOutcomeBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyOutcomeConstantsBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.Stage;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ConfidenceCalculator;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
@@ -55,10 +58,20 @@ public class AccessControlOutcome extends IPrivacyOutcome implements Serializabl
 
 	private int confidenceLevel;
 
+	private Stage currentStage;
+
 
 
 	public AccessControlOutcome(PrivacyOutcomeConstantsBean effect){
 		this.effect = effect;
+		this.confidenceLevel = 50;
+		this.currentStage = Stage.START;
+	}
+	
+	public AccessControlOutcome(AccessControlOutcomeBean bean){
+		this.effect = bean.getEffect();
+		this.confidenceLevel = bean.getConfidenceLevel();
+		this.currentStage = bean.getCurrentStage();
 	}
 
 	public PrivacyOutcomeConstantsBean getEffect(){
@@ -125,10 +138,19 @@ public class AccessControlOutcome extends IPrivacyOutcome implements Serializabl
 		return true;
 	}
 
-	@Override
+/*	@Override
 	public AccessControlOutcome clone(){
 		AccessControlOutcome outcome = new AccessControlOutcome(this.effect);
 		outcome.setConfidenceLevel(this.confidenceLevel);
 		return outcome;
+	}*/
+
+	public Stage getCurrentStage() {
+		// TODO Auto-generated method stub
+		return this.currentStage;
+	}
+	
+	public void updateConfidenceLevel(boolean positive){
+		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
 	}
 }

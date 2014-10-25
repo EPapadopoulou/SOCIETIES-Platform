@@ -69,7 +69,7 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PrivateContextCache;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.PrivatePreferenceCache;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.cache.PreferenceCache;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.AccessControlPreferenceCreator;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.AttrSelPreferenceCreator;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.DObfPreferenceCreator;
@@ -86,7 +86,7 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.mon
 
 public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 
-	private PrivatePreferenceCache prefCache;
+	private PreferenceCache prefCache;
 	private PrivateContextCache contextCache;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
@@ -133,14 +133,14 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 		this.ctxBroker = ctxBroker;
 		this.trustBroker = trustBroker;
 		this.privacyPCM = new PrivacyPreferenceConditionMonitor(ctxBroker, this, privacyDataManagerInternal, commsMgr);
-		prefCache = new PrivatePreferenceCache(ctxBroker, this.idm);
+		prefCache = new PreferenceCache(ctxBroker, this.idm);
 		contextCache = new PrivateContextCache(ctxBroker);
 
 	}
 
 	public void initialisePrivacyPreferenceManager(){
 		this.userIdentity = this.idm.getThisNetworkNode();
-		prefCache = new PrivatePreferenceCache(ctxBroker, this.idm);
+		prefCache = new PreferenceCache(ctxBroker, this.idm);
 		
 		this.privacyPCM = new PrivacyPreferenceConditionMonitor(ctxBroker, this, this.privacyDataManagerInternal, commsMgr);
 		this.contextCache = new PrivateContextCache(ctxBroker);
@@ -639,6 +639,36 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 
 	public IDSPreferenceCreator getIdsPreferenceCreator() {
 		return idsPreferenceCreator;
+	}
+
+
+	@Override
+	public boolean deletePPNPreferences() {
+		return this.ppnMgr.deletePPNPreferences();
+	}
+
+
+	@Override
+	public boolean deleteIDSPreferences() {
+		return this.idsMgr.deleteIDSPreferences();
+	}
+
+
+	@Override
+	public boolean deleteDObfPreferences() {
+		return this.getDObfPreferenceManager().deleteDObfPreferences();
+	}
+
+
+	@Override
+	public boolean deleteAccCtrlPreferences() {
+		return this.getAccessControlPreferenceManager().deleteAccCtrlPreferences();
+	}
+
+
+	@Override
+	public boolean deleteAttSelPreferences() {
+		return this.getAttrSelPreferenceManager().deleteAttSelPreferences();
 	}
 
 

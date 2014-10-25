@@ -1,6 +1,7 @@
 package org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components;
 
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -22,13 +23,17 @@ import java.util.List;
 
 import javax.swing.JCheckBox;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
+import javax.swing.Icon;
 
 public class ActionsPanel extends JPanel {
+	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
 	private JCheckBox readChckBox;
 	private JCheckBox writeChckBox;
@@ -42,85 +47,157 @@ public class ActionsPanel extends JPanel {
 
 	private RequestItem reqItem;
 	private ResponseItem respItem;
-	private List<PPNPreferenceDetailsBean> preferences;
-	private boolean thirdRound;
+	private boolean firstRound;
+	private JLabel lblWriteIcon;
+	private JLabel lblCreateIcon;
+	private JLabel lblDeleteIcon;
+
+	private JLabel lblReadIcon;
 
 	/**
 	 * Create the panel.
 	 * @param firstRound 
 	 */
-	public ActionsPanel(RequestItem reqItem, ResponseItem respItem, List<PPNPreferenceDetailsBean> preferences, boolean firstRound) {
+	public ActionsPanel(RequestItem reqItem, ResponseItem respItem,boolean firstRound) {
 		this.reqItem = reqItem;
 		this.respItem = respItem;
-		this.preferences = preferences;
-		this.thirdRound = firstRound;
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{0, 0};
-		gridBagLayout.rowHeights = new int[]{0, 0};
-		gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{1.0, Double.MIN_VALUE};
-
-		setLayout(gridBagLayout);
+		this.firstRound = firstRound;
+		setLayout(null);
 
 		JPanel panel = new JPanel();
+		panel.setBounds(0, 0, 90, 98);
 		panel.setToolTipText("Right click on each checkbox to view the associated preference");
-		GridBagConstraints gbc_panel = new GridBagConstraints();
-		gbc_panel.fill = GridBagConstraints.BOTH;
-		gbc_panel.gridx = 0;
-		gbc_panel.gridy = 0;
-		add(panel, gbc_panel);
-
-
-		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		add(panel);
+		panel.setLayout(null);
 		readChckBox = new JCheckBox("Read");
-		readChckBox.setEnabled(firstRound);
+		readChckBox.setBounds(0, 0, 84, 23);
+		readChckBox.setEnabled(false);
 		readChckBox.setToolTipText("Right click on each checkbox to view the associated preference");
 		panel.add(readChckBox);
 
-		
+
 
 		writeChckBox = new JCheckBox("Write");
-		writeChckBox.setEnabled(firstRound);
+		writeChckBox.setBounds(0, 23, 84, 23);
+		writeChckBox.setEnabled(false);
 		writeChckBox.setToolTipText("Right click on each checkbox to view the associated preference");
 		panel.add(writeChckBox);
-		
+
 
 		createChckBox = new JCheckBox("Create");
-		createChckBox.setEnabled(firstRound);
+		createChckBox.setBounds(0, 46, 84, 23);
+		createChckBox.setEnabled(false);
 		createChckBox.setToolTipText("Right click on each checkbox to view the associated preference");
 		panel.add(createChckBox);
-		
+
 
 		deleteChckBox = new JCheckBox("Delete");
-		deleteChckBox.setEnabled(firstRound);
+		deleteChckBox.setBounds(0, 69, 84, 23);
+		deleteChckBox.setEnabled(false);
 		deleteChckBox.setToolTipText("Right click on each checkbox to view the associated preference");
 		panel.add(deleteChckBox);
+
+		JPanel iconsPanel = new JPanel();
+		iconsPanel.setBounds(90, 0, 66, 98);
+		add(iconsPanel);
+		iconsPanel.setLayout(null);
+
+		
+		lblReadIcon = new JLabel();
+		lblReadIcon.setBounds(0, 0, 23, 23);
+		iconsPanel.add(lblReadIcon);
+
+		lblWriteIcon = new JLabel();
+		lblWriteIcon.setBounds(0, 23, 23, 23);
+		iconsPanel.add(lblWriteIcon);
+
+		lblCreateIcon = new JLabel();
+		lblCreateIcon.setBounds(0, 46, 23, 23);
+		iconsPanel.add(lblCreateIcon);
+
+		lblDeleteIcon = new JLabel();
+		lblDeleteIcon.setBounds(0, 69, 23, 23);
+		iconsPanel.add(lblDeleteIcon);
 		System.out.println("actions size: "+reqItem.getActions().size());
 		for (Action a: reqItem.getActions()){
 			if (a.getActionConstant().equals(ActionConstants.READ)){
 				readChckBox.setSelected(true);
+				if (firstRound && a.isOptional()){
+					readChckBox.setEnabled(true);
+				}
 			}else if (a.getActionConstant().equals(ActionConstants.WRITE)){
 				writeChckBox.setSelected(true);
+				if (firstRound && a.isOptional()){
+					writeChckBox.setEnabled(true);
+				}
 			}else if (a.getActionConstant().equals(ActionConstants.CREATE)){
 				createChckBox.setSelected(true);
+				if (firstRound && a.isOptional()){
+					createChckBox.setEnabled(true);
+				}
 			}else if (a.getActionConstant().equals(ActionConstants.DELETE)){
 				deleteChckBox.setSelected(true);
+				if(firstRound && a.isOptional()){
+					deleteChckBox.setEnabled(true);
+				}
 			}
 		}
 
 		setupPopupMenu();
 	}
 
+	private ImageIcon createWarningImageIcon() {
+		java.net.URL imgURL = getClass().getResource("/images/warning.png");
+		if (imgURL!=null){
+			return new ImageIcon(imgURL);
+		}else{
+			this.logging.error("Can't find warning image");
+			return null;
+		}
+	}
+
+	private ImageIcon createCheckImageIcon() {
+		java.net.URL imgURL = getClass().getResource("/images/check.png");
+		if (imgURL!=null){
+			return new ImageIcon(imgURL);
+		}else{
+			this.logging.error("Can't find warning image");
+			return null;
+		}
+	}
+
+	private ImageIcon createLeftArrowImageIcon() {
+		java.net.URL imgURL = getClass().getResource("/images/left_arrow_galazio_23.png");
+		if (imgURL!=null){
+			return new ImageIcon(imgURL);
+		}else{
+			this.logging.error("Can't find warning image");
+			return null;
+		}
+	}
+
 	public void setEnabledChckBoxes(boolean bool){
 		for (Action a: reqItem.getActions()){
 			if (a.getActionConstant().equals(ActionConstants.READ)){
 				readChckBox.setSelected(true);
+				if (firstRound && a.isOptional()){
+					readChckBox.setEnabled(true);
+				}
 			}else if (a.getActionConstant().equals(ActionConstants.WRITE)){
 				writeChckBox.setSelected(true);
+				if (firstRound && a.isOptional()){
+					writeChckBox.setEnabled(true);
+				}
 			}else if (a.getActionConstant().equals(ActionConstants.CREATE)){
 				createChckBox.setSelected(true);
+				if (firstRound && a.isOptional()){
+					createChckBox.setEnabled(true);
+				}
 			}else if (a.getActionConstant().equals(ActionConstants.DELETE)){
 				deleteChckBox.setSelected(true);
+				if(firstRound && a.isOptional()){
+					deleteChckBox.setEnabled(true);
+				}
 			}
 		}
 	}
@@ -145,38 +222,36 @@ public class ActionsPanel extends JPanel {
 
 
 	public void applyPersonalisation(){
-
 		if (respItem!=null){
-		for (Action requestedAction : this.reqItem.getActions()){
-			boolean allowed = false;
-			//check if this action is included in the respItem:
-			for (Action suggestedAction : this.respItem.getRequestItem().getActions()){
-				if (suggestedAction.getActionConstant().equals(requestedAction.getActionConstant())){
-					allowed = true;
+			for (Action requestedAction : this.reqItem.getActions()){
+				//can only edit the actions that are optional
+				if (requestedAction.isOptional()){
+					boolean userAllowed = false;
+					//check if this action is included in the respItem:
+					for (Action suggestedAction : this.respItem.getRequestItem().getActions()){
+						if (suggestedAction.getActionConstant().equals(requestedAction.getActionConstant())){
+							userAllowed = true;
+						}
+					}
+					//personalise
+					if (userAllowed){
+						switch (requestedAction.getActionConstant()){
+						case READ:	this.readChckBox.setSelected(true);
+						lblReadIcon.setIcon(createLeftArrowImageIcon());
+						break;
+						case WRITE:	this.writeChckBox.setSelected(true);
+						lblWriteIcon.setIcon(createLeftArrowImageIcon());
+						break;
+						case CREATE: this.createChckBox.setSelected(true);
+						lblCreateIcon.setIcon(createLeftArrowImageIcon());
+						break;
+						case DELETE: this.deleteChckBox.setSelected(true);
+						lblDeleteIcon.setIcon(createLeftArrowImageIcon());
+						break;
+						}
+					}
 				}
 			}
-
-			//reset all
-			this.readChckBox.setSelected(false);
-			this.writeChckBox.setSelected(false);
-			this.createChckBox.setSelected(false);
-			this.deleteChckBox.setSelected(false);
-			
-			//personalise
-			if (allowed){
-				switch (requestedAction.getActionConstant()){
-				case READ:	this.readChckBox.setSelected(true);
-					break;
-				case WRITE:	this.writeChckBox.setSelected(true);
-					break;
-				case CREATE: this.createChckBox.setSelected(true);
-					break;
-				case DELETE: this.deleteChckBox.setSelected(true);
-					break;
-				}
-			}
-		}
-
 		}
 
 	}
@@ -191,21 +266,32 @@ public class ActionsPanel extends JPanel {
 		this.createChckBox.setEnabled(false);
 		this.deleteChckBox.setSelected(false);
 		this.deleteChckBox.setEnabled(false);
-		
+
+		this.lblCreateIcon.setIcon(null);
+		this.lblDeleteIcon.setIcon(null);
+		this.lblReadIcon.setIcon(null);
+		this.lblWriteIcon.setIcon(null);
 		for (Action a: reqItem.getActions()){
-			switch (a.getActionConstant()){
-			case READ:	this.readChckBox.setSelected(true);
-						this.readChckBox.setEnabled(true);
-				break;
-			case WRITE:	this.writeChckBox.setSelected(true);
-						this.writeChckBox.setEnabled(true);
-				break;
-			case CREATE: this.createChckBox.setSelected(true);
-						this.createChckBox.setEnabled(true);
-				break;
-			case DELETE: this.deleteChckBox.setSelected(true);
-						this.deleteChckBox.setEnabled(true);
-				break;
+			if (a.getActionConstant().equals(ActionConstants.READ)){
+				readChckBox.setSelected(true);
+				if (firstRound && a.isOptional()){
+					readChckBox.setEnabled(true);
+				}
+			}else if (a.getActionConstant().equals(ActionConstants.WRITE)){
+				writeChckBox.setSelected(true);
+				if (firstRound && a.isOptional()){
+					writeChckBox.setEnabled(true);
+				}
+			}else if (a.getActionConstant().equals(ActionConstants.CREATE)){
+				createChckBox.setSelected(true);
+				if (firstRound && a.isOptional()){
+					createChckBox.setEnabled(true);
+				}
+			}else if (a.getActionConstant().equals(ActionConstants.DELETE)){
+				deleteChckBox.setSelected(true);
+				if(firstRound && a.isOptional()){
+					deleteChckBox.setEnabled(true);
+				}
 			}
 		}
 	}
@@ -311,5 +397,4 @@ public class ActionsPanel extends JPanel {
 		}
 		return false;
 	}
-
 }

@@ -24,24 +24,15 @@
  */
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager.management;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.CtxException;
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxIdentifier;
-import org.societies.api.context.model.CtxModelType;
-import org.societies.api.context.model.IndividualCtxEntity;
 import org.societies.api.context.model.util.SerialisationHelper;
-import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.internal.context.broker.ICtxBroker;
@@ -50,10 +41,9 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.preferen
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPrivacyPreferenceTreeModelBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPrivacyPreferenceTreeModelBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPrivacyPreferenceTreeModelBean;
-import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.RegistryBean;
+import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.util.PrivacyPreferenceUtils;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.CtxTypes;
 
 /**
  * @author Elizabeth
@@ -70,47 +60,12 @@ public class PreferenceRetriever {
 		this.idMgr = idMgr;
 	}
 
-	public Registry retrieveRegistry(){
-		IIdentity userId = this.idMgr.getThisNetworkNode();
-
-		this.logging.debug("Retrieving registry");
-		try {
-			IndividualCtxEntity entityPerson = ctxBroker.retrieveIndividualEntity(userId).get();
-			Set<CtxAttribute> attributes = entityPerson.getAttributes(CtxTypes.PRIVACY_PREFERENCE_REGISTRY);
-			if (attributes.size()==0){
-				return new Registry();
-			}
-			CtxAttribute ctxAttribute = attributes.iterator().next();
-			Registry registry = (Registry) SerialisationHelper.deserialise(ctxAttribute.getBinaryValue(), this.getClass().getClassLoader());
-			return registry;
-		} catch (CtxException e) {
-			this.logging.debug("Exception while loading PreferenceRegistry from DB ");
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			this.logging.debug("Exception while loading PreferenceRegistry from DB ");
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			this.logging.debug("Exception while loading PreferenceRegistry from DB ");
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		this.logging.debug("Error retrieving registry from DB, creating new registry");
-		return new Registry();
-	}
-
-
 	/*
 	 * retrieves a preference object using that preference object's context identifier to find it
 	 * @param id
 	 * @return
 	 */
-	public IPrivacyPreferenceTreeModel retrievePreference(CtxIdentifier id){
+	public IPrivacyPreferenceTreeModel retrievePreference(CtxIdentifier id) throws PrivacyException{
 		try{
 			//retrieve directly the attribute in context that holds the preference as a blob value
 			CtxAttribute attrPref = (CtxAttribute) ctxBroker.retrieve(id).get();

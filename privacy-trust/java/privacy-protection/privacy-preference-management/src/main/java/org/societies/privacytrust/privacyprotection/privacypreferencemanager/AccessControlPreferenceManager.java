@@ -30,9 +30,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.CtxException;
@@ -40,11 +37,9 @@ import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxEntity;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelObject;
-import org.societies.api.context.model.CtxOriginType;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
-import org.societies.api.identity.INetworkNode;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.Requestor;
 import org.societies.api.identity.util.RequestorUtils;
@@ -71,7 +66,6 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decisio
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
-import org.societies.privacytrust.privacyprotection.api.IDataObfuscationManager;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
@@ -83,7 +77,8 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.OperatorConstants;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PreferenceEvaluator;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PrivateContextCache;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.PrivatePreferenceCache;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.gui.AccessControlDialog;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.cache.PreferenceCache;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.DObfPreferenceCreator;
 
 /**
@@ -93,7 +88,7 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.mer
 public class AccessControlPreferenceManager {
 
 	private final static Logger logging = LoggerFactory.getLogger(AccessControlPreferenceManager.class);
-	private final PrivatePreferenceCache prefCache;
+	private final PreferenceCache prefCache;
 	private final PrivateContextCache contextCache;
 	private final IUserFeedback userFeedback;
 	private final ITrustBroker trustBroker;
@@ -107,7 +102,7 @@ public class AccessControlPreferenceManager {
 
 
 
-	public AccessControlPreferenceManager(PrivatePreferenceCache prefCache, PrivateContextCache contextCache, IUserFeedback userFeedback, ITrustBroker trustBroker, ICtxBroker ctxBroker, IPrivacyAgreementManager agreementMgr, IIdentityManager idMgr, DObfPreferenceCreator dobfPrefCreator, IPrivacyDataManagerInternal privacyDataManagerInternal){
+	public AccessControlPreferenceManager(PreferenceCache prefCache, PrivateContextCache contextCache, IUserFeedback userFeedback, ITrustBroker trustBroker, ICtxBroker ctxBroker, IPrivacyAgreementManager agreementMgr, IIdentityManager idMgr, DObfPreferenceCreator dobfPrefCreator, IPrivacyDataManagerInternal privacyDataManagerInternal){
 		this.prefCache = prefCache;
 		this.contextCache = contextCache;
 		this.userFeedback = userFeedback;
@@ -245,7 +240,14 @@ public class AccessControlPreferenceManager {
 		if (preferencesDoNotExist.size()>0){
 			//TODO: AC gui!
 			//List<AccessControlResponseItem> list = this.userFeedback.getAccessControlFB(RequestorUtils.toRequestor(requestor, idMgr), preferencesDoNotExist).get();
+			
 			List<AccessControlResponseItem> list = new ArrayList<AccessControlResponseItem>();
+			for (ResponseItem item :preferencesDoNotExist){
+				AccessControlDialog dialog = new AccessControlDialog();
+				AccessControlResponseItem accessControlResponseItem = dialog.getAccessControlResponseItem(requestor, item);
+				list.add(accessControlResponseItem);
+			}
+			
 			for (AccessControlResponseItem item: list){
 				if (item.isRemember()){
 					this.privacyDataManagerInternal.updatePermission(requestor, item);
@@ -336,15 +338,13 @@ public class AccessControlPreferenceManager {
 			List<AccessControlResponseItem> responseItems = new ArrayList<AccessControlResponseItem>();
 			responseItems.add(responseItem);
 
-			List<AccessControlResponseItem> resultlist = new ArrayList<AccessControlResponseItem>();
 			//TODO! AC GUI (SEE LINES 412,413)
-			//List<AccessControlResponseItem> resultlist = this.userFeedback.getAccessControlFB(RequestorUtils.toRequestor(requestor, idMgr), responseItems).get();
-			if (resultlist.size()==0){
-				responseItem.setDecision(Decision.DENY);
-				return responseItem;
-			}
+			AccessControlDialog dialog = new AccessControlDialog();
+			AccessControlResponseItem accessControlResponseItem = dialog.getAccessControlResponseItem(requestor, responseItem);
+			
 
-			AccessControlResponseItem accessControlResponseItem = resultlist.get(0);
+			//AccessControlResponseItem accessControlResponseItem = resultlist.get(0);
+			
 			if (accessControlResponseItem.isRemember()){
 				this.privacyDataManagerInternal.updatePermission(requestor, accessControlResponseItem);
 				this.storeDecision(requestor, resource, accessControlResponseItem.getRequestItem().getConditions(), action, accessControlResponseItem.getDecision());
@@ -693,6 +693,11 @@ public class AccessControlPreferenceManager {
 		PrivacyPreference pref = prefMgr.createPreferenceWithPrivacyConditions(conditions, action, outcome);
 		System.out.println(pref.getRoot());
 
+	}
+
+
+	public boolean deleteAccCtrlPreferences() {
+		return this.prefCache.removeAccCtrlPreferences();
 	}
 
 

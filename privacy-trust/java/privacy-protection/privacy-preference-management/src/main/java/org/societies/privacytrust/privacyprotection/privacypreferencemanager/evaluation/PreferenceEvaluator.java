@@ -313,7 +313,18 @@ public class PreferenceEvaluator {
 
 
 
-	public ResponseItem evaluatePPNPreferences(RequestItem requestItem, PPNPrivacyPreferenceTreeModel model) {
+	public Condition evaluatePPNPreferences(PPNPrivacyPreferenceTreeModel model){
+		Hashtable<IPrivacyOutcome, List<CtxIdentifier>> evaluatePreference = this.evaluatePreference(model.getRootPreference());
+		if (evaluatePreference.keySet().size() > 0){
+			IPrivacyOutcome outcome = evaluatePreference.keys().nextElement();
+			if (outcome instanceof PPNPOutcome){
+				return ((PPNPOutcome) outcome).getCondition();
+			}
+		}
+		
+		return null;
+	}
+/*	public ResponseItem evaluatePPNPreferences(RequestItem requestItem, PPNPrivacyPreferenceTreeModel model) {
 		this.conditions = requestItem.getConditions();
 		//need a custom method
 		Hashtable<IPrivacyOutcome, List<CtxIdentifier>> evaluatePreference = this.evaluatePreference(model.getRootPreference());
@@ -329,7 +340,7 @@ public class PreferenceEvaluator {
 
 		return null;
 
-		/*		Enumeration<RequestItem> items = modelsHashtable.keys();
+				Enumeration<RequestItem> items = modelsHashtable.keys();
 
 		//for every requestItem, a list of responseItems will be created
 		//for each action in the requestItem, there will be a ResponseItem
@@ -354,10 +365,10 @@ public class PreferenceEvaluator {
 
 		}
 
-		return toReturn;*/
+		return toReturn;
 
 
-	}
+	}*/
 
 	public Hashtable<IPrivacyOutcome, List<CtxIdentifier>> evaluateAccessCtrlPreference(IPrivacyPreference pref, List<Condition> conditions) {
 		this.conditions = conditions;

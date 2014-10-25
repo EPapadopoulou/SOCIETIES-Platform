@@ -6,6 +6,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -32,7 +34,7 @@ import org.societies.api.internal.context.broker.ICtxBroker;
 
 public class DataInitialiser extends JDialog implements ActionListener {
 
-	private static final String FULLNAME = "name";
+/*	private static final String FULLNAME = "name";
 	private static final String LOCATION_COORDINATES = "locationCoordinates";
 	private static final String EMAIL = "email";
 	private static final String OCCUPATION = "occupation";
@@ -40,24 +42,36 @@ public class DataInitialiser extends JDialog implements ActionListener {
 	private static final String LANGUAGES = "languages";
 	private static final String INTERESTS = "interests";
 	private static final String LOCATION_SYMBOLIC = "locationSymbolic";
-	private static final String SEX = "sex";
+	private static final String SEX = "sex";*/
 
 	private JPanel contentPane;
     private Logger logging = LoggerFactory.getLogger(this.getClass());
 
 
-	public static String[] dataTypes = new String[]{LOCATION_SYMBOLIC, INTERESTS, LANGUAGES, AGE, OCCUPATION,  EMAIL, LOCATION_COORDINATES, FULLNAME};
+	public static String[] dataTypes = new String[]{
+		org.societies.api.context.model.CtxAttributeTypes.LOCATION_SYMBOLIC, 
+		org.societies.api.context.model.CtxAttributeTypes.INTERESTS, 
+		org.societies.api.context.model.CtxAttributeTypes.LANGUAGES,
+		org.societies.api.context.model.CtxAttributeTypes.AGE, 
+		org.societies.api.context.model.CtxAttributeTypes.OCCUPATION,  
+		org.societies.api.context.model.CtxAttributeTypes.EMAIL, 
+		org.societies.api.context.model.CtxAttributeTypes.LOCATION_COORDINATES, 
+		org.societies.api.context.model.CtxAttributeTypes.NAME,
+		org.societies.api.context.model.CtxAttributeTypes.SEX,
+		org.societies.api.context.model.CtxAttributeTypes.SKILLS,
+		org.societies.api.context.model.CtxAttributeTypes.BIRTHDAY};
 	private JTextField txtName;
 	private JTextField txtEmail;
 	private JTextField txtJob;
 	private JTextField txtInterests;
 	private JTextField txtLanguages;
-
+	private JTextField txtBirthday;
+	
 	private ICtxBroker ctxBroker;
 
 	private IIdentity userId;
 
-	private JComboBox cmbAge;
+	
 
 	private JComboBox cmbSex;
 
@@ -75,89 +89,100 @@ public class DataInitialiser extends JDialog implements ActionListener {
 		this.ctxBroker = ctxBroker;
 		this.userId = userId;
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 450, 338);
+		setBounds(100, 100, 450, 363);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.columnWidths = new int[]{424, 0};
-		gbl_contentPane.rowHeights = new int[]{1, 0, 0};
-		gbl_contentPane.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_contentPane.rowWeights = new double[]{1.0, 1.0, Double.MIN_VALUE};
-		contentPane.setLayout(gbl_contentPane);
+		contentPane.setLayout(null);
 
 		JPanel mainPanel = new JPanel();
-		GridBagConstraints gbc_mainPanel = new GridBagConstraints();
-		gbc_mainPanel.insets = new Insets(20, 20, 20, 20);
-		gbc_mainPanel.anchor = GridBagConstraints.NORTH;
-		gbc_mainPanel.fill = GridBagConstraints.HORIZONTAL;
-		gbc_mainPanel.gridx = 0;
-		gbc_mainPanel.gridy = 0;
-		contentPane.add(mainPanel, gbc_mainPanel);
-		mainPanel.setLayout(new GridLayout(7, 2, 10, 10));
+		mainPanel.setBounds(5, 11, 424, 231);
+		contentPane.add(mainPanel);
+		mainPanel.setLayout(null);
 
 		JLabel lblNewLabel = new JLabel("Your name:");
+		lblNewLabel.setBounds(0, 0, 187, 20);
 		mainPanel.add(lblNewLabel);
 
 		txtName = new JTextField();
+		lblNewLabel.setLabelFor(txtName);
+		txtName.setBounds(210, 0, 204, 20);
 		mainPanel.add(txtName);
 		txtName.setColumns(10);
 
 		JLabel lblNewLabel_1 = new JLabel("Your email:");
+		lblNewLabel_1.setBounds(0, 30, 187, 20);
 		mainPanel.add(lblNewLabel_1);
 
 		txtEmail = new JTextField();
+		lblNewLabel_1.setLabelFor(txtEmail);
+		txtEmail.setBounds(210, 30, 204, 20);
 		mainPanel.add(txtEmail);
 		txtEmail.setColumns(10);
 
-		JLabel lblYourAge = new JLabel("Your age:");
+		JLabel lblYourAge = new JLabel("Your birthday:");
+		lblYourAge.setBounds(0, 60, 187, 20);
 		mainPanel.add(lblYourAge);
 
-		Vector<String> ages = new Vector<String>();
-		for (int i = 1; i<=100; i++){
-			ages.add(""+i);
-		}
-		cmbAge = new JComboBox(ages);
-		mainPanel.add(cmbAge);
+		
+		txtBirthday = new JTextField();
+		lblYourAge.setLabelFor(txtBirthday);
+		txtBirthday.setBounds(210, 60, 204, 20);
+		txtBirthday.addMouseListener(new MouseAdapter() {
+			 	public void mouseClicked(MouseEvent e){
+					txtBirthday.setText(new DatePicker(DataInitialiser.this).setPickedDate());
+			 	}
+		});
+		mainPanel.add(txtBirthday);
 
 		JLabel lblNewLabel_5 = new JLabel("Gender:");
+		lblNewLabel_5.setBounds(0, 90, 187, 20);
 		mainPanel.add(lblNewLabel_5);
 
 		String[] genderOptions = new String[]{"male", "female"};
 		cmbSex = new JComboBox(genderOptions);
+		lblNewLabel_5.setLabelFor(cmbSex);
+		cmbSex.setBounds(210, 90, 204, 20);
 		mainPanel.add(cmbSex);
 
 		JLabel lblNewLabel_2 = new JLabel("Your occupation:");
+		lblNewLabel_2.setBounds(0, 120, 187, 20);
 		mainPanel.add(lblNewLabel_2);
 
 		txtJob = new JTextField();
+		lblNewLabel_2.setLabelFor(txtJob);
+		txtJob.setBounds(210, 120, 204, 20);
 		mainPanel.add(txtJob);
 		txtJob.setColumns(10);
 
 		JLabel lblNewLabel_3 = new JLabel("Your interests:");
+		lblNewLabel_3.setBounds(0, 150, 187, 20);
 		mainPanel.add(lblNewLabel_3);
 
 		txtInterests = new JTextField();
+		lblNewLabel_3.setLabelFor(txtInterests);
+		txtInterests.setBounds(210, 150, 204, 20);
 		mainPanel.add(txtInterests);
 		txtInterests.setColumns(10);
 
 		JLabel lblNewLabel_4 = new JLabel("Languages you speak:");
+		lblNewLabel_4.setBounds(0, 180, 187, 20);
 		mainPanel.add(lblNewLabel_4);
 
 		txtLanguages = new JTextField();
+		lblNewLabel_4.setLabelFor(txtLanguages);
+		txtLanguages.setBounds(210, 180, 204, 20);
 		mainPanel.add(txtLanguages);
 		txtLanguages.setColumns(10);
 
 		JPanel btnPanel = new JPanel();
-		GridBagConstraints gbc_btnPanel = new GridBagConstraints();
-		gbc_btnPanel.fill = GridBagConstraints.BOTH;
-		gbc_btnPanel.gridx = 0;
-		gbc_btnPanel.gridy = 1;
-		contentPane.add(btnPanel, gbc_btnPanel);
-		btnPanel.setLayout(new GridLayout(1, 1, 20, 20));
+		btnPanel.setBounds(5, 253, 424, 67);
+		contentPane.add(btnPanel);
 
 		JButton btnSave = new JButton("Save details");
+		btnSave.setBounds(0, 11, 424, 49);
 		btnSave.addActionListener(this);
+		btnPanel.setLayout(null);
 		btnPanel.add(btnSave);
 		
 
@@ -217,15 +242,15 @@ public class DataInitialiser extends JDialog implements ActionListener {
 
 				person = this.ctxBroker.retrieveIndividualEntity(userId).get();
 			}
-			this.createOrUpdateAttribute(FULLNAME, this.txtName.getText());
-			this.createOrUpdateAttribute(EMAIL, this.txtEmail.getText());
-			this.createOrUpdateAttribute(AGE, this.cmbAge.getSelectedItem().toString());
-			this.createOrUpdateAttribute(SEX, this.cmbSex.getSelectedItem().toString());
-			this.createOrUpdateAttribute(INTERESTS, this.txtInterests.getText());
-			this.createOrUpdateAttribute(LANGUAGES, this.txtLanguages.getText());
-			this.createOrUpdateAttribute(OCCUPATION, this.txtJob.getText());
-			this.createOrUpdateAttribute(LOCATION_COORDINATES, this.getHWUCoordinates());
-			this.createOrUpdateAttribute(LOCATION_SYMBOLIC, "PumaLab");
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.NAME, this.txtName.getText());
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.EMAIL, this.txtEmail.getText());
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.BIRTHDAY, this.txtBirthday.getText());
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.SEX, this.cmbSex.getSelectedItem().toString());
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.INTERESTS, this.txtInterests.getText());
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.LANGUAGES, this.txtLanguages.getText());
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.OCCUPATION, this.txtJob.getText());
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.LOCATION_COORDINATES, this.getHWUCoordinates());
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.LOCATION_SYMBOLIC, "PumaLab");
 			
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -279,27 +304,27 @@ public class DataInitialiser extends JDialog implements ActionListener {
 		return "55.912378, -3.323077";
 	}
 	private void setValueToTextField(String dataType, String value){
-		if (dataType.equals(DataInitialiser.FULLNAME)){
+		if (dataType.equals(org.societies.api.context.model.CtxAttributeTypes.NAME)){
 			this.txtName.setText(value);
 			return;
 		}
-		if (dataType.equals(EMAIL)){
+		if (dataType.equals(org.societies.api.context.model.CtxAttributeTypes.EMAIL)){
 			this.txtEmail.setText(value);
 			return;
 		}
-		if (dataType.equals(OCCUPATION)){
+		if (dataType.equals(org.societies.api.context.model.CtxAttributeTypes.OCCUPATION)){
 			this.txtJob.setText(value);
 		}
-		if (dataType.equals(AGE)){
-			this.cmbAge.setSelectedItem(value);
+		if (dataType.equals(org.societies.api.context.model.CtxAttributeTypes.BIRTHDAY)){
+			this.txtBirthday.setText(value);
 		}
-		if (dataType.equals(INTERESTS)){
+		if (dataType.equals(org.societies.api.context.model.CtxAttributeTypes.INTERESTS)){
 			this.txtInterests.setText(value);
 		}
-		if (dataType.equals(LANGUAGES)){
+		if (dataType.equals(org.societies.api.context.model.CtxAttributeTypes.LANGUAGES)){
 			this.txtLanguages.setText(value);
 		}
-		if (dataType.equals(SEX)){
+		if (dataType.equals(org.societies.api.context.model.CtxAttributeTypes.SEX)){
 			this.cmbSex.setSelectedItem(value);
 		}
 
@@ -323,6 +348,12 @@ public class DataInitialiser extends JDialog implements ActionListener {
 
 	public void setInitialised(boolean initialised) {
 		this.initialised = initialised;
+	}
+
+
+	public String getUserName() {
+		// TODO Auto-generated method stub
+		return this.txtName.getText();
 	}
 
 }

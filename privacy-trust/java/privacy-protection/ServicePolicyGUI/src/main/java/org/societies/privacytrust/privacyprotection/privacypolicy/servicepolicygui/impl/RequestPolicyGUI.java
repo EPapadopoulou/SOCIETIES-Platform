@@ -34,9 +34,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -53,24 +51,23 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileFilter;
 
 import org.societies.api.identity.IIdentity;
-import org.societies.api.identity.Requestor;
 import org.societies.api.identity.RequestorService;
 import org.societies.api.internal.servicelifecycle.ServiceModelUtils;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Condition;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestItem;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Resource;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ActionConstants;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ConditionConstants;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
+import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestPolicyUtils;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
 
 public class RequestPolicyGUI extends JPanel
 implements ActionListener, WindowListener
 {
-	RequestPolicy policy;
-	ArrayList<RequestItem> requestItems;
+	org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy policy;
+	ArrayList<org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem> requestItems;
 	ResourcesTableModel model;
 	JButton saveBtn;
 	JPanel resourcePanel;
@@ -84,7 +81,7 @@ implements ActionListener, WindowListener
 	JTextField serviceIDTxtField;
 	JTextField dpiTxtField;
 	RequestItemEditor reqEditor;
-	
+
 	public static void main(String[] args)
 	{
 		try
@@ -103,10 +100,10 @@ implements ActionListener, WindowListener
 		catch (UnsupportedLookAndFeelException localUnsupportedLookAndFeelException)
 		{
 		}
-		
+
 		RequestPolicyGUI gui = new RequestPolicyGUI();
-		
-		
+
+
 	}
 
 	public RequestPolicyGUI()
@@ -140,7 +137,7 @@ implements ActionListener, WindowListener
 
 		this.resourceTable = new JTable(this.model);
 		JScrollPane scpResourceTable = new JScrollPane(this.resourceTable);
-		
+
 		gbcResourcePanel.gridx = 0;
 		gbcResourcePanel.gridy = 0;
 		gbcResourcePanel.gridwidth = 1;
@@ -278,7 +275,7 @@ implements ActionListener, WindowListener
 	public void actionPerformed(ActionEvent e)
 	{
 		if (e.getSource().equals(this.saveBtn)) {
-			
+
 			if (this.reqEditor != null) {
 				JOptionPane.showMessageDialog(this, "Please finish editing the resource in the Resources editor window");
 				this.reqEditor.toFront();
@@ -286,18 +283,20 @@ implements ActionListener, WindowListener
 			else if (this.requestItems.size() == 0) {
 				JOptionPane.showMessageDialog(this, "Add at least one resource ");
 			} else {
-				
+
+
+
 				JFileChooser fileChooser = new JFileChooser();
 				fileChooser.setSelectedFile(new File("Privacy-policy.xml"));
 				fileChooser.setDialogTitle("Save your privacy folder inside the src/main/resources folder of your 3p service");
-				
+
 				fileChooser.setFileFilter(new FileFilter() {
-					
+
 					@Override
 					public String getDescription() {
 						return "XML files - .xml";
 					}
-					
+
 					@Override
 					public boolean accept(File f) {
 						return f.getName().endsWith(".xml");
@@ -352,7 +351,7 @@ implements ActionListener, WindowListener
 			if (this.reqEditor != null) {
 				String message = "Select a condition from the list";
 				String title = "New Condition";
-				ConditionConstants condition = (ConditionConstants)JOptionPane.showInputDialog(this.reqEditor, message, title, 3, null, ConditionConstants.values(), ConditionConstants.DATA_RETENTION_IN_HOURS);
+				ConditionConstants condition = (ConditionConstants)JOptionPane.showInputDialog(this.reqEditor, message, title, 3, null, ConditionConstants.values(), ConditionConstants.DATA_RETENTION);
 				if (condition != null) {
 					String[] values = PrivacyConditionsConstantValues.getValues(condition);
 					System.out.println("Value: " + condition);
@@ -375,6 +374,18 @@ implements ActionListener, WindowListener
 			}
 			else
 			{
+				String s = null;
+				while (null==s){
+					s = (String)JOptionPane.showInputDialog(
+							RequestPolicyGUI.this,
+							"Please enter the purpose for which you request this data type",
+							"Purpose",
+							JOptionPane.QUESTION_MESSAGE,
+							null,
+							null,
+							"");
+				}
+				requestItem.setPurpose(s);
 				this.reqEditor.dispose();
 				this.reqEditor = null;
 				this.requestItems.add(requestItem);
@@ -397,23 +408,23 @@ implements ActionListener, WindowListener
 	{
 		try
 		{
-			
-			
 
-			
-			this.policy = new RequestPolicy(this.requestItems);
 
+
+
+			this.policy = new RequestPolicy();
+			policy.setRequestItems(this.requestItems);
 			IIdentity identity = new MockIdentity(this.dpiTxtField.getText());
-			
+
 			ServiceResourceIdentifier serviceID = ServiceModelUtils.generateServiceResourceIdentifierFromString(this.serviceIDTxtField.getText()+" "+this.serviceIDTxtField.getText());
 			RequestorService subject = new RequestorService(identity, serviceID);
-			this.policy.setRequestor(subject );
+			//this.policy.setRequestor(subject );
 			try
 			{
 				FileWriter fWriter = new FileWriter(selectedFile);
 				BufferedWriter bWriter = new BufferedWriter(fWriter);
 				BufferedWriter out = new BufferedWriter(bWriter);
-				out.write(this.policy.toXMLString());
+				out.write(RequestPolicyUtils.toXmlString(this.policy));
 				out.close();
 				JOptionPane.showMessageDialog(this, "ServicePolicy saved as: " + selectedFile.getCanonicalPath());
 			} catch (IOException ioe) {
@@ -436,10 +447,10 @@ implements ActionListener, WindowListener
 			Action a = (Action)item.getActions().get(i);
 			if (i > 0) {
 				actions = actions.concat("+");
-				actions = actions.concat(a.getActionType().toString());
+				actions = actions.concat(a.getActionConstant().toString());
 			}
 			else {
-				actions = a.getActionType().toString();
+				actions = a.getActionConstant().toString();
 			}
 		}
 		row.add(actions);
@@ -448,9 +459,9 @@ implements ActionListener, WindowListener
 			Condition con = (Condition)item.getConditions().get(i);
 			if (i > 0) {
 				conditions = conditions.concat(",");
-				conditions = conditions.concat(con.getConditionName().toString());
+				conditions = conditions.concat(con.getConditionConstant().toString());
 			} else {
-				conditions = conditions.concat(con.getConditionName().toString());
+				conditions = conditions.concat(con.getConditionConstant().toString());
 			}
 		}
 		row.add(conditions);

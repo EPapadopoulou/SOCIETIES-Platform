@@ -1,6 +1,8 @@
 package org.societies.identity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.societies.api.identity.IIdentity;
@@ -19,6 +21,7 @@ public class IdentityManagerImpl implements IIdentityManager {
 	private INetworkNode domainAuthorityNode;
 	private Set<IIdentity> publicIdentities;
 	private IIdentityContextMapper ctxMapper;
+	private List<IIdentity> myAliases;
 	// TODO cache known identities
 	
 	public IdentityManagerImpl(String thisNode) throws InvalidFormatException {
@@ -27,7 +30,9 @@ public class IdentityManagerImpl implements IIdentityManager {
 	}
 	
 	private void init(String thisNode) throws InvalidFormatException {
+		this.myAliases = new ArrayList<IIdentity>();
 		this.thisNode = fromFullJid(thisNode);
+		this.myAliases.add(this.thisNode);
 		if (this.thisNode.getType().equals(IdentityType.CSS_RICH))
 			cloudNode = this.thisNode;
 		else
@@ -88,6 +93,13 @@ public class IdentityManagerImpl implements IIdentityManager {
 		throw new InvalidFormatException("Unable to parse JID into INetworkNode: "+jid);
 	}
 
+	@Override
+	public IIdentity addAlias(String alias){
+		IdentityImpl impl = new IdentityImpl(IdentityType.CSS, alias,
+				thisNode.getDomain());
+		this.myAliases.add(impl);
+		return impl;
+	}
 	public INetworkNode getThisNetworkNode() {
 		return thisNode; // TODO clone?
 	}
@@ -107,6 +119,12 @@ public class IdentityManagerImpl implements IIdentityManager {
 	}
 
 	public boolean isMine(IIdentity identity) {
+		for (IIdentity id : this.myAliases){
+			
+			if (((IdentityImpl)id).equals(identity)){
+				return true;
+			}
+		}
 		return (((IdentityImpl)thisNode).equals(identity));
 	}
 

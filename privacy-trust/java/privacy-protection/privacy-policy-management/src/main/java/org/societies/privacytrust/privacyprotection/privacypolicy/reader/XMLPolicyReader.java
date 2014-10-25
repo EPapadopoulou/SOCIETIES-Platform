@@ -43,8 +43,6 @@ import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.Requestor;
-import org.societies.api.identity.RequestorCis;
-import org.societies.api.identity.RequestorService;
 import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
@@ -343,6 +341,19 @@ public class XMLPolicyReader {
 			return null;
 		}
 
+		NodeList purposeNodeList = targetElement.getElementsByTagName("Purpose");
+		
+		
+		//JOptionPane.showMessageDialog(null, "in Action: "+optionalNodeList.getLength());
+		String purpose = "";
+		if (purposeNodeList!=null){
+			if (purposeNodeList.getLength()>0){
+				Element valuePurpose = (Element) purposeNodeList.item(purposeNodeList.getLength()-1);
+				 purpose = valuePurpose.getFirstChild().getNodeValue();
+				
+			}
+		}
+		
 		NodeList actions = targetElement.getElementsByTagName("Action");
 		ArrayList<Action> actionsList = this.readActions(actions);
 		if (actionsList == null || actionsList.size()==0){
@@ -372,6 +383,7 @@ public class XMLPolicyReader {
 		}
 		RequestItem rItem = new RequestItem();
 		rItem.setResource(r);
+		rItem.setPurpose(purpose);
 		rItem.setActions(actionsList);
 		rItem.setConditions(conditionsList);
 		rItem.setOptional(isOptional);
@@ -395,7 +407,7 @@ public class XMLPolicyReader {
 					NodeList attributeValueList = attributeElement.getElementsByTagName("AttributeValue");
 					Element attributeValueElement = (Element) attributeValueList.item(0);
 
-					String strCtxId = attributeValueElement.getFirstChild().getNodeValue();
+					String strCtxId = attributeValueElement.getFirstChild().getNodeValue().trim();
 					try {
 						ctxID = CtxIdentifierFactory.getInstance().fromString(strCtxId);
 						//ctxID = this.getBroker().parseIdentifier(strCtxId);
@@ -414,7 +426,7 @@ public class XMLPolicyReader {
 				if (dataType.compareToIgnoreCase("http://www.w3.org/2001/XMLSchema#string")==0){
 					NodeList attributeValueList = attributeElement.getElementsByTagName("AttributeValue");
 					Element attributeValueElement = (Element) attributeValueList.item(0);
-					ctxType = attributeValueElement.getFirstChild().getNodeValue();
+					ctxType = attributeValueElement.getFirstChild().getNodeValue().trim();
 
 				}
 			}
@@ -457,7 +469,7 @@ public class XMLPolicyReader {
 						|| dataType.compareToIgnoreCase("org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.constants.ActionConstants")==0){
 					NodeList attributeValueList = attributeElement.getElementsByTagName("AttributeValue");
 					Element attributeValueElement = (Element) attributeValueList.item(0);
-					ActionConstants ac = ActionConstants.valueOf(attributeValueElement.getFirstChild().getNodeValue().toUpperCase());
+					ActionConstants ac = ActionConstants.valueOf(attributeValueElement.getFirstChild().getNodeValue().trim().toUpperCase());
 					a = new Action();
 					a.setActionConstant(ac);
 				}
@@ -470,7 +482,7 @@ public class XMLPolicyReader {
 			if (optionalNodeList!=null){
 				if (optionalNodeList.getLength()>0){
 					Element valueOptional = (Element) optionalNodeList.item(0);
-					String value = valueOptional.getFirstChild().getNodeValue();
+					String value = valueOptional.getFirstChild().getNodeValue().trim();
 					if (value.equalsIgnoreCase("true")){
 						a.setOptional(true);
 					}
@@ -499,14 +511,14 @@ public class XMLPolicyReader {
 			Element attributeElement = (Element) attributeList.item(i);
 			String attributeId = attributeElement.getAttribute("AttributeId");
 			if (attributeId.compareTo("urn:oasis:names:tc:xacml:1.0:action:condition-id")==0){
-				String dataType = attributeElement.getAttribute("DataType");
+				String dataType = attributeElement.getAttribute("DataType").trim();
 				if (dataType.compareToIgnoreCase(org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants.class.getName())==0
 						|| dataType.compareToIgnoreCase("org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.constants.ConditionConstants")==0){
 					NodeList attributeValueList = attributeElement.getElementsByTagName("AttributeValue");
 					Element attributeValueElement = (Element) attributeValueList.item(0);
-					ConditionConstants cc = ConditionConstants.valueOf(attributeValueElement.getAttribute("DataType"));
+					ConditionConstants cc = ConditionConstants.valueOf(attributeValueElement.getAttribute("DataType").trim());
 
-					conditionValue = attributeValueElement.getFirstChild().getNodeValue();
+					conditionValue = attributeValueElement.getFirstChild().getNodeValue().trim();
 					c = new Condition();
 					c.setConditionConstant(cc);
 					c.setValue(conditionValue);
@@ -519,7 +531,7 @@ public class XMLPolicyReader {
 			if (optionalNodeList!=null){
 				if (optionalNodeList.getLength()>0){
 					Element valueOptional = (Element) optionalNodeList.item(0);
-					String value = valueOptional.getFirstChild().getNodeValue();
+					String value = valueOptional.getFirstChild().getNodeValue().trim();
 					if (value.equalsIgnoreCase("false")){
 						c.setOptional(false);
 					}

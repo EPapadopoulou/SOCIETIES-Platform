@@ -267,6 +267,7 @@
 		<xs:sequence>
 			<xs:element name="resource" type="ns3:resource" minOccurs="1"
 				maxOccurs="1" />
+			<xs:element name="condition" type="ns3:conditionConstants" minOccurs="1" maxOccurs="1" />
 			<xs:element name="requestor" type="ns1:requestorBean"
 				minOccurs="1" maxOccurs="1" />
 			<!-- <xs:element name="action" type="ns3:action" minOccurs="1" maxOccurs="1"/> -->
@@ -303,14 +304,26 @@
 				maxOccurs="unbounded" />
 		</xs:sequence>
 	</xs:complexType>
-
+	
+	<xs:simpleType name="Stage">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="START" />
+			<xs:enumeration value="POSITIVE1" />
+			<xs:enumeration value="POSITIVE2" />
+			<xs:enumeration value="POSITIVE3" />
+			<xs:enumeration value="NEGATIVE1" />
+			<xs:enumeration value="NEGATIVE2" />
+			<xs:enumeration value="NEGATIVE3" />
+		</xs:restriction>
+	</xs:simpleType>
+	
+	
 	<xs:complexType name="PPNPOutcomeBean">
 		<xs:sequence>
-			<xs:element name="decision" type="ns3:decision" minOccurs="1"
+			<xs:element name="condition" type="ns3:condition" minOccurs="1"
 				maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
-			<xs:element name="actions" type="ns3:action" minOccurs="0"
-				maxOccurs="unbounded" />
+			<xs:element name="currentStage" type="Stage"></xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -320,7 +333,8 @@
 				minOccurs="1" maxOccurs="1" />
 			<xs:element name="shouldUseIdentity" type="xs:boolean"
 				minOccurs="1" maxOccurs="1" />
-
+			<xs:element name="currentStage" type="Stage"></xs:element>
+			<xs:element name="confidenceLevel" type="xs:int" />
 		</xs:sequence>
 	</xs:complexType>
 
@@ -328,9 +342,8 @@
 		<xs:sequence>
 			<xs:element name="obfuscationLevel" type="xs:double"
 				minOccurs="1" maxOccurs="1" />
-			<xs:element name="type" type="PrivacyPreferenceTypeConstantsBean"
-				minOccurs="0" maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
+			<xs:element name="currentStage" type="Stage"></xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -338,9 +351,8 @@
 		<xs:sequence>
 			<xs:element name="effect" type="PrivacyOutcomeConstantsBean"
 				minOccurs="1" maxOccurs="1" />
-			<xs:element name="type" type="PrivacyPreferenceTypeConstantsBean"
-				minOccurs="0" maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
+			<xs:element name="currentStage" type="Stage"></xs:element>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -349,6 +361,7 @@
 			<xs:element name="ctxID" type="context:ctxAttributeIdentifierBean"
 				minOccurs="1" maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
+			<xs:element name="currentStage" type="Stage"></xs:element>
 		</xs:sequence>
 	</xs:complexType>
 

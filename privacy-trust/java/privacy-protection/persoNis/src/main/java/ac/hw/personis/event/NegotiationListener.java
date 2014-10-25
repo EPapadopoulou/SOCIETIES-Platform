@@ -3,6 +3,7 @@ package ac.hw.personis.event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.PPNegotiationEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.negotiation.FailedNegotiationEvent;
 import org.societies.api.osgi.event.CSSEvent;
 import org.societies.api.osgi.event.EventListener;
 import org.societies.api.osgi.event.EventTypes;
@@ -59,9 +60,10 @@ public class NegotiationListener extends EventListener{
 			
 			PPNegotiationEvent payload = (PPNegotiationEvent) event.geteventInfo();
 			RequestorBean requestor = payload.getDetails().getRequestor();
-			application.notifySuccessfulNegotiation(requestor);
+			application.notifySuccessfulNegotiation(requestor, payload.getAgreement());
+			
 		}else if (type.equals(EventTypes.FAILED_NEGOTIATION_EVENT)){
-			PPNegotiationEvent payload = (PPNegotiationEvent) event.geteventInfo();
+			FailedNegotiationEvent payload = (FailedNegotiationEvent) event.geteventInfo();
 			RequestorBean requestor = payload.getDetails().getRequestor();
 			application.notifyFailedNegotiation(requestor);
 		}

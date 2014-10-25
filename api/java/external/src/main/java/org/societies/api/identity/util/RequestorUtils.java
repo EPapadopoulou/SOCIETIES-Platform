@@ -48,7 +48,7 @@ import org.societies.api.services.ServiceUtils;
  * @author Olivier Maridat (Trialog)
  */
 public class RequestorUtils {
-	private static Logger logging = LoggerFactory.getLogger(RequestorUtils.class);
+	//private static Logger logging = LoggerFactory.getLogger(RequestorUtils.class);
 
 
 	public static RequestorBean copyOf(RequestorBean bean){
@@ -110,21 +110,21 @@ public class RequestorUtils {
 	public static String toXmlString(RequestorBean requestor){
 		StringBuilder sb = new StringBuilder();
 		if (null != requestor) {
-			sb.append("<Subject>");
-			sb.append("\t<Attribute AttributeId=\"urn:oasis:names:tc:xacml:1.0:subject:subject-id\" DataType=\""+IIdentity.class.getName()+"\">\n");
-			sb.append("\t\t<AttributeValue>"+requestor.getRequestorId()+"</AttributeValue>\n");
-			sb.append("\t</Attribute>\n");
+			sb.append("\n\t<Subject>");
+			sb.append("\t\t<Attribute AttributeId=\"urn:oasis:names:tc:xacml:1.0:subject:subject-id\" DataType=\""+IIdentity.class.getName()+"\">\n");
+			sb.append("\t\t\t<AttributeValue>"+requestor.getRequestorId()+"</AttributeValue>\n");
+			sb.append("\t\t</Attribute>\n");
 			if (requestor instanceof RequestorCisBean) {
-				sb.append("\t<Attribute AttributeId=\"CisId\" DataType=\""+IIdentity.class.getName()+"\">\n");
-				sb.append("\t\t<AttributeValue>"+((RequestorCisBean)requestor).getCisRequestorId()+"</AttributeValue>\n");
-				sb.append("\t</Attribute>\n");
+				sb.append("\t\t<Attribute AttributeId=\"CisId\" DataType=\""+IIdentity.class.getName()+"\">\n");
+				sb.append("\t\t\t<AttributeValue>"+((RequestorCisBean)requestor).getCisRequestorId()+"</AttributeValue>\n");
+				sb.append("\t\t</Attribute>\n");
 			}
 			if (requestor instanceof RequestorServiceBean) {
-				sb.append("\t<Attribute AttributeId=\"serviceId\" DataType=\""+ServiceResourceIdentifier.class.getName()+"\">\n");
-				sb.append("\t\t<AttributeValue>"+((RequestorServiceBean)requestor).getRequestorServiceId()+"</AttributeValue>\n");
-				sb.append("\t</Attribute>\n");
+				sb.append("\t\t<Attribute AttributeId=\"serviceId\" DataType=\""+ServiceResourceIdentifier.class.getName()+"\">\n");
+				sb.append("\t\t\t<AttributeValue>"+((RequestorServiceBean)requestor).getRequestorServiceId()+"</AttributeValue>\n");
+				sb.append("\t\t</Attribute>\n");
 			}
-			sb.append("</Subject>");
+			sb.append("\t</Subject>\n");
 		}
 		return sb.toString();
 	}
@@ -182,32 +182,32 @@ public class RequestorUtils {
 	public static boolean equals(RequestorBean o1, Object o2) {
 		
 		if (o1==o2){
-			logging.debug("requestor1 is equal to requestor2, true");
+			//logging.debug("requestor1 is equal to requestor2, true");
 			return true;
 		}
 
 		if (o2==null){
-			logging.debug("requestor2 is null, false");
+			//logging.debug("requestor2 is null, false");
 			return false;
 		}
 
 		if (o1==null){
-			logging.debug("requestor1 is null, false");
+			//logging.debug("requestor1 is null, false");
 			return false;
 		}
 		if (o1 instanceof RequestorServiceBean && (!(o2 instanceof RequestorServiceBean))){
-			logging.debug("requestor 1 instanceof service, o2 not, false");
+			//logging.debug("requestor 1 instanceof service, o2 not, false");
 			return false;
 		}
 
 		if (o1 instanceof RequestorCisBean && (!(o2 instanceof RequestorCisBean))){
-			logging.debug("requestor1 instance of cis, o2 not, false");
+			//logging.debug("requestor1 instance of cis, o2 not, false");
 			return false;
 		}
 
 		if (((o1 instanceof RequestorCisBean) || (o1 instanceof RequestorServiceBean)) &&
 				(!((o2 instanceof RequestorCisBean) || (o2 instanceof RequestorServiceBean)))){
-			logging.debug("requestor2 not service or cis, false");
+			//logging.debug("requestor2 not service or cis, false");
 			return false;
 		}
 
@@ -216,7 +216,7 @@ public class RequestorUtils {
 			if (o1.getRequestorId().equalsIgnoreCase(((RequestorCisBean)o2).getRequestorId())){
 				
 				boolean eq = ((RequestorCisBean) o1).getCisRequestorId().equalsIgnoreCase(((RequestorCisBean) o2).getCisRequestorId());
-				logging.debug("requestor1 cis id == requestor2 cis id, "+(eq));
+				//logging.debug("requestor1 cis id == requestor2 cis id, "+(eq));
 				return eq; 
 			}
 		}
@@ -226,7 +226,7 @@ public class RequestorUtils {
 			if (o1.getRequestorId().equalsIgnoreCase(((RequestorServiceBean)o2).getRequestorId())){
 				
 				 boolean eq = ServiceUtils.compare(((RequestorServiceBean) o1).getRequestorServiceId(),((RequestorServiceBean) o2).getRequestorServiceId());
-				 logging.debug("requestor1 service id == requestor2 service id, "+(eq));
+				 //logging.debug("requestor1 service id == requestor2 service id, "+(eq));
 				 return eq;
 			}
 		}
@@ -235,11 +235,11 @@ public class RequestorUtils {
 		if (!((o1 instanceof RequestorCisBean) || (o1 instanceof RequestorServiceBean)) &&
 				(!(o2 instanceof RequestorCisBean) || (o2 instanceof RequestorServiceBean))){
 			boolean eq = o1.getRequestorId().equalsIgnoreCase(((RequestorBean)o2).getRequestorId());
-			logging.debug("both beans instance of RequestorBean, are their ids equal: "+(eq));
+			//logging.debug("both beans instance of RequestorBean, are their ids equal: "+(eq));
 			return eq;
 		}
 		
-		logging.debug("returning false, none of the above if/then statements caught it");
+		//logging.debug("returning false, none of the above if/then statements caught it");
 		return false;
 
 	}

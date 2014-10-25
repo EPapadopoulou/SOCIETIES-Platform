@@ -18,8 +18,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListDataListener;
 
 import org.societies.api.identity.IIdentity;
-import org.societies.privacytrust.privacyprotection.api.identity.IdentityImpl;
-
 import java.awt.GridBagLayout;
 
 import javax.swing.JLabel;
@@ -35,29 +33,13 @@ public class IdentitySelectionGUIDialog extends JDialog implements ActionListene
 	private IIdentity identity;
 	private IIdentity recommendedIdentity;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		try {
-			ArrayList<IIdentity> identities = new ArrayList<IIdentity>();
-			IIdentity ideliza  = new IdentityImpl("eliza.societies.local2");
-			IIdentity idAnonymous = new IdentityImpl("anonymous234234.societies.local2");
-			identities.add(ideliza);
-			identities.add(idAnonymous);
-			JFrame frame  = new JFrame();
-			IdentitySelectionGUIDialog dialog = new IdentitySelectionGUIDialog(frame, identities, ideliza);	
-			IIdentity selectedIdentity = dialog.getSelectedIdentity();
-			System.out.println("Got Identity: "+selectedIdentity.getJid());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+
 
 	/**
 	 * Create the dialog.
-	 * @param recommendedIdentity 
+	 * this class is now deprecated. Use IIdentitySelection component
 	 */
+	@Deprecated
 	public IdentitySelectionGUIDialog(JFrame frame, List<IIdentity> identities, IIdentity recommendedIdentity) {
 		super(frame,"Identity Selection", true);
 		this.frame = frame;

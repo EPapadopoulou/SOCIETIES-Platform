@@ -38,5 +38,10 @@ public class CtxTypes {
 	public static final String SYMBOLIC_LOCATION = "SYMBOLIC_LOCATION";
 	public static final String STATUS = "STATUS";
 	public static final String ACTIVITY = "ACTIVITY";
+	public static final String PPN_PREFERENCE = "PPN_PREFERENCE";
+	public static final String IDS_PREFERENCE = "IDS_PREFERENCE";
+	public static final String ACC_CTRL_PREFERENCE = "ACC_CTRL_PREFERENCE";
+	public static final String ATTR_SEL_PREFERENCE = "ATTR_SEL_PREFERENCE";
+	public static final String DOBF_PREFERENCE = "DOBF_PREFERENCE";
 	
 }

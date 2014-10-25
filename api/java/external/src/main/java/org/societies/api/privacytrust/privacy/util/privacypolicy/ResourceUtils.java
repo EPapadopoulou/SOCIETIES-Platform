@@ -46,7 +46,7 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resourc
  * @author Olivier Maridat (Trialog)
  */
 public class ResourceUtils {
-	private static Logger logging = LoggerFactory.getLogger(ResourceUtils.class.getName());
+	//private static Logger logging = LoggerFactory.getLogger(ResourceUtils.class.getName());
 
 	public static Resource copyOf(Resource resource1){
 		Resource resource = new Resource();
@@ -65,7 +65,7 @@ public class ResourceUtils {
 			resource.setDataType(dataId.getType());
 			resource.setScheme(dataId.getScheme());
 		} catch (MalformedCtxIdentifierException e) {
-			logging.error("Can't retrieve all data identifier fields using the data id uri", e);
+			//logging.error("Can't retrieve all data identifier fields using the data id uri", e);
 			resource.setDataIdUri(dataIdUri);
 		}
 
@@ -115,20 +115,20 @@ public class ResourceUtils {
 	public static String toXmlString(Resource resource){
 		StringBuilder sb = new StringBuilder();
 		if (null != resource) {
-			sb.append("\n<Resource>\n");
+			sb.append("\t\t<Resource>\n");
 			// URI
 			if (null != resource.getDataIdUri()){
-				sb.append("\t<Attribute AttributeId=\"urn:oasis:names:tc:xacml:1.0:subject:resource-id\" DataType=\"org.societies.api.context.model.CtxIdentifier\">\n");
-				sb.append("\t\t<AttributeValue>"+resource.getDataIdUri()+"</AttributeValue>\n");
-				sb.append("\t</Attribute>\n");
+				sb.append("\t\t\t<Attribute AttributeId=\"urn:oasis:names:tc:xacml:1.0:subject:resource-id\" DataType=\"org.societies.api.context.model.CtxIdentifier\">\n");
+				sb.append("\t\t\t\t<AttributeValue>"+resource.getDataIdUri()+"</AttributeValue>\n");
+				sb.append("\t\t\t</Attribute>\n");
 			}
 			// Scheme + Type
 			if (null != resource.getDataType()){
-				sb.append("\t<Attribute AttributeId=\""+resource.getScheme()+"\" DataType=\"http://www.w3.org/2001/XMLSchema#string\">\n");
-				sb.append("\t\t<AttributeValue>"+resource.getDataType()+"</AttributeValue>\n");
-				sb.append("\t</Attribute>\n");
+				sb.append("\t\t\t<Attribute AttributeId=\""+resource.getScheme()+"\" DataType=\"http://www.w3.org/2001/XMLSchema#string\">\n");
+				sb.append("\t\t\t\t<AttributeValue>"+resource.getDataType()+"</AttributeValue>\n");
+				sb.append("\t\t\t</Attribute>\n");
 			}
-			sb.append("</Resource>\n");
+			sb.append("\t\t</Resource>\n");
 		}
 		return sb.toString();
 	}
@@ -159,19 +159,19 @@ public class ResourceUtils {
 	public static boolean equal(Resource o1, Object o2) {
 		// -- Verify reference equality
 		if (o1 == o2) {
-			logging.debug("resource1 equals resource2, true");
+			//logging.debug("resource1 equals resource2, true");
 			return true;
 		}
 		if (o2 == null) {
-			logging.debug("resource2 is null, false");
+			//logging.debug("resource2 is null, false");
 			return false;
 		}
 		if (o1 == null) {
-			logging.debug("resource1 is null, false");
+			//logging.debug("resource1 is null, false");
 			return false;
 		}
 		if (!(o2 instanceof Resource)){
-			logging.debug("resource2 is not instance of Resource, false");
+			//logging.debug("resource2 is not instance of Resource, false");
 		}
 		// -- Verify obj type
 		
@@ -181,19 +181,19 @@ public class ResourceUtils {
 		if (StringUtils.equalsIgnoreCase(o1.getDataType(),ro2.getDataType())){
 			if (StringUtils.equalsIgnoreCase(o1.getDataIdUri(),ro2.getDataIdUri())){
 				if (o1.getScheme().equals(ro2.getScheme())){
-					logging.debug("resources match, true");
+					//logging.debug("resources match, true");
 					return true;
 				}else{
-					logging.debug("schemes are different, false");
+					//logging.debug("schemes are different, false");
 					return false;
 				}
 					
 			}else{
-				logging.debug("dataId URIs are different, false");
+				//logging.debug("dataId URIs are different, false");
 				return false;
 			}
 		}else{
-			logging.debug("resource data types are different, false");
+			//logging.debug("resource data types are different, false");
 			return false;
 		}
 	}

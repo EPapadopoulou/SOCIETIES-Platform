@@ -26,6 +26,7 @@ package org.societies.api.internal.context.broker;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -967,4 +968,9 @@ public interface ICtxBroker extends org.societies.api.context.broker.ICtxBroker 
 	 * @throws CtxException 
 	 */
 	public void disableCtxRecording() throws CtxException;
+	
+	
+	public void setLinkedAttributes(Hashtable<String, List<CtxIdentifier>> table);
+	
+	public void addIdentityLinkedAttributes(String identity, List<CtxIdentifier> attributeIdentifiers);
 }

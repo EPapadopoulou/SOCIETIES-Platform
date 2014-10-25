@@ -84,7 +84,9 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 
 	/**
 	 * Create the dialog.
+	 * this class is now deprecated. Use IIdentitySelection component
 	 */
+	@Deprecated
 	public IdentityCreationGUIDialog(JFrame frame, Agreement agreement, PrivacyPolicyNegotiationManager negManager, IIdentity userId, List<IIdentity> allIdentities) {
 		super(frame, "Identity Creation", true);
 		this.frame = frame;
@@ -224,6 +226,16 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 
 		if (event.getSource().equals(this.okButton)){
 
+			if (this.txtIdentityName.getText().contains("@")){
+				JOptionPane.showMessageDialog(this, "Your identity cannot contain the character '@'. ", "Invalid character", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			
+			if (this.txtIdentityName.getText().contains(".")){
+				JOptionPane.showMessageDialog(this, "Your identity cannot contain the character '.' . ", "Invalid character", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			
 			if (this.txtIdentityName.getText()==null || this.txtIdentityName.getText().isEmpty()){
 				JOptionPane.showMessageDialog(this, "Please enter a name for your new identity", "Identity name missing", JOptionPane.ERROR_MESSAGE);
 				return;

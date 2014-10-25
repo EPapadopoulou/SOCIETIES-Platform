@@ -74,12 +74,15 @@ public class RequestItemUtils {
 	public static String toXmlString(RequestItem requestItem){
 		StringBuilder sb = new StringBuilder();
 		if (null != requestItem) {
-			sb.append("\n<Target>\n");
+			sb.append("\t<Target>\n");
 			sb.append(ResourceUtils.toXmlString(requestItem.getResource()));
-			sb.append(ActionUtils.toXmlString(requestItem.getActions()));
-			sb.append(ConditionUtils.toXmlString(requestItem.getConditions()));
-			sb.append("\t<optional>"+requestItem.isOptional()+"</optional>\n");
-			sb.append("</Target>");
+			sb.append("\t\t<Purpose>");
+			sb.append(requestItem.getPurpose());
+			sb.append("</Purpose>\n");
+			sb.append(ActionUtils.toXmlString(requestItem.getActions())+"\n");
+			sb.append(ConditionUtils.toXmlString(requestItem.getConditions())+"\n");
+			sb.append("\t\t<optional>"+requestItem.isOptional()+"</optional>\n");
+			sb.append("\t</Target>\n");
 		}
 		return sb.toString();
 	}

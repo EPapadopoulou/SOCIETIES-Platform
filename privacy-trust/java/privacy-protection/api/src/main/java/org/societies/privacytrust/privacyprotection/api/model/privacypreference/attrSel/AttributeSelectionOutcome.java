@@ -6,6 +6,11 @@ package org.societies.privacytrust.privacyprotection.api.model.privacypreference
 import java.io.Serializable;
 
 import org.societies.api.context.model.CtxIdentifier;
+import org.societies.api.context.model.CtxModelBeanTranslator;
+import org.societies.api.context.model.MalformedCtxIdentifierException;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionOutcomeBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.Stage;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ConfidenceCalculator;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
@@ -24,6 +29,21 @@ public class AttributeSelectionOutcome extends IPrivacyOutcome implements Serial
 	private CtxIdentifier ctxID;
 
 	private int confidenceLevel;
+
+	private Stage currentStage;
+		
+	public AttributeSelectionOutcome(CtxIdentifier ctxID){
+		this.ctxID = ctxID;
+		this.currentStage = Stage.START;
+		this.confidenceLevel = 50;
+		
+	}
+	
+	public AttributeSelectionOutcome(AttributeSelectionOutcomeBean bean) throws MalformedCtxIdentifierException{
+		this.ctxID = CtxModelBeanTranslator.getInstance().fromCtxIdentifierBean(bean.getCtxID());
+		this.confidenceLevel = bean.getConfidenceLevel();
+		this.currentStage = bean.getCurrentStage();
+	}
 	
 	@Override
 	public PrivacyPreferenceTypeConstants getOutcomeType() {
@@ -31,12 +51,6 @@ public class AttributeSelectionOutcome extends IPrivacyOutcome implements Serial
 		return PrivacyPreferenceTypeConstants.ATTRIBUTE_SELECTION;
 	}
 	
-	public AttributeSelectionOutcome(CtxIdentifier ctxID){
-		this.ctxID = ctxID;
-		
-		
-	}
-
 	public CtxIdentifier getCtxID() {
 		return ctxID;
 	}
@@ -98,6 +112,14 @@ public class AttributeSelectionOutcome extends IPrivacyOutcome implements Serial
 	public String toString() {
 		return "AttributeSelectionOutcome [ctxID=" + ctxID.getUri() + "]";
 	}
-	
+
+	public Stage getCurrentStage() {
+		// TODO Auto-generated method stub
+		return this.currentStage;
+	}
+
+	public void updateConfidenceLevel(boolean positive){
+		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
+	}
 	
 }
