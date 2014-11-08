@@ -46,7 +46,7 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  * @author Elizabeth
  *
  */
-public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivacyPreference {
+public class PrivacyPreference  extends DefaultMutableTreeNode implements MutableTreeNode{
 
 	public PrivacyPreference(){
 		super();
@@ -62,7 +62,15 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 	
 
 	@Override
-	public void add(IPrivacyPreference p) {
+	public void add(MutableTreeNode node){
+		if (node instanceof PrivacyPreference){
+			PrivacyPreference pref = (PrivacyPreference) node;
+			super.add(pref);
+		}
+	}
+	
+	
+	public void add(PrivacyPreference p) {
 		super.add(p);
 		
 	}
@@ -117,31 +125,47 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 	
 	
 	public String toTreeString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("PrivacyPreference \n[userObject=");
-		builder.append(userObject);
-		builder.append("\n, children=");
-		builder.append(children);
-		builder.append("]");
-		return builder.toString();
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i< getLevel(); i ++){
+			sb.append("\t");
+		}
+		sb.append(toString());
+		sb.append("\n");
+		
+		if (isLeaf()){
+			System.out.println("leaf");
+			return sb.toString();
+		}else if (isBranch()){
+			System.out.println("branch");
+			Enumeration children2 = children();
+			while (children2.hasMoreElements()){
+			
+				PrivacyPreference child = (PrivacyPreference) children2.nextElement();
+				sb.append(child.toTreeString());
+			}
+		}else{
+			System.out.println("WTF, not a leaf or a branch");
+		}
+		return sb.toString();
 	}
 	
 	
 	
 
 	@Override
-	public Enumeration<IPrivacyPreference> breadthFirstEnumeration() {
+	public Enumeration<PrivacyPreference> breadthFirstEnumeration() {
 		return super.breadthFirstEnumeration();
 	}
 
 
 	@Override
-	public Enumeration<IPrivacyPreference> depthFirstEnumeration() {
+	public Enumeration<PrivacyPreference> depthFirstEnumeration() {
 		return super.depthFirstEnumeration();
 	}
 
 
-	@Override
+	
 	public IPrivacyPreferenceCondition getCondition() {
 		if (this.isLeaf()){
 			return null;
@@ -162,7 +186,6 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 	}
 
 
-	@Override
 	public IPrivacyOutcome getOutcome() {
 		if (this.isBranch()){
 			return null;
@@ -172,9 +195,9 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 
 
 	@Override
-	public IPrivacyPreference getRoot() {
+	public PrivacyPreference getRoot() {
 		// TODO Auto-generated method stub
-		return (IPrivacyPreference) super.getRoot();
+		return (PrivacyPreference) super.getRoot();
 	}
 
 
@@ -192,8 +215,10 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 	}
 
 
-	@Override
 	public boolean isBranch() {
+		if (this.getUserObject()==null){
+			return true;
+		}
 		return (this.getUserObject() instanceof IPrivacyPreferenceCondition);
 	}
 
@@ -203,9 +228,17 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 		return (this.getUserObject() instanceof IPrivacyOutcome);
 	}
 
+	
 
 	@Override
-	public void remove(IPrivacyPreference p) {
+	public void remove(MutableTreeNode node){
+		if (node instanceof PrivacyPreference){
+			PrivacyPreference pref = (PrivacyPreference) node;
+			super.remove(pref);
+		}
+	}
+	
+	public void remove(PrivacyPreference p) {
 		super.remove(p);
 
 	}
@@ -252,7 +285,7 @@ public class PrivacyPreference extends DefaultMutableTreeNode implements IPrivac
 	}
 	
 	@Override
-	public Enumeration<IPrivacyPreference> preorderEnumeration(){
+	public Enumeration<PrivacyPreference> preorderEnumeration(){
 		return super.preorderEnumeration();
 	}
 

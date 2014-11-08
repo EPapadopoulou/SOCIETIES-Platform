@@ -345,4 +345,5 @@ public class PrivacyDataManagerInternal extends PrivacyDataManagerInternalUtilit
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
+
 }

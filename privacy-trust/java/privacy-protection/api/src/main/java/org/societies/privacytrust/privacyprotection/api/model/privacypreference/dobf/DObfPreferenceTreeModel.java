@@ -29,8 +29,8 @@ import java.io.Serializable;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
 
@@ -42,30 +42,29 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  * @version 1.0
  * @created 11-Nov-2011 17:06:54
  */
-public class DObfPreferenceTreeModel extends DefaultTreeModel implements IPrivacyPreferenceTreeModel, Serializable{
+public class DObfPreferenceTreeModel extends DefaultTreeModel implements IPrivacyPreferenceTreeModel,   Serializable{
 
 	private final DObfPreferenceDetailsBean details;
-	private IPrivacyPreference pref;
+	private PrivacyPreference pref;
 	
-	public DObfPreferenceTreeModel(DObfPreferenceDetailsBean details, IPrivacyPreference preference){
+	public DObfPreferenceTreeModel(DObfPreferenceDetailsBean details, PrivacyPreference preference){
 		super(preference);
 		this.details = details;
 		this.pref = preference;
 	}
 
 
-	@Override
 	public PrivacyPreferenceTypeConstants getPrivacyType() {
 		return PrivacyPreferenceTypeConstants.DATA_OBFUSCATION;
 	}
 
 
-	@Override
-	public IPrivacyPreference getRootPreference() {
+	
+	public PrivacyPreference getRootPreference() {
 		return this.pref;
 	}
 	
-	public void setRootPreference(IPrivacyPreference pref){
+	public void setRootPreference(PrivacyPreference pref){
 		this.pref = pref;
 	}
 

@@ -29,8 +29,8 @@ import java.io.Serializable;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
 /**
@@ -43,20 +43,20 @@ public class AccessControlPreferenceTreeModel extends DefaultTreeModel implement
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private IPrivacyPreference pref;
+	private PrivacyPreference pref;
 	private final AccessControlPreferenceDetailsBean details;
 	
-	public AccessControlPreferenceTreeModel(AccessControlPreferenceDetailsBean details, IPrivacyPreference preference) {
+	public AccessControlPreferenceTreeModel(AccessControlPreferenceDetailsBean details, PrivacyPreference preference) {
 		super(preference);
 		this.details = details;
 		this.pref = preference;
 	}
 
-	public IPrivacyPreference getPref() {
+	public PrivacyPreference getPref() {
 		return pref;
 	}
 
-	public void setPref(IPrivacyPreference pref) {
+	public void setPref(PrivacyPreference pref) {
 		this.pref = pref;
 	}
 
@@ -113,13 +113,12 @@ public class AccessControlPreferenceTreeModel extends DefaultTreeModel implement
 		return builder.toString();
 	}
 
-	@Override
-	public IPrivacyPreference getRootPreference() {
+	public PrivacyPreference getRootPreference() {
 		// TODO Auto-generated method stub
 		return  this.pref;
 	}
 
-	@Override
+
 	public PrivacyPreferenceTypeConstants getPrivacyType() {
 		// TODO Auto-generated method stub
 		return PrivacyPreferenceTypeConstants.ACCESS_CONTROL;

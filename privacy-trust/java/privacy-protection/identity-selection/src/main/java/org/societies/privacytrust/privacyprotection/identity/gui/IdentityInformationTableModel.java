@@ -41,6 +41,8 @@ public class IdentityInformationTableModel extends AbstractTableModel  implement
 		// TODO Auto-generated method stub
 		return ctxAttributes.size();
 	}
+	
+	
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
@@ -102,6 +104,13 @@ public class IdentityInformationTableModel extends AbstractTableModel  implement
 		this.fireTableDataChanged();
 	}
 
+	public void remove(int index){
+		if ((index>-1) && (index<ctxAttributes.size())){
+			this.ctxAttributes.remove(index);
+			fireTableDataChanged();
+		}
+		
+	}
 	public List<CtxIdentifier> getValues() {
 		
 		List<CtxIdentifier> list = new ArrayList<CtxIdentifier>();

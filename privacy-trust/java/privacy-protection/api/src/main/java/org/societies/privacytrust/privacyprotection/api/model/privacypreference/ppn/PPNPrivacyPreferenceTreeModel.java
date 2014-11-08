@@ -29,12 +29,12 @@ import java.io.Serializable;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
 /**
- * This class represents a tree model for Privacy Policy Negotiation Preferences and encapsulates a tree of IPrivacyPreference objects.
+ * This class represents a tree model for Privacy Policy Negotiation Preferences and encapsulates a tree of PrivacyPreference objects.
  * @author Elizabeth
  *
  */
@@ -42,10 +42,10 @@ public class PPNPrivacyPreferenceTreeModel extends DefaultTreeModel implements I
 
 
 	
-	private IPrivacyPreference pref;
+	private PrivacyPreference pref;
 	private final PPNPreferenceDetailsBean details;
 	
-	public PPNPrivacyPreferenceTreeModel(PPNPreferenceDetailsBean details, IPrivacyPreference preference){
+	public PPNPrivacyPreferenceTreeModel(PPNPreferenceDetailsBean details, PrivacyPreference preference){
 		super(preference);
 		this.details = details;
 
@@ -94,14 +94,13 @@ public class PPNPrivacyPreferenceTreeModel extends DefaultTreeModel implements I
 	}
 
 
-	@Override
 	public PrivacyPreferenceTypeConstants getPrivacyType() {
 		return PrivacyPreferenceTypeConstants.PRIVACY_POLICY_NEGOTIATION;
 	}
 
 
-	@Override
-	public IPrivacyPreference getRootPreference() {
+	
+	public PrivacyPreference getRootPreference() {
 		return this.pref;
 	}
 

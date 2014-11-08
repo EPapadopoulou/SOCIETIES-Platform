@@ -52,19 +52,17 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.mon
  */
 public class PPNegotiationPreferenceManager {
 
-	private PreferenceCache prefCache;
-	private final PrivateContextCache contextCache;
+
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
-	private final PrivacyPreferenceConditionMonitor privacyPCM;
-	private final ITrustBroker trustBroker;
+
 	private IIdentity userIdentity;
 
-	public PPNegotiationPreferenceManager(PreferenceCache prefCache, PrivateContextCache contextCache, PrivacyPreferenceConditionMonitor privacyPCM, ITrustBroker trustBroker, IIdentity userIdentity){
-		this.prefCache = prefCache;
-		this.contextCache = contextCache;
-		this.privacyPCM = privacyPCM;
-		this.trustBroker = trustBroker;
-		this.userIdentity = userIdentity;
+	private PrivacyPreferenceManager privPrefMgr;
+
+	public PPNegotiationPreferenceManager(PrivacyPreferenceManager privPrefMgr){
+
+		this.privPrefMgr = privPrefMgr;
+		this.userIdentity = privPrefMgr.getIdm().getThisNetworkNode();
 
 
 
@@ -86,11 +84,11 @@ public class PPNegotiationPreferenceManager {
 				details.setResource(item.getResource());
 				details.setCondition(condition.getConditionConstant());
 				
-				PPNPrivacyPreferenceTreeModel model = this.prefCache.getPPNPreference(details);
+				PPNPrivacyPreferenceTreeModel model = privPrefMgr.getPrefCache().getPPNPreference(details);
 
 				if (model!=null){
 					this.logging.debug("Found PPN model for resource: "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant());
-					PreferenceEvaluator ppE = new PreferenceEvaluator(contextCache, trustBroker, requestPolicy.getRequestor(), this.userIdentity );
+					PreferenceEvaluator ppE = new PreferenceEvaluator(privPrefMgr, requestPolicy.getRequestor(), this.userIdentity );
 					Condition evaluatedCondition = ppE.evaluatePPNPreferences(model);
 					if (evaluatedCondition==null){
 						this.logging.debug("PPN evaluation returned null for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and specific requestor "+RequestorUtils.toString(requestPolicy.getRequestor()));
@@ -101,13 +99,13 @@ public class PPNegotiationPreferenceManager {
 				}else{
 					this.logging.debug("Not found for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and specific requestor, attempting to find generic preference");
 					details.setRequestor(null);
-					model  = this.prefCache.getPPNPreference(details);
+					model  = privPrefMgr.getPrefCache().getPPNPreference(details);
 					if (model==null){
 						this.logging.debug("Not found any generic ppn preference for resource: "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant());
 
 					}else{
 						this.logging.debug("Found generic ppn preference for resource: "+item.getResource().getDataType());
-						PreferenceEvaluator ppE = new PreferenceEvaluator(contextCache, trustBroker, requestPolicy.getRequestor(), this.userIdentity);
+						PreferenceEvaluator ppE = new PreferenceEvaluator(privPrefMgr, requestPolicy.getRequestor(), this.userIdentity);
 						Condition evaluatedCondition = ppE.evaluatePPNPreferences(model);
 						if (evaluatedCondition==null){
 							this.logging.debug("PPN evaluation returned null for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and generic requestor");
@@ -141,18 +139,18 @@ public class PPNegotiationPreferenceManager {
 	 */
 
 	public boolean deletePPNPreference(PPNPreferenceDetailsBean details) {
-		return 	this.prefCache.removePPNPreference(details);
+		return 	privPrefMgr.getPrefCache().removePPNPreference(details);
 
 
 	}
 
 	public PPNPrivacyPreferenceTreeModel getPPNPreference(
 			PPNPreferenceDetailsBean details) {
-		return this.prefCache.getPPNPreference(details);
+		return privPrefMgr.getPrefCache().getPPNPreference(details);
 	}
 
 	public List<PPNPreferenceDetailsBean> getPPNPreferenceDetails() {
-		return this.prefCache.getPPNPreferenceDetails();
+		return privPrefMgr.getPrefCache().getPPNPreferenceDetails();
 	}
 
 	public boolean storePPNPreference(PPNPreferenceDetailsBean details,
@@ -161,7 +159,7 @@ public class PPNegotiationPreferenceManager {
 		if (model.getDetails().equals(details)){
 			this.logging.debug("Request to add preference :\n"+details.toString());
 
-			if (this.prefCache.addPPNPreference(details, model)){
+			if (privPrefMgr.getPrefCache().addPPNPreference(details, model)){
 				return true;
 			}else{
 				throw new PrivacyException("Error storing PPN preference");
@@ -176,7 +174,7 @@ public class PPNegotiationPreferenceManager {
 
 
 	public boolean deletePPNPreferences() {
-		return this.prefCache.removePPNPreferences();
+		return privPrefMgr.getPrefCache().removePPNPreferences();
 
 	}
 }

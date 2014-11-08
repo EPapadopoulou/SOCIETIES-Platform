@@ -5,33 +5,33 @@ import java.io.Serializable;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
-public class AttributeSelectionPreferenceTreeModel extends DefaultTreeModel implements IPrivacyPreferenceTreeModel, Serializable{
+public class AttributeSelectionPreferenceTreeModel extends DefaultTreeModel implements IPrivacyPreferenceTreeModel,   Serializable{
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private IPrivacyPreference preference;
+	private PrivacyPreference preference;
 	private AttributeSelectionPreferenceDetailsBean details;
 
-	public AttributeSelectionPreferenceTreeModel(AttributeSelectionPreferenceDetailsBean details, IPrivacyPreference preference){
+	public AttributeSelectionPreferenceTreeModel(AttributeSelectionPreferenceDetailsBean details, PrivacyPreference preference){
 		super(preference);
 		this.details = details;
 		this.preference = preference;
 		
 		
 	}
-	@Override
-	public IPrivacyPreference getRootPreference() {
+	
+	public PrivacyPreference getRootPreference() {
 		// TODO Auto-generated method stub
 		return this.preference;
 	}
 
-	@Override
+	
 	public PrivacyPreferenceTypeConstants getPrivacyType() {
 		// TODO Auto-generated method stub
 		return PrivacyPreferenceTypeConstants.ATTRIBUTE_SELECTION;
@@ -39,10 +39,10 @@ public class AttributeSelectionPreferenceTreeModel extends DefaultTreeModel impl
 	public AttributeSelectionPreferenceDetailsBean getDetails() {
 		return details;
 	}
-	public IPrivacyPreference getPreference() {
+	public PrivacyPreference getPreference() {
 		return preference;
 	}
-	public void setPreference(IPrivacyPreference preference) {
+	public void setPreference(PrivacyPreference preference) {
 		this.preference = preference;
 	}
 	@Override

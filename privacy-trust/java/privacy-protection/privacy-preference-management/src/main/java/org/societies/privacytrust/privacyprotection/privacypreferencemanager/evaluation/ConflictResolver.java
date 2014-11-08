@@ -25,8 +25,18 @@
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
 
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
+import javax.swing.tree.TreeNode;
+
+import org.societies.api.privacytrust.privacy.model.PrivacyException;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.TrustPreferenceCondition;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.SingleRule;
 
 
 
@@ -43,7 +53,7 @@ public class ConflictResolver {
 		
 	}
 	
-	public  IPrivacyPreference resolveConflicts(ArrayList<IPrivacyPreference> outcomes){
+	public  PrivacyPreference resolveConflictsConfidenceOnly(List<PrivacyPreference> outcomes){
 		int confLevel = outcomes.get(0).getOutcome().getConfidenceLevel();
 		int index = -1; 
 		for (int i = 1; i < outcomes.size(); i++){
@@ -60,5 +70,55 @@ public class ConflictResolver {
 		
 	}
 
+	
+	public PrivacyPreference resolveConflicts(List<PrivacyPreference> outcomes){
+		
+		Hashtable<Double, List<PrivacyPreference>> table = new Hashtable<Double, List<PrivacyPreference>>(); 
+		double trustValue = 0.0;
+
+		//we must find the highest trust
+		for (PrivacyPreference pref : outcomes){
+			if (pref.isBranch()){
+				System.err.println("OUTCOMES ONLY PLEASE");
+			}
+			TreeNode[] path = pref.getPath();
+			for (TreeNode node: path){
+				if (node instanceof PrivacyPreference){
+					PrivacyPreference privacyPreference = (PrivacyPreference) node;
+					if (privacyPreference.isBranch()){
+						if (privacyPreference.getUserObject() instanceof TrustPreferenceCondition){
+							TrustPreferenceCondition trustCondition = (TrustPreferenceCondition) privacyPreference.getCondition();
+							if (trustCondition.getTrustThreshold()>trustValue){
+								trustValue = trustCondition.getTrustThreshold();
+							}
+							
+							if (table.containsKey(trustCondition.getTrustThreshold())){
+								table.get(trustCondition.getTrustThreshold()).add(pref);
+							}else{
+								
+								List<PrivacyPreference> list = new ArrayList<PrivacyPreference>();
+								list.add(pref);
+								table.put(trustCondition.getTrustThreshold(), list);
+							}
+							
+						}
+					}
+				}
+			}
+		}
+		
+		if (table.containsKey(trustValue)){
+			List<PrivacyPreference> list = table.get(trustValue);
+			if (list.size()==1){
+				return list.get(0);
+			}else if (list.size()==0){
+				System.err.println("ERRORRRRR");
+				return null;
+			}else{
+				return resolveConflictsConfidenceOnly(list);
+			}
+		}
+		return null;
+	}
 }
 

@@ -24,55 +24,6 @@
  */
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager.test;
 
-import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JOptionPane;
-
-import junit.framework.TestCase;
-
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.mockito.Mockito;
-import org.societies.api.comm.xmpp.interfaces.ICommManager;
-import org.societies.api.context.CtxException;
-import org.societies.api.context.model.CtxAssociation;
-import org.societies.api.context.model.CtxAssociationIdentifier;
-import org.societies.api.context.model.CtxAttribute;
-import org.societies.api.context.model.CtxAttributeIdentifier;
-import org.societies.api.context.model.CtxAttributeValueMetrics;
-import org.societies.api.context.model.CtxAttributeValueType;
-import org.societies.api.context.model.CtxEntity;
-import org.societies.api.context.model.CtxEntityIdentifier;
-import org.societies.api.context.model.CtxIdentifier;
-import org.societies.api.context.model.CtxModelObject;
-import org.societies.api.context.model.CtxModelType;
-import org.societies.api.context.model.CtxOriginType;
-import org.societies.api.context.model.CtxQuality;
-import org.societies.api.context.model.IndividualCtxEntity;
-import org.societies.api.identity.IIdentity;
-import org.societies.api.identity.IIdentityManager;
-import org.societies.api.identity.INetworkNode;
-import org.societies.api.identity.IdentityType;
-import org.societies.api.identity.RequestorCis;
-import org.societies.api.identity.RequestorService;
-import org.societies.api.internal.context.broker.ICtxBroker;
-import org.societies.api.internal.privacytrust.trust.ITrustBroker;
-import org.societies.api.internal.useragent.feedback.IUserFeedback;
-import org.societies.api.internal.useragent.model.ExpProposalContent;
-import org.societies.api.privacytrust.privacy.model.PrivacyException;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ActionConstants;
-import org.societies.api.schema.context.model.CtxQualityBean;
-import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
-import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.CtxTypes;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
-import org.springframework.scheduling.annotation.AsyncResult;
 
 /**
  * Describe your class here...
@@ -81,7 +32,7 @@ import org.springframework.scheduling.annotation.AsyncResult;
  *
  */
 public class TestCheckPermission {
-
+/*
 	ICtxBroker ctxBroker = Mockito.mock(ICtxBroker.class);
 	ITrustBroker trustBroker = Mockito.mock(ITrustBroker.class);
 	IPrivacyDataManagerInternal  privacyDataManager = Mockito.mock(IPrivacyDataManagerInternal.class);
@@ -211,7 +162,7 @@ public class TestCheckPermission {
 		IIdentity requestorId = new MyIdentity(IdentityType.CSS, "me","domain.com");
 		IIdentity cisId = new MyIdentity(IdentityType.CIS, "Holidays", "domain.com");
 		return new RequestorCis(requestorId, cisId);
-	}
+	}*/
 	
 
 	

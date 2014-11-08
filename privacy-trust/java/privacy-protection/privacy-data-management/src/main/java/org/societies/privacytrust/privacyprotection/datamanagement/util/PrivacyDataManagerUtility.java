@@ -27,6 +27,8 @@ package org.societies.privacytrust.privacyprotection.datamanagement.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyDataManager;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.schema.identity.DataIdentifier;
@@ -39,8 +41,11 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Respons
  * @author Olivier Maridat (Trialog)
  */
 public abstract class PrivacyDataManagerUtility extends PrivacyDataManagerDeprecation implements IPrivacyDataManager {
+	private static final Logger LOG = LoggerFactory.getLogger(PrivacyDataManagerUtility.class);
+
 	@Override
 	public List<ResponseItem> checkPermission(RequestorBean requestor, DataIdentifier dataId, List<Action> actions) throws PrivacyException {
+		LOG.debug("public List<ResponseItem> checkPermission(RequestorBean requestor, DataIdentifier dataId, List<Action> actions)");
 		List<DataIdentifier> dataIds = new ArrayList<DataIdentifier>();
 		dataIds.add(dataId);
 		return checkPermission(requestor, dataIds, actions);
@@ -48,6 +53,7 @@ public abstract class PrivacyDataManagerUtility extends PrivacyDataManagerDeprec
 	
 	@Override
 	public List<ResponseItem> checkPermission(RequestorBean requestor, DataIdentifier dataId, Action action) throws PrivacyException {
+		LOG.debug("public List<ResponseItem> checkPermission(RequestorBean requestor, DataIdentifier dataId, Action action)");
 		List<Action> actions = new ArrayList<Action>();
 		actions.add(action);
 		return checkPermission(requestor, dataId, actions);
@@ -55,6 +61,7 @@ public abstract class PrivacyDataManagerUtility extends PrivacyDataManagerDeprec
 
 	@Override
 	public List<ResponseItem> checkPermission(RequestorBean requestor, List<DataIdentifier> dataIds, Action action) throws PrivacyException {
+		LOG.debug("public List<ResponseItem> checkPermission(RequestorBean requestor, List<DataIdentifier> dataIds, Action action)");
 		List<Action> actions = new ArrayList<Action>();
 		actions.add(action);
 		return checkPermission(requestor, dataIds, actions);

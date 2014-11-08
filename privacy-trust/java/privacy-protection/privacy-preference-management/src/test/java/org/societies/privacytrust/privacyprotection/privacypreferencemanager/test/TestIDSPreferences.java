@@ -24,63 +24,13 @@
  */
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager.test;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-import org.societies.api.comm.xmpp.interfaces.ICommManager;
-import org.societies.api.context.CtxException;
-import org.societies.api.context.model.CtxAttribute;
-import org.societies.api.context.model.CtxAttributeIdentifier;
-import org.societies.api.context.model.CtxAttributeTypes;
-import org.societies.api.context.model.CtxEntity;
-import org.societies.api.context.model.CtxEntityIdentifier;
-import org.societies.api.context.model.CtxIdentifier;
-import org.societies.api.context.model.CtxModelObject;
-import org.societies.api.context.model.CtxModelType;
-import org.societies.api.context.model.IndividualCtxEntity;
-import org.societies.api.identity.IIdentity;
-import org.societies.api.identity.IIdentityManager;
-import org.societies.api.identity.INetworkNode;
-import org.societies.api.identity.IdentityType;
-import org.societies.api.internal.context.broker.ICtxBroker;
-import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.NegotiationAgreement;
-import org.societies.api.internal.privacytrust.trust.ITrustBroker;
-import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
-import org.societies.api.internal.useragent.feedback.IUserFeedback;
-import org.societies.api.osgi.event.IEventMgr;
-import org.societies.api.schema.identity.DataIdentifierScheme;
-import org.societies.api.schema.identity.RequestorCisBean;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.PrivacyPolicyTypeConstants;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
-import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.CtxTypes;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
-import org.springframework.scheduling.annotation.AsyncResult;
 
 /**
  * @author Eliza
  *
  */
 public class TestIDSPreferences {
-
+/*
 	private static final String ids_Preference_Name1 = "ids_preference_1";
 	PrivacyPreferenceManager privPrefMgr;
 	private ICommManager commsMgr = Mockito.mock(ICommManager.class);
@@ -339,6 +289,6 @@ public class TestIDSPreferences {
 		this.ids_1_CtxAttribute = new CtxAttribute(new CtxAttributeIdentifier(this.privacyPreferenceEntity.getId(), ids_Preference_Name1, new Long(5)));
 		
 		this.registryCtxAttribute = new CtxAttribute(new CtxAttributeIdentifier(userCtxEntity.getId(), CtxTypes.PRIVACY_PREFERENCE_REGISTRY, new Long(1)));
-	}
+	}*/
 }
 

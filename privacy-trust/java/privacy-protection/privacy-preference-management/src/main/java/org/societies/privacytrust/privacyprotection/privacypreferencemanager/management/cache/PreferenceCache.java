@@ -20,6 +20,7 @@ import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.CtxModelType;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.context.model.util.SerialisationHelper;
+import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.internal.context.broker.ICtxBroker;
@@ -41,6 +42,7 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.util.PrivacyPreferenceUtils;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.CtxTypes;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.PreferenceRetriever;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.PreferenceStorer;
 
@@ -55,24 +57,21 @@ public class PreferenceCache {
 	List<IDSCacheEntry> idsList = new ArrayList<IDSCacheEntry>();
 	List<AttrSelCacheEntry> attrSelList = new ArrayList<AttrSelCacheEntry>();
 	List<DObfCacheEntry> dobfList = new ArrayList<DObfCacheEntry>();
-	private IIdentityManager idMgr;
-	private ICtxBroker ctxBroker;
 	private PreferenceRetriever retriever;
 	private PreferenceStorer storer;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
-
-
-
-	public PreferenceCache(ICtxBroker ctxBroker, IIdentityManager idMgr){
-
-		this.ctxBroker = ctxBroker;
-		this.idMgr = idMgr;
-		retriever = new PreferenceRetriever(ctxBroker, idMgr);
-		storer = new PreferenceStorer(ctxBroker, idMgr);
+	private PrivacyPreferenceManager privPrefMgr;
+	private final IIdentity userIdentity;
+	public PreferenceCache(PrivacyPreferenceManager privPrefMgr) {
+		this.privPrefMgr = privPrefMgr;
+		this.userIdentity = privPrefMgr.getIdm().getThisNetworkNode();
+	
+		retriever = new PreferenceRetriever(this.privPrefMgr);
+		storer = new PreferenceStorer(this.privPrefMgr);
 		try {
-			List<CtxIdentifier> list = ctxBroker.lookup(idMgr.getThisNetworkNode(), CtxModelType.ENTITY, CtxTypes.PRIVACY_PREFERENCE).get();
+			List<CtxIdentifier> list = privPrefMgr.getCtxBroker().lookup(this.userIdentity, CtxModelType.ENTITY, CtxTypes.PRIVACY_PREFERENCE).get();
 			for (CtxIdentifier ctxEntityID : list){
-				CtxEntity ctxEntity = (CtxEntity) ctxBroker.retrieve(ctxEntityID).get();
+				CtxEntity ctxEntity = (CtxEntity) privPrefMgr.getCtxBroker().retrieve(ctxEntityID).get();
 				
 				this.loadPPNPreferences(ctxEntity.getAttributes(CtxTypes.PPN_PREFERENCE));
 				
@@ -94,15 +93,17 @@ public class PreferenceCache {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
+
+
+
 
 	private void loadPPNPreferences(Set<CtxAttribute> attributes) {
 		for (CtxAttribute ctxAttribute : attributes){
 			CtxAttributeIdentifier locationCtxID = ctxAttribute.getId();
 			try {
 				Object obj = SerialisationHelper.deserialise(ctxAttribute.getBinaryValue(), getClass().getClassLoader());
-				PPNPrivacyPreferenceTreeModel model = PrivacyPreferenceUtils.toPPNPrivacyPreferenceTreeModel((PPNPrivacyPreferenceTreeModelBean) obj, this.idMgr);
+				PPNPrivacyPreferenceTreeModel model = PrivacyPreferenceUtils.toPPNPrivacyPreferenceTreeModel((PPNPrivacyPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 				PPNCacheEntry entry = new PPNCacheEntry(model.getDetails(), model, locationCtxID);
 				this.ppnList.add(entry);
 			} catch (IOException e) {
@@ -126,7 +127,7 @@ public class PreferenceCache {
 			CtxAttributeIdentifier locationCtxID = ctxAttribute.getId();
 			try {
 				Object obj = SerialisationHelper.deserialise(ctxAttribute.getBinaryValue(), getClass().getClassLoader());
-				AccessControlPreferenceTreeModel model = PrivacyPreferenceUtils.toAccCtrlPreferenceTreeModel((AccessControlPreferenceTreeModelBean) obj, idMgr);
+				AccessControlPreferenceTreeModel model = PrivacyPreferenceUtils.toAccCtrlPreferenceTreeModel((AccessControlPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 				AccCtrlCacheEntry entry = new AccCtrlCacheEntry(model.getDetails(), model, locationCtxID);
 				this.accCtrlList.add(entry);
 			} catch (IOException e) {
@@ -147,7 +148,7 @@ public class PreferenceCache {
 			CtxAttributeIdentifier locationCtxID = ctxAttribute.getId();
 			try {
 				Object obj = SerialisationHelper.deserialise(ctxAttribute.getBinaryValue(), getClass().getClassLoader());
-				AttributeSelectionPreferenceTreeModel model = PrivacyPreferenceUtils.toAttSelPreferenceTreeModel((AttributeSelectionPreferenceTreeModelBean) obj, idMgr);
+				AttributeSelectionPreferenceTreeModel model = PrivacyPreferenceUtils.toAttSelPreferenceTreeModel((AttributeSelectionPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 				AttrSelCacheEntry entry = new AttrSelCacheEntry(model.getDetails(), model, locationCtxID);
 				this.attrSelList.add(entry);
 			} catch (IOException e) {
@@ -168,7 +169,7 @@ public class PreferenceCache {
 			CtxAttributeIdentifier locationCtxID = ctxAttribute.getId();
 			try {
 				Object obj = SerialisationHelper.deserialise(ctxAttribute.getBinaryValue(), getClass().getClassLoader());
-				IDSPrivacyPreferenceTreeModel model = PrivacyPreferenceUtils.toIDSPrivacyPreferenceTreeModel((IDSPrivacyPreferenceTreeModelBean) obj, idMgr);
+				IDSPrivacyPreferenceTreeModel model = PrivacyPreferenceUtils.toIDSPrivacyPreferenceTreeModel((IDSPrivacyPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 				IDSCacheEntry entry = new IDSCacheEntry(model.getDetails(), model, locationCtxID);
 				this.idsList.add(entry);
 			} catch (IOException e) {
@@ -192,7 +193,7 @@ public class PreferenceCache {
 			CtxAttributeIdentifier locationCtxID = ctxAttribute.getId();
 			try {
 				Object obj = SerialisationHelper.deserialise(ctxAttribute.getBinaryValue(), getClass().getClassLoader());
-				DObfPreferenceTreeModel model = PrivacyPreferenceUtils.toDObfPreferenceTreeModel((DObfPrivacyPreferenceTreeModelBean) obj, idMgr);
+				DObfPreferenceTreeModel model = PrivacyPreferenceUtils.toDObfPreferenceTreeModel((DObfPrivacyPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 				DObfCacheEntry entry = new DObfCacheEntry(model.getDetails(), model, locationCtxID);
 				this.dobfList.add(entry);
 			} catch (IOException e) {
@@ -439,7 +440,7 @@ public class PreferenceCache {
 			if (entry.equalsDetails(details)){
 				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 				try {
-					CtxModelObject ctxModelObject = this.ctxBroker.remove(locationCtxID).get();
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 					if (ctxModelObject == null){
 						return false;
 					}
@@ -469,7 +470,7 @@ public class PreferenceCache {
 			if (entry.equalsDetails(details)){
 				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 				try {
-					CtxModelObject ctxModelObject = this.ctxBroker.remove(locationCtxID).get();
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 					if (ctxModelObject == null){
 						return false;
 					}
@@ -498,7 +499,7 @@ public class PreferenceCache {
 			if (entry.equalsDetails(details)){
 				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 				try {
-					CtxModelObject ctxModelObject = ctxBroker.remove(locationCtxID).get();
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 					if (ctxModelObject==null){
 						return false;
 					}
@@ -527,7 +528,7 @@ public class PreferenceCache {
 			if (entry.equalsDetails(details)){
 				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 				try {
-					CtxModelObject ctxModelObject = ctxBroker.remove(locationCtxID).get();
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 					if (ctxModelObject==null){
 						return false;
 					}
@@ -556,7 +557,7 @@ public class PreferenceCache {
 			if (entry.equalsDetails(details)){
 				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 				try {
-					CtxModelObject ctxModelObject = ctxBroker.remove(locationCtxID).get();
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 					if (ctxModelObject==null){
 						return false;
 					}
@@ -631,7 +632,7 @@ public class PreferenceCache {
 
 			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 			try {
-				CtxModelObject ctxModelObject = this.ctxBroker.remove(locationCtxID).get();
+				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 				if (ctxModelObject == null){
 					removed = false;
 				}else{
@@ -665,7 +666,7 @@ public class PreferenceCache {
 
 			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 			try {
-				CtxModelObject ctxModelObject = this.ctxBroker.remove(locationCtxID).get();
+				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 				if (ctxModelObject == null){
 					removed = false;
 				}else{
@@ -698,7 +699,7 @@ public class PreferenceCache {
 
 			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 			try {
-				CtxModelObject ctxModelObject = this.ctxBroker.remove(locationCtxID).get();
+				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 				if (ctxModelObject == null){
 					removed = false;
 				}else{
@@ -731,7 +732,7 @@ public class PreferenceCache {
 
 			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 			try {
-				CtxModelObject ctxModelObject = this.ctxBroker.remove(locationCtxID).get();
+				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 				if (ctxModelObject == null){
 					removed = false;
 				}else{
@@ -764,7 +765,7 @@ public class PreferenceCache {
 
 			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
 			try {
-				CtxModelObject ctxModelObject = this.ctxBroker.remove(locationCtxID).get();
+				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
 				if (ctxModelObject == null){
 					removed = false;
 				}else{

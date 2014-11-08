@@ -110,10 +110,11 @@ public class ConditionPanel extends JPanel {
 
 	public void applyPersonalisation() {
 		if (this.suggestedCondition!=null){
-
+			String suggestedConditionValue = "";
 			if (this.requestedCondition.getConditionConstant().equals(ConditionConstants.DATA_RETENTION)){
 				try {
-					comboBox.setSelectedItem(PrivacyConditionsConstantValues.getBetterDataRetention(requestedCondition.getValue(), suggestedCondition.getValue()));
+					suggestedConditionValue = PrivacyConditionsConstantValues.getBetterDataRetention(requestedCondition.getValue(), suggestedCondition.getValue());
+					comboBox.setSelectedItem(suggestedConditionValue);
 				} catch (PrivacyException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -121,16 +122,20 @@ public class ConditionPanel extends JPanel {
 			}else if (this.requestedCondition.getConditionConstant().equals(ConditionConstants.SHARE_WITH_3RD_PARTIES)){
 				
 				try {
-					comboBox.setSelectedItem(PrivacyConditionsConstantValues.getBetterSharedValue(requestedCondition.getValue(), suggestedCondition.getValue()));
+					suggestedConditionValue = PrivacyConditionsConstantValues.getBetterSharedValue(requestedCondition.getValue(), suggestedCondition.getValue());
+					comboBox.setSelectedItem(suggestedConditionValue);
 				} catch (PrivacyException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}else {
-				comboBox.setSelectedItem(PrivacyConditionsConstantValues.getBetterConditionValue(requestedCondition.getConditionConstant()));
+				suggestedConditionValue = PrivacyConditionsConstantValues.getBetterConditionValue(requestedCondition.getConditionConstant());
+				comboBox.setSelectedItem(suggestedConditionValue);
 				
 			}
-			this.lblIcon.setIcon(this.createLeftArrowImageIcon());
+			if (!requestedCondition.getValue().equalsIgnoreCase(suggestedConditionValue)){
+				this.lblIcon.setIcon(this.createLeftArrowImageIcon());
+			}
 		}
 	}
 

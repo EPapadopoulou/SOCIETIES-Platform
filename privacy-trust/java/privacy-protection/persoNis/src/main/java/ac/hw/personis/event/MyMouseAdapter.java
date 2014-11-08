@@ -13,8 +13,8 @@ import javax.swing.table.TableModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
 import ac.hw.personis.PersonisHelper;
-import ac.hw.personis.preference.AllPreferencesGUI;
-import ac.hw.personis.preference.table.DetailTableModel;
+import ac.hw.personis.internalwindows.preferences.AllPreferencesGUI;
+import ac.hw.personis.internalwindows.preferences.DetailTableModel;
 
 
 public class MyMouseAdapter extends MouseAdapter {

@@ -23,7 +23,7 @@
         <xs:complexContent>
             <xs:extension base="tns:responseItem">
                 <xs:sequence>
-                    <xs:element name="obfuscationLevel" type="xs:double"/>
+                    <xs:element name="obfuscationLevel" type="xs:int"/>
                     <xs:element name="obfuscationInput" type="xs:boolean" />
                     <xs:element name="remember" type="xs:boolean"/>
                     <xs:element name="requestorscope" type="tns:requestorScopeValues" minOccurs="0"/>

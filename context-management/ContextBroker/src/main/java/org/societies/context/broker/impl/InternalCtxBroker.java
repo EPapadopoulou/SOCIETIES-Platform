@@ -1684,40 +1684,27 @@ public class InternalCtxBroker implements ICtxBroker {
 		return this.retrieve(requestor, ctxId);
 	}
 
-	/*
-	 * @see org.societies.api.context.broker.ICtxBroker#retrieve(org.societies.api.identity.Requestor, org.societies.api.context.model.CtxIdentifier)
-	 */
-	@Override
-	@Async
-	public Future<CtxModelObject> retrieve(final Requestor requestor,
-			final CtxIdentifier ctxId) throws CtxException {
-		String targetOwnerID = ctxId.getOwnerId();
+	public CtxAttribute retrieveAttribute(final Requestor requestor, final CtxAttributeIdentifier ctxId) throws CtxException{
 
-		if (requestor == null) {
-			throw new NullPointerException("requestor can't be null");
-		}
-		if (ctxId == null) {
-			throw new NullPointerException("ctxId can't be null");
-		}
+		String targetCtxID = ctxId.getOwnerId();
 
-		LOG.debug("retrieve: requestor={}, ctxId={}", requestor, ctxId);
-
-		CtxModelObject result = null;
+		CtxAttribute result = null;
 
 		// Extract target IIdentity
-		final IIdentity target = this.extractIIdentity(ctxId);
+		final IIdentity targetId = this.extractIIdentity(ctxId);
 
 		// Log with Privacy Log Appender
-		this.logRequest(requestor, target);
+		//this.logRequest(requestor, target);
 		IIdentity userID = this.commMgr.getIdManager().getThisNetworkNode();
 
-		if (this.isLocalId(target)) { // L O C A L
+		
+		if (this.isLocalId(targetId)) { // L O C A L
 
 			// Check if access control is required.
 			if(!requestor.equals(this.getLocalRequestor())) {
 
 				//Eliza edit: check that ctxID is linked to this identity
-				List<CtxIdentifier> linkedAttributeList = this.linkedAttributes.get(targetOwnerID);
+				List<CtxIdentifier> linkedAttributeList = this.linkedAttributes.get(targetCtxID);
 				if (linkedAttributeList==null){
 					throw new CtxBrokerException("Requestor: "+requestor.getRequestorId().getBareJid()+" is not allowed to access "+ctxId.getUri());
 				}
@@ -1731,28 +1718,119 @@ public class InternalCtxBroker implements ICtxBroker {
 				}
 
 				if (!linked){
-					throw new CtxBrokerException("Requestor: "+requestor.getRequestorId().getBareJid()+" is not allowed to access "+ctxId.getUri()+" with targetID: "+targetOwnerID);
+					throw new CtxBrokerException("Requestor: "+requestor.getRequestorId().getBareJid()+" is not allowed to access "+ctxId.getUri()+" with targetID: "+targetCtxID);
 				}
 
-
-				//replace the alias identity with the true identity because context only uses the true identity
-
-				//We do the check permission with the real identity 
 				// Check READ permission
-				this.ctxAccessController.checkPermission(requestor, CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId),
-						ActionConstants.READ);
-
+				this.ctxAccessController.checkPermission(requestor, CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId), ActionConstants.READ);
 
 
 			}
 			// No CtxAccessControlException thrown implies READ access has been granted
 
-			if (IdentityType.CIS != target.getType()) { // U S E R
-				//Eliza edit: first check that the CtxID is in the list of linkedAttributes for this identity after replacing the target with the user's ID.
+			if (IdentityType.CIS != targetId.getType()) { // U S E R
+
+				result = this.inferUserAttribute(CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
+
+
+			} else { // C O M M U N I T Y
 
 				if (ctxId instanceof CtxAttributeIdentifier) { // I N F E R E N C E
-					result = this.inferUserAttribute(CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
+					result = this.inferCommunityAttribute(CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
+				} else {
+					result = (CtxAttribute) this.communityCtxDBMgr.retrieve(CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
+				}
+			}
 
+			// Obfuscate non-null result if requestor is not local
+			if (result != null && !requestor.equals(this.getLocalRequestor())) {
+				
+				result = CtxIDChanger.changeOwner(targetCtxID, (CtxAttribute) result);
+				result = (CtxAttribute) this.ctxAccessController.obfuscate(requestor, result);
+			}
+
+		} else { // R E M O T E
+
+			// Needed for performance test
+			long initTimestamp = System.nanoTime();
+
+			final RetrieveCtxCallback callback = new RetrieveCtxCallback();
+			this.ctxBrokerClient.retrieve(requestor, ctxId, callback); 
+			synchronized (callback) {
+				try {
+					callback.wait();
+					if (callback.getException() == null) {
+						result = (CtxAttribute) callback.getResult();
+					} else { 
+						throw callback.getException();
+					}
+
+					// Needed for performance test
+					if (PERF_LOG.isTraceEnabled()) {
+						final IPerformanceMessage m = new PerformanceMessage();
+						m.setTestContext("ContextBroker_Delay_RemoteContextRetrieval");
+						m.setSourceComponent(this.getClass().getName());
+						m.setPerformanceType(IPerformanceMessage.Delay);
+						m.setOperationType("RemoteCSS_ContextRetrieval");
+						m.setD82TestTableName("S11");
+						long delay = System.nanoTime() - initTimestamp;
+						m.setPerformanceNameValue("Delay="+(delay));
+						PERF_LOG.trace(m.toString());
+					}
+
+				} catch (InterruptedException e) {
+
+					throw new CtxBrokerException("Interrupted while waiting for remote retrieve");
+				}
+			}
+		}
+
+		LOG.debug("retrieve: result={}", result);
+		return result;
+	}
+	/*
+	 * @see org.societies.api.context.broker.ICtxBroker#retrieve(org.societies.api.identity.Requestor, org.societies.api.context.model.CtxIdentifier)
+	 */
+	@Override
+	@Async
+	public Future<CtxModelObject> retrieve(final Requestor requestor,
+			final CtxIdentifier ctxId) throws CtxException {
+
+		if (requestor == null) {
+			throw new NullPointerException("requestor can't be null");
+		}
+		if (ctxId == null) {
+			throw new NullPointerException("ctxId can't be null");
+		}
+
+		LOG.debug("retrieve: requestor={}, ctxId={}", requestor, ctxId);
+
+		if (ctxId instanceof CtxAttributeIdentifier){
+			CtxAttribute retrieveAttribute = retrieveAttribute(requestor, (CtxAttributeIdentifier) ctxId);
+			return new AsyncResult<CtxModelObject>(retrieveAttribute);
+		}
+		CtxModelObject result = null;
+
+		// Extract target IIdentity
+		final IIdentity target = this.extractIIdentity(ctxId);
+
+		// Log with Privacy Log Appender
+		this.logRequest(requestor, target);
+
+		if (this.isLocalId(target)) { // L O C A L
+
+			// Check if access control is required.
+			if(!requestor.equals(this.getLocalRequestor())) {
+				// Check READ permission
+				this.ctxAccessController.checkPermission(requestor, ctxId, 
+						ActionConstants.READ);
+			}
+			// No CtxAccessControlException thrown implies READ access has been granted
+
+			if (IdentityType.CIS != target.getType()) { // U S E R
+
+				if (ctxId instanceof CtxAttributeIdentifier) { // I N F E R E N C E
+					result = this.inferUserAttribute((CtxAttributeIdentifier) ctxId);
 				} else {
 					result = this.userCtxDBMgr.retrieve(ctxId);
 				}	

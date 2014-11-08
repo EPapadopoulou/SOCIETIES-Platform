@@ -1,9 +1,6 @@
 package org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui;
 
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -15,14 +12,12 @@ import javax.swing.border.EtchedBorder;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
-import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components.ActionsPanel;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components.ConditionsPanel;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components.DecisionPanel;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components.PurposePanel;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components.ToggleButtonActionListener;
 
 import com.alee.laf.separator.WebSeparator;
-import java.util.List;
 
 
 public class RequestItemPanel extends JPanel {
@@ -33,7 +28,6 @@ public class RequestItemPanel extends JPanel {
 	private DecisionPanel decisionPanel;
 	private JButton btnRestoreChanges;
 	private boolean firstRound;
-	private ActionsPanel actionsPanel;
 
 	/**
 	 * Create the panel.
@@ -46,7 +40,7 @@ public class RequestItemPanel extends JPanel {
 		setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
 		
 		setLayout(null);
-		setBounds(0,0, 760, 510);
+		setBounds(0,0, 760, 387);
 		JLabel lblPurpose = new JLabel("Purpose");
 		lblPurpose.setBounds(17, 15, 60, 16);
 		add(lblPurpose);
@@ -61,49 +55,42 @@ public class RequestItemPanel extends JPanel {
 		separator_1.setDrawSideLines(false);//new JSeparator(JSeparator.HORIZONTAL);
 		add(separator_1);
 		
-		JLabel lblActions = new JLabel("Actions");
-		lblActions.setBounds(17, 100, 60, 14);
-		add(lblActions);
-		
-		WebSeparator separator = new WebSeparator(WebSeparator.HORIZONTAL);
-		separator.setBounds(2, 162, 756, 3);
-		separator.setDrawSideLines(false);
-		add(separator);
-		
 		JLabel lblConditions = new JLabel("Conditions");
-		lblConditions.setBounds(17, 186, 60, 14);
+		lblConditions.setBounds(17, 137, 60, 14);
 		add(lblConditions);
 		
 		conditionsPanel = new ConditionsPanel(requestItem, responseItem, firstRound);
-		conditionsPanel.setBounds(97, 173, 650, 200);
+		lblConditions.setLabelFor(conditionsPanel);
+		conditionsPanel.setBounds(97, 55, 650, 200);
 		add(conditionsPanel);
 		
 		WebSeparator separator_2 = new WebSeparator(WebSeparator.HORIZONTAL);
-		separator_2.setBounds(2, 380, 796, 3);
+		separator_2.setBounds(2, 266, 796, 3);
 		separator_2.setDrawSideLines(false);
 		add(separator_2);
 		
 		JLabel lblDecision = new JLabel("Decision");
-		lblDecision.setBounds(17, 395, 60, 14);
+		lblDecision.setBounds(17, 287, 63, 14);
 		add(lblDecision);
 		
-		ToggleButtonActionListener toggleButtonActionListener = new ToggleButtonActionListener(this);
 		Decision decision = Decision.PERMIT;
 		if (responseItem!=null){
 			decision = responseItem.getDecision();
 		}
 		
-		decisionPanel = new DecisionPanel(toggleButtonActionListener, decision);
-		decisionPanel.setBounds(97, 390, 152, 30);
+		ToggleButtonActionListener btnActionListener = new ToggleButtonActionListener(this);
+		decisionPanel = new DecisionPanel(decision, btnActionListener);
+		lblDecision.setLabelFor(decisionPanel);
+		decisionPanel.setBounds(94, 280, 152, 30);
 		add(decisionPanel);
 		
 		WebSeparator separator_3 = new WebSeparator();
-		separator_3.setBounds(2, 427, 748, 3);
+		separator_3.setBounds(-1, 321, 748, 3);
 		separator_3.setDrawSideLines(false);
 		add(separator_3);
 		
 		JPanel panel = new JPanel();
-		panel.setBounds(97, 437, 650, 40);
+		panel.setBounds(97, 335, 650, 40);
 		add(panel);
 		
 		btnPersonalise = new JButton("Get Personalised Suggestions");
@@ -126,16 +113,7 @@ public class RequestItemPanel extends JPanel {
 		}
 		this.setMaximumSize(new Dimension(800, 600));
 		this.setMinimumSize(new Dimension(800, 600));
-		
-		actionsPanel = new ActionsPanel(requestItem, responseItem, firstRound);
-		actionsPanel.setBounds(97, 55, 650, 100);
-		add(actionsPanel);
 
-	}
-	
-
-	public void setEnabledPanels(boolean bool){
-		this.actionsPanel.setEnabledChckBoxes(bool);
 	}
 	
 	
@@ -166,14 +144,12 @@ public class RequestItemPanel extends JPanel {
 	public void applyPersonalisation() {
 		
 		this.conditionsPanel.applyPersonalisation();
-		this.actionsPanel.applyPersonalisation();
 		this.decisionPanel.applyPersonalisation();
 	}
 
 
 	public void resetChanges() {
 		this.conditionsPanel.resetChanges();
-		this.actionsPanel.resetChanges();
 		this.decisionPanel.resetChanges();
 		
 	}
@@ -195,19 +171,16 @@ public class RequestItemPanel extends JPanel {
 		}
 		RequestItem reqItem = new RequestItem();
 		
-		reqItem.setActions(this.actionsPanel.getActions());
 		reqItem.setConditions(this.conditionsPanel.getConditions());
 		reqItem.setResource(this.item.getResource());
 		reqItem.setPurpose(this.item.getPurpose());
+		reqItem.setActions(this.item.getActions());
 		respItem.setRequestItem(reqItem);
 		return respItem;
 	}
 
 
 	private boolean hasResponseBeenEditedByUser() {
-		if (!this.actionsPanel.match()){
-			return false;
-		}
 		
 		if (!this.conditionsPanel.match()){
 			return false;

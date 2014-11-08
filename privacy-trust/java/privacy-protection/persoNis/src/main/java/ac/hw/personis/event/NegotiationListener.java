@@ -12,7 +12,7 @@ import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.schema.identity.RequestorBean;
 
 import ac.hw.personis.Application;
-import ac.hw.personis.Apps;
+import ac.hw.personis.internalwindows.apps.Apps;
 
 public class NegotiationListener extends EventListener{
 

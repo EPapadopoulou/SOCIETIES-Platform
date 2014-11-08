@@ -308,7 +308,14 @@ public class ProviderResponsePolicyGenerator {
 
 
 	private ResponseItem getSatisfiableActions(RequestItem reqItem, ResponseItem respItem) {
-		boolean different = false;
+		RequestItem requestItem = new RequestItem();
+		requestItem.setActions(respItem.getRequestItem().getActions());
+		requestItem.setResource(reqItem.getResource());
+		requestItem.setPurpose(reqItem.getPurpose());
+		ResponseItem responseItem = new ResponseItem();
+		responseItem.setRequestItem(requestItem);
+		return responseItem;
+/*		boolean different = false;
 		List<Action> myActions = reqItem.getActions();
 		List<Action> requestedActions = respItem.getRequestItem().getActions();
 		List<Action> missingActions = new ArrayList<Action>();
@@ -347,7 +354,7 @@ public class ProviderResponsePolicyGenerator {
 			return responseItem;
 		}
 
-		return null;
+		return null;*/
 	}
 
 	/*	public ResponsePolicy generateResponse(ResponsePolicy clientResponse, RequestPolicy myPolicy){

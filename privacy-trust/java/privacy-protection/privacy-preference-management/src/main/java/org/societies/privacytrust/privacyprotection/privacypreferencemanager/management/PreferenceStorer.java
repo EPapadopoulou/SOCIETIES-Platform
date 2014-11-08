@@ -24,11 +24,8 @@
  */
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager.management;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -44,16 +41,13 @@ import org.societies.api.context.model.CtxEntity;
 import org.societies.api.context.model.CtxEntityIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelObject;
-import org.societies.api.context.model.CtxModelType;
 import org.societies.api.context.model.IndividualCtxEntity;
 import org.societies.api.context.model.util.SerialisationHelper;
 import org.societies.api.identity.IIdentity;
-import org.societies.api.identity.IIdentityManager;
-import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyPreferenceTreeModelBean;
-import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.RegistryBean;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.CtxTypes;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 
 
 
@@ -64,13 +58,12 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.Ctx
 public class PreferenceStorer {
 
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
-	private final ICtxBroker ctxBroker;
-	private final IIdentityManager idMgr;
+	private PrivacyPreferenceManager privPrefMgr;
 
 
-	public PreferenceStorer(ICtxBroker broker, IIdentityManager idMgr){
-		this.ctxBroker = broker;
-		this.idMgr = idMgr;	
+
+	public PreferenceStorer(PrivacyPreferenceManager privPrefMgr){
+		this.privPrefMgr = privPrefMgr;
 	}
 
 
@@ -78,12 +71,12 @@ public class PreferenceStorer {
 		CtxAttribute attrPreference;
 		try {
 			System.out.println("Deleting: "+id.toUriString());
-			attrPreference = (CtxAttribute) ctxBroker.retrieve(id).get();
+			attrPreference = (CtxAttribute) privPrefMgr.getCtxBroker().retrieve(id).get();
 			if (attrPreference == null){
 				this.logging.debug("Cannot delete preference. Doesn't exist: "+id.toUriString());
 				
 			}else{
-				ctxBroker.remove(id).get();
+				privPrefMgr.getCtxBroker().remove(id).get();
 			}
 		} catch (CtxException e) {
 			// TODO Auto-generated catch block
@@ -103,7 +96,7 @@ public class PreferenceStorer {
 		while (ids.hasMoreElements()){
 			try {
 				CtxIdentifier ctxID = ids.nextElement();
-				CtxModelObject ctxModelObject = ctxBroker.remove(ctxID).get();
+				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(ctxID).get();
 				if (ctxModelObject==null){
 					this.logging.debug("Could not delete preference with id: "+ctxID.toString()+". ID doesn't exist in DB.");
 				}
@@ -125,7 +118,7 @@ public class PreferenceStorer {
 		try {
 			Future<CtxAttribute> futureAttr;
 			CtxAttribute attr = null;	
-			futureAttr = ctxBroker.updateAttribute(((CtxAttributeIdentifier) id), SerialisationHelper.serialise(p));
+			futureAttr = privPrefMgr.getCtxBroker().updateAttribute(((CtxAttributeIdentifier) id), SerialisationHelper.serialise(p));
 			attr = futureAttr.get();
 
 			if (null==attr){
@@ -157,49 +150,49 @@ public class PreferenceStorer {
 
 	public CtxAttributeIdentifier storeNewPreference(PrivacyPreferenceTreeModelBean bean, String key) throws PrivacyException{
 
-		IIdentity userId = this.idMgr.getThisNetworkNode();
+		IIdentity userId = this.privPrefMgr.getIdm().getThisNetworkNode();
 		try {
 			
-			IndividualCtxEntity personEntity = ctxBroker.retrieveIndividualEntity(userId).get();
+			IndividualCtxEntity personEntity = privPrefMgr.getCtxBroker().retrieveIndividualEntity(userId).get();
 			Set<CtxAssociationIdentifier> associations = personEntity.getAssociations(CtxTypes.HAS_PRIVACY_PREFERENCES);
 			if (associations.size()==0){
 				this.logging.debug(CtxTypes.HAS_PRIVACY_PREFERENCES+" association doesn't exist in DB. Creating it");
 				//create association and child entity
 				
-				CtxAssociation association = ctxBroker.createAssociation(userId, CtxTypes.HAS_PRIVACY_PREFERENCES).get();
+				CtxAssociation association = privPrefMgr.getCtxBroker().createAssociation(userId, CtxTypes.HAS_PRIVACY_PREFERENCES).get();
 				association.setParentEntity(personEntity.getId());
-				CtxEntity preferenceEntity = ctxBroker.createEntity(CtxTypes.PRIVACY_PREFERENCE).get();
+				CtxEntity preferenceEntity = privPrefMgr.getCtxBroker().createEntity(CtxTypes.PRIVACY_PREFERENCE).get();
 				association.addChildEntity(preferenceEntity.getId());
-				association = (CtxAssociation) ctxBroker.update(association).get();
+				association = (CtxAssociation) privPrefMgr.getCtxBroker().update(association).get();
 				//create attribute under preference entity and store it
-				CtxAttribute ctxAttribute = ctxBroker.createAttribute(preferenceEntity.getId(), key).get();
+				CtxAttribute ctxAttribute = privPrefMgr.getCtxBroker().createAttribute(preferenceEntity.getId(), key).get();
 				ctxAttribute.setBinaryValue(SerialisationHelper.serialise(bean));
-				 ctxAttribute = (CtxAttribute) ctxBroker.update(ctxAttribute).get();	
+				 ctxAttribute = (CtxAttribute) privPrefMgr.getCtxBroker().update(ctxAttribute).get();	
 				 return ctxAttribute.getId();
 			}else{
 				//get association
 				CtxAssociationIdentifier ctxAssociationIdentifier = associations.iterator().next();
-				CtxAssociation association = (CtxAssociation) this.ctxBroker.retrieve(ctxAssociationIdentifier).get();
+				CtxAssociation association = (CtxAssociation) this.privPrefMgr.getCtxBroker().retrieve(ctxAssociationIdentifier).get();
 				Set<CtxEntityIdentifier> childEntityIDs = association.getChildEntities(CtxTypes.PRIVACY_PREFERENCE);
 				if (childEntityIDs.size()==0){
 					this.logging.debug(CtxTypes.HAS_PRIVACY_PREFERENCES+" association found in DB but Entity "+CtxTypes.PRIVACY_PREFERENCE+" was not found. Creating it");
 					//create preference entity and attach it to the association
-					CtxEntity preferenceEntity = ctxBroker.createEntity(CtxTypes.PRIVACY_PREFERENCE).get();
+					CtxEntity preferenceEntity = privPrefMgr.getCtxBroker().createEntity(CtxTypes.PRIVACY_PREFERENCE).get();
 					association.addChildEntity(preferenceEntity.getId());
-					association = (CtxAssociation) ctxBroker.update(association).get();
+					association = (CtxAssociation) privPrefMgr.getCtxBroker().update(association).get();
 					
 					//create attribute under preference entity and store it
-					CtxAttribute ctxAttribute = ctxBroker.createAttribute(preferenceEntity.getId(), key).get();
+					CtxAttribute ctxAttribute = privPrefMgr.getCtxBroker().createAttribute(preferenceEntity.getId(), key).get();
 					ctxAttribute.setBinaryValue(SerialisationHelper.serialise(bean));
-					ctxAttribute = (CtxAttribute) ctxBroker.update(ctxAttribute).get();
+					ctxAttribute = (CtxAttribute) privPrefMgr.getCtxBroker().update(ctxAttribute).get();
 					return ctxAttribute.getId();
 				}else{
 					this.logging.debug(CtxTypes.PRIVACY_PREFERENCE+" entity found in DB.");
 					//store the attribute
-					CtxEntity preferenceEntity = (CtxEntity) ctxBroker.retrieve(childEntityIDs.iterator().next()).get();
-					CtxAttribute ctxAttribute = ctxBroker.createAttribute(preferenceEntity.getId(), key).get();
+					CtxEntity preferenceEntity = (CtxEntity) privPrefMgr.getCtxBroker().retrieve(childEntityIDs.iterator().next()).get();
+					CtxAttribute ctxAttribute = privPrefMgr.getCtxBroker().createAttribute(preferenceEntity.getId(), key).get();
 					ctxAttribute.setBinaryValue(SerialisationHelper.serialise(bean));
-					ctxAttribute = (CtxAttribute) ctxBroker.update(ctxAttribute).get();
+					ctxAttribute = (CtxAttribute) privPrefMgr.getCtxBroker().update(ctxAttribute).get();
 					return ctxAttribute.getId();
 				}
 			}

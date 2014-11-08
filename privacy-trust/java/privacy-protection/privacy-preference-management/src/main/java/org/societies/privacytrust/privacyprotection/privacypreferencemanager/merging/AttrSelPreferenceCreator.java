@@ -27,7 +27,7 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Conditi
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.TrustPreferenceCondition;
@@ -94,23 +94,45 @@ public class AttrSelPreferenceCreator {
 			detailsSpecific.setRequestor(requestor);
 			detailsSpecific.setDataType(resource.getDataType());
 			
-			IPrivacyPreference preference = this.createAttrSelectionPreference(ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), trusteeID, trustValue, ctxID);
+			PrivacyPreference  preference = this.createAttrSelectionPreference(ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), trusteeID, trustValue, ctxID);
 
-			AttributeSelectionPreferenceTreeModel model = new AttributeSelectionPreferenceTreeModel(detailsSpecific, preference);
-			this.privPrefMgr.storeAttrSelPreference(detailsSpecific, model);
 			
-			IPrivacyPreference preference2 = this.createAttrSelectionPreference(ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), trusteeID, trustValue, ctxID);
+			AttributeSelectionPreferenceTreeModel attrSelPreference = this.privPrefMgr.getAttrSelPreference(detailsSpecific);
+			if (attrSelPreference==null){
+			this.privPrefMgr.storeAttrSelPreference(detailsSpecific, new AttributeSelectionPreferenceTreeModel(detailsSpecific, preference));
+			}else{
+				PrivacyPreferenceMerger merger = new  PrivacyPreferenceMerger(privPrefMgr);
+				PrivacyPreference mergeAttrSelPreference = merger.mergeAttrSelPreference(detailsSpecific, attrSelPreference.getRootPreference(), preference);
+				if (mergeAttrSelPreference==null){
+					this.logging.debug("Could not merge attribute selection preferences. no changes made");
+				}else{
+					this.privPrefMgr.storeAttrSelPreference(detailsSpecific, new AttributeSelectionPreferenceTreeModel(detailsSpecific, mergeAttrSelPreference));
+				}
+			}
+			
+			PrivacyPreference  preference2 = this.createAttrSelectionPreference(ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), trusteeID, trustValue, ctxID);
 			AttributeSelectionPreferenceDetailsBean detailsGeneric = new AttributeSelectionPreferenceDetailsBean();
 			detailsGeneric.setActions(ActionUtils.copyOf(actions));
 			detailsGeneric.setDataType(resource.getDataType());
-			AttributeSelectionPreferenceTreeModel model2 = new AttributeSelectionPreferenceTreeModel(detailsGeneric , preference2);
-			this.privPrefMgr.storeAttrSelPreference(detailsGeneric, model2);
+			
+			AttributeSelectionPreferenceTreeModel attrSelPreference2 = this.privPrefMgr.getAttrSelPreference(detailsGeneric);
+			if (attrSelPreference2==null){
+			this.privPrefMgr.storeAttrSelPreference(detailsGeneric, new AttributeSelectionPreferenceTreeModel(detailsGeneric , preference2));
+			}else{
+				PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(privPrefMgr);
+				PrivacyPreference mergeAttrSelPreference = merger.mergeAttrSelPreference(detailsGeneric, attrSelPreference2.getRootPreference(), preference2);
+				if (mergeAttrSelPreference==null){
+					this.logging.debug("Could not merge attribute selection preferences. no changes made");
+				}else{
+					this.privPrefMgr.storeAttrSelPreference(detailsGeneric, new AttributeSelectionPreferenceTreeModel(detailsGeneric, mergeAttrSelPreference));
+				}
+			}
 		}
 
 	}
 
 	
-	private IPrivacyPreference createAttrSelectionPreference(List<Condition> conditions, TrustedEntityId trusteedEntityId, Double trustValue, CtxIdentifier ctxID){
+	private PrivacyPreference  createAttrSelectionPreference(List<Condition> conditions, TrustedEntityId trusteedEntityId, Double trustValue, CtxIdentifier ctxID){
 		AttributeSelectionOutcome outcome = new AttributeSelectionOutcome(ctxID);
 		PrivacyPreference preference = new PrivacyPreference(outcome);
 		

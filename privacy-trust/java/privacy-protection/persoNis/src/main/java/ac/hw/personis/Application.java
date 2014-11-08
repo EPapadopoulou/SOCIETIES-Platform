@@ -1,5 +1,7 @@
 package ac.hw.personis;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -21,7 +23,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.FontUIResource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +37,19 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.model.pr
 import org.societies.api.schema.identity.RequestorBean;
 
 import ac.hw.personis.dataInit.DataInitialiser;
-import ac.hw.personis.dataInit.IdentitiesViewer;
-import ac.hw.personis.dataInit.ProfileEditor;
-import ac.hw.personis.preference.AllPreferencesGUI;
+import ac.hw.personis.event.NotificationsListener;
+import ac.hw.personis.internalwindows.apps.Apps;
+import ac.hw.personis.internalwindows.apps.Appsv2;
+import ac.hw.personis.internalwindows.preferences.AllPreferencesGUI;
+import ac.hw.personis.internalwindows.profile.IdentitiesViewer;
+import ac.hw.personis.internalwindows.profile.ProfileEditor;
+import ac.hw.personis.internalwindows.profile.TrustGUI;
+import ac.hw.personis.notification.NotificationsPanel;
 
 public class Application implements WindowListener{
 
 	private JFrame frmPersonismEvaluationTool;
-	private Apps appsPage;
+	private Appsv2 appsPage;
 	private JDesktopPane desktopPane;
 	//private HomeFrame homeFrame;
 	private PersonisHelper helper;
@@ -85,14 +96,36 @@ public class Application implements WindowListener{
 	 */
 	private void initialize() {
 
-
+		try {
+		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		    	this.logging.debug("Found LookAndFeel: "+info.getName());
+		        if ("Nimbus".equals(info.getName())) {
+		            UIManager.setLookAndFeel(info.getClassName());
+		            
+		            break;
+		        }
+		    }
+		} catch (Exception e) {
+		    // If Nimbus is not available, you can set the GUI to another look and feel.
+		}
+		//UIManager.put("control", new Color(242,242,189));
+		//UIManager.put("Button.background", new Color(10,10,10));
+		UIManager.put("TextField.font", new Font("Tahoma", Font.PLAIN,11));
+		//UIManager.put("Label[Enabled].font", new Font("Tahoma", Font.PLAIN,14));
+		UIManager.put("ComboBox.font", new Font("Tahoma", Font.PLAIN,11));
+		//UIManager.put("Button.font", new FontUIResource("Tahoma",Font.PLAIN,2));
+		UIManager.getLookAndFeelDefaults().put("Button.font", new FontUIResource("Tahoma",Font.BOLD,12));
+		UIManager.getLookAndFeelDefaults().put("Label.font", new FontUIResource("Tahoma",Font.BOLD,12));
+		UIManager.getLookAndFeelDefaults().put("Button.background", new ColorUIResource(Color.GREEN));
 		frmPersonismEvaluationTool = new JFrame();
+		
 		frmPersonismEvaluationTool.setTitle("PersoNISM Evaluation Tool");
 		//centers the window on startup
 		frmPersonismEvaluationTool.setLocationRelativeTo(null);
-		frmPersonismEvaluationTool.setBounds(100, 100, 957, 749);
+		frmPersonismEvaluationTool.setBounds(100, 100, 1100, 790);
 		frmPersonismEvaluationTool.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frmPersonismEvaluationTool.addWindowListener(this);
+		SwingUtilities.updateComponentTreeUI(this.frmPersonismEvaluationTool);
 
 		DataInitialiser initialiser = new DataInitialiser(helper.getCtxBroker(), helper.getCommsMgr().getIdManager().getThisNetworkNode(), this.frmPersonismEvaluationTool);
 		if (!initialiser.dataExists()){
@@ -111,42 +144,19 @@ public class Application implements WindowListener{
 		gridBagLayout.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE};
 		frmPersonismEvaluationTool.getContentPane().setLayout(gridBagLayout);
 
-		JPanel topPanel = new JPanel();
-		GridBagConstraints gbc_topPanel = new GridBagConstraints();
-		gbc_topPanel.insets = new Insets(0, 0, 5, 0);
-		gbc_topPanel.fill = GridBagConstraints.BOTH;
-		gbc_topPanel.gridx = 0;
-		gbc_topPanel.gridy = 0;
-		frmPersonismEvaluationTool.getContentPane().add(topPanel, gbc_topPanel);
-		GridBagLayout gbl_topPanel = new GridBagLayout();
-		gbl_topPanel.columnWidths = new int[]{0, 0, 0};
-		gbl_topPanel.rowHeights = new int[]{0, 0, 0};
-		gbl_topPanel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gbl_topPanel.rowWeights = new double[]{1.0, 1.0, Double.MIN_VALUE};
-		topPanel.setLayout(gbl_topPanel);
-
-		JPanel panel_3 = new JPanel();
-		GridBagConstraints gbc_panel_3 = new GridBagConstraints();
-		gbc_panel_3.insets = new Insets(0, 0, 5, 0);
-		gbc_panel_3.fill = GridBagConstraints.BOTH;
-		gbc_panel_3.gridx = 0;
-		gbc_panel_3.gridy = 0;
-		topPanel.add(panel_3, gbc_panel_3);
-
-		JLabel lblNewLabel = new JLabel("New label");
-		panel_3.add(lblNewLabel);
-
-		JPanel panel_4 = new JPanel();
-		GridBagConstraints gbc_panel_4 = new GridBagConstraints();
-		gbc_panel_4.anchor = GridBagConstraints.EAST;
-		gbc_panel_4.fill = GridBagConstraints.VERTICAL;
-		gbc_panel_4.gridx = 1;
-		gbc_panel_4.gridy = 0;
-		topPanel.add(panel_4, gbc_panel_4);
-
-		JLabel lblHelloUser = new JLabel("Hello, "+userName);
-		panel_4.add(lblHelloUser);
-
+		
+		NotificationsPanel notificationsPanel = new NotificationsPanel(helper);
+		NotificationsListener listener = new NotificationsListener(helper, notificationsPanel);
+		GridBagConstraints gbc_notificationPanel = new GridBagConstraints();
+		gbc_notificationPanel.anchor = GridBagConstraints.EAST;
+		gbc_notificationPanel.insets = new Insets(0, 0, 5, 0);
+		gbc_notificationPanel.fill = GridBagConstraints.BOTH;
+		gbc_notificationPanel.gridx = 1;
+		gbc_notificationPanel.gridy = 1;
+		notificationsPanel.setSize(200, 200);
+		notificationsPanel.setBackground(Color.blue);
+		
+		frmPersonismEvaluationTool.getContentPane().add(notificationsPanel, gbc_notificationPanel);
 		JPanel bottomPanel = new JPanel();
 		GridBagConstraints gbc_bottomPanel = new GridBagConstraints();
 		gbc_bottomPanel.insets = new Insets(0, 0, 5, 0);
@@ -173,142 +183,178 @@ public class Application implements WindowListener{
 		this.storeApps = this.helper.getStoreApps();
 
 		installedApps = this.helper.getInstalledApps();
-		appsPage = new Apps(helper, this.installedApps, this.storeApps);
+		appsPage = new Appsv2(helper, this.installedApps, this.storeApps);
 		appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		appsPage.setClosable(true);
 		appsPage.setVisible(true);	
 		desktopPane.add(appsPage);
 
-		try {
-			appsPage.setMaximum(true);
-			JMenuBar menuBar = new JMenuBar();
-			GridBagConstraints gbc_menuBar = new GridBagConstraints();
-			gbc_menuBar.gridx = 0;
-			gbc_menuBar.gridy = 3;
-			frmPersonismEvaluationTool.setJMenuBar(menuBar);
+		JMenuBar menuBar = new JMenuBar();
+		GridBagConstraints gbc_menuBar = new GridBagConstraints();
+		gbc_menuBar.gridx = 0;
+		gbc_menuBar.gridy = 3;
+		frmPersonismEvaluationTool.setJMenuBar(menuBar);
 
-			JMenu menuNavigation = new JMenu("Navigation");
-			menuBar.add(menuNavigation);
-			JMenu menuData = new JMenu("My Data");
-			menuBar.add(menuData);
+		JMenu menuNavigation = new JMenu("Navigation");
+		menuBar.add(menuNavigation);
+		JMenu menuData = new JMenu("My Data");
+		menuBar.add(menuData);
+		JMenu menuIdentities = new JMenu("Identities");
+		menuBar.add(menuIdentities);
+		
+		JMenuItem trustMenuItem = new JMenuItem("Trust Management");
+		trustMenuItem.addActionListener(new ActionListener() {
 			
-			JMenuItem prefsMenuItem = new JMenuItem("Privacy Preferences");
-			prefsMenuItem.setActionCommand("preferences");
-			prefsMenuItem.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent ev) {
-					//JOptionPane.showMessageDialog(frame, "Frames: "+desktopPane.getAllFrames().length);
-					//JOptionPane.showMessageDialog(frame, "Starting prefs page");
-					if (preferencesPage!=null){
-						preferencesPage.dispose();
-					}
-					preferencesPage = new AllPreferencesGUI(helper);
-					//preferencesPage.refreshData();
-					preferencesPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-					preferencesPage.setClosable(true);
-					preferencesPage.setVisible(true);
-					desktopPane.add(preferencesPage);
-					try {
-						preferencesPage.setMaximum(true);
-						preferencesPage.setSelected(true);
-					} catch (PropertyVetoException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-
-					//JOptionPane.showMessageDialog(frame, "Shown page");
-				}
-			});
-			menuData.add(prefsMenuItem);
-
-			JMenuItem appsMenuItem = new JMenuItem("Applications");
-			appsMenuItem.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					//JOptionPane.showMessageDialog(frame, "Frames: "+desktopPane.getAllFrames().length);
-					if (appsPage!=null){
-						appsPage.dispose();
-					}
-					appsPage = new Apps(helper, installedApps, storeApps);
-					appsPage.setVisible(true);
-					appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-					appsPage.setClosable(true);
-
-					desktopPane.add(appsPage);
-					try {
-						appsPage.setMaximum(true);
-						appsPage.setSelected(true);
-					} catch (PropertyVetoException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			});
-
-			menuNavigation.add(appsMenuItem);
-
-			JMenuItem identitiesMenuItem = new JMenuItem("Identities viewer");
-			identitiesMenuItem.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					if (idViewer!=null){
-						idViewer.dispose();
-					}
-					idViewer = new IdentitiesViewer(helper);
-					idViewer.setVisible(true);
-					idViewer.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-					idViewer.setClosable(true);
-					desktopPane.add(idViewer);
-					try {
-						idViewer.setSelected(true);
-					} catch (PropertyVetoException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-
-				}
-			});
-
-			menuData.add(identitiesMenuItem);
 			
-			JMenuItem profileMenuItem = new JMenuItem("Profile Information");
-			profileMenuItem.addActionListener(new ActionListener() {
+
+			private TrustGUI trustGui;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (trustGui!=null){
+					trustGui.dispose();
+				}
+				trustGui = new TrustGUI(helper);
+				trustGui.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+				trustGui.setClosable(true);
+				trustGui.setVisible(true);
+				desktopPane.add(trustGui);
+				try {
+					trustGui.setSelected(true);
+				} catch (PropertyVetoException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				
-				private ProfileEditor profileEditor;
+			}
+		});
+		menuData.add(trustMenuItem);
+		
+		JMenuItem prefsMenuItem = new JMenuItem("Privacy Preferences");
+		prefsMenuItem.setActionCommand("preferences");
+		prefsMenuItem.addActionListener(new ActionListener() {
 
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					if (profileEditor!=null){
-						profileEditor.dispose();
-					}
-					profileEditor = new ProfileEditor(helper);
-					profileEditor.setVisible(true);
-					profileEditor.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-					profileEditor.setClosable(true);
-					desktopPane.add(profileEditor);
-					try {
-						profileEditor.setSelected(true);
-					} catch (PropertyVetoException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					
+			@Override
+			public void actionPerformed(ActionEvent ev) {
+				//JOptionPane.showMessageDialog(frame, "Frames: "+desktopPane.getAllFrames().length);
+				//JOptionPane.showMessageDialog(frame, "Starting prefs page");
+				if (preferencesPage!=null){
+					preferencesPage.dispose();
 				}
-			});
-			menuData.add(profileMenuItem);
-		} catch (PropertyVetoException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+				preferencesPage = new AllPreferencesGUI(helper);
+				//preferencesPage.refreshData();
+				preferencesPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+				preferencesPage.setClosable(true);
+				preferencesPage.setVisible(true);
+				desktopPane.add(preferencesPage);
+				try {
+					preferencesPage.setMaximum(true);
+					preferencesPage.setSelected(true);
+				} catch (PropertyVetoException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				//JOptionPane.showMessageDialog(frame, "Shown page");
+			}
+		});
+		menuData.add(prefsMenuItem);
+
+		JMenuItem appsMenuItem = new JMenuItem("Applications");
+		appsMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				//JOptionPane.showMessageDialog(frame, "Frames: "+desktopPane.getAllFrames().length);
+				if (appsPage!=null){
+					appsPage.dispose();
+				}
+				appsPage = new Appsv2(helper, installedApps, storeApps);
+				appsPage.setVisible(true);
+				appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+				appsPage.setClosable(true);
+
+				desktopPane.add(appsPage);
+				try {
+					
+					appsPage.setSelected(true);
+				} catch (PropertyVetoException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+
+		menuNavigation.add(appsMenuItem);
+
+		JMenuItem identitiesMenuItem = new JMenuItem("Identities viewer");
+		identitiesMenuItem.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if (idViewer!=null){
+					idViewer.dispose();
+				}
+				idViewer = new IdentitiesViewer(helper);
+				idViewer.setVisible(true);
+				idViewer.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+				idViewer.setClosable(true);
+				desktopPane.add(idViewer);
+				try {
+					idViewer.setSelected(true);
+				} catch (PropertyVetoException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+		});
+
+		menuIdentities.add(identitiesMenuItem);
+		
+		JMenuItem createIdentityMenuItem = new JMenuItem("Create new Identity");
+		createIdentityMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				helper.getIdentitySelection().showIdentityCreationGUI(null);
+				
+			}
+		});
+		
+		menuIdentities.add(createIdentityMenuItem);
+		
+		JMenuItem profileMenuItem = new JMenuItem("Profile Information");
+		profileMenuItem.addActionListener(new ActionListener() {
+			
+			private ProfileEditor profileEditor;
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if (profileEditor!=null){
+					profileEditor.dispose();
+				}
+				profileEditor = new ProfileEditor(helper);
+				profileEditor.setVisible(true);
+				profileEditor.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+				profileEditor.setClosable(true);
+				desktopPane.add(profileEditor);
+				try {
+					profileEditor.setSelected(true);
+				} catch (PropertyVetoException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+			}
+		});
+		menuData.add(profileMenuItem);
 
 
 	}
 
-	public Apps getAppsPage() {
+	public Appsv2 getAppsPage() {
 		return appsPage;
 	}
 
@@ -402,57 +448,28 @@ public class Application implements WindowListener{
 
 			this.installedApps.add(PersonisHelper.GOOGLE_VENUE_FINDER);
 			this.storeApps.remove(PersonisHelper.GOOGLE_VENUE_FINDER);
-			this.logging.debug("step: "+(i++));
-			//this.appsPage.removeInternalFrameListener(frameListener);
-			//this.appsPage.dispose();
-			this.appsPage = new Apps(helper, installedApps, storeApps);
-			this.logging.debug("step: "+(i++));
-			this.appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			this.logging.debug("step: "+(i++));
-			this.logging.debug("step: "+(i++));
+			this.appsPage.setAppInstalled(requestor);
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.GOOGLE_VENUE_FINDER+" successfully installed");
 		}else if (RequestorUtils.equals(requestor, this.helper.getHwuRequestor())){
 
 			this.installedApps.add(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
 			this.storeApps.remove(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
-			this.logging.debug("step: "+(i++));
-			//this.appsPage.removeInternalFrameListener(frameListener);
-			//this.appsPage.dispose();
-			this.appsPage = new Apps(helper, installedApps, storeApps);
-			this.logging.debug("step: "+(i++));
-			this.appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			this.logging.debug("step: "+(i++));
-			this.logging.debug("step: "+(i++));
+			this.appsPage.setAppInstalled(requestor);
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.HWU_CAMPUS_GUIDE_APP+" successfully installed");
 		}else if (RequestorUtils.equals(requestor, this.helper.getBbcRequestor())){
-
 			this.installedApps.add(PersonisHelper.BBC_NEWS_APP);
 			this.storeApps.remove(PersonisHelper.BBC_NEWS_APP);
-			this.appsPage = new Apps(helper, installedApps, storeApps);
-			this.appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			this.appsPage.setAppInstalled(requestor);
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.BBC_NEWS_APP+" successfully installed");
 		}else if (RequestorUtils.equals(requestor, this.helper.getItunesRequestor())){
-
 			this.installedApps.add(PersonisHelper.ITUNES_MUSIC_APP);
 			this.storeApps.remove(PersonisHelper.ITUNES_MUSIC_APP);
-			this.appsPage = new Apps(helper, installedApps, storeApps);
-			this.appsPage.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			this.appsPage.setAppInstalled(requestor);
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.ITUNES_MUSIC_APP+" successfully installed");
-
 		}
-
-
-		this.logging.debug("step: "+(i++));
 		this.appsPage.setVisible(true);
-		this.logging.debug("step: "+(i++));
-		this.getDesktopPane().add(appsPage);
-		this.logging.debug("step: "+(i++));
 		try {
 			this.appsPage.setSelected(true);
-			this.logging.debug("step: "+(i++));
-			this.appsPage.setMaximum(true);
-			this.logging.debug("step: "+(i++));
-
 		} catch (PropertyVetoException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

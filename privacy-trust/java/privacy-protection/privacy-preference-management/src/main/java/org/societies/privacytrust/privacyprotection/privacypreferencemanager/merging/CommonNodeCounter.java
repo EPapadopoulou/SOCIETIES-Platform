@@ -30,7 +30,7 @@ import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 
 /**
  * @author Elizabeth
@@ -40,10 +40,10 @@ public class CommonNodeCounter {
 
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	private class NodeCounter{
-		IPrivacyPreference node;
+		PrivacyPreference node;
 		int counter;
 		
-		NodeCounter(IPrivacyPreference ptn, int c){
+		NodeCounter(PrivacyPreference ptn, int c){
 			this.node = ptn;
 			this.counter = c;
 			
@@ -53,7 +53,7 @@ public class CommonNodeCounter {
 			return this.counter;
 		}
 		
-		public IPrivacyPreference getNode(){
+		public PrivacyPreference getNode(){
 			return this.node;
 		}
 	}
@@ -63,13 +63,13 @@ public class CommonNodeCounter {
 		nc = new ArrayList<NodeCounter>();
 	}
 	
-	public void add(IPrivacyPreference ptn, int counter){
+	public void add(PrivacyPreference ptn, int counter){
 		this.nc.add(new NodeCounter(ptn,counter));
 	}
 	
-	public IPrivacyPreference getMostCommonNode(){
+	public PrivacyPreference getMostCommonNode(){
 		int counter = 0;
-		IPrivacyPreference ptn = null;
+		PrivacyPreference ptn = null;
 		logging.debug("nc size:"+this.nc.size());
 		for (int i = 0; i< this.nc.size(); i++){
 			int c = this.nc.get(i).getCounter();

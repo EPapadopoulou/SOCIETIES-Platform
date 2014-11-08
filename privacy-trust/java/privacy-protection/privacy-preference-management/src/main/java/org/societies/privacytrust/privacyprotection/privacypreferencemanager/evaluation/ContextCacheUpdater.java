@@ -37,21 +37,23 @@ import org.societies.api.context.event.CtxChangeEventListener;
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
-import org.societies.api.internal.context.broker.ICtxBroker;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.monitoring.IMonitor;
 
 
 public class ContextCacheUpdater /*extends EventListener*/ implements CtxChangeEventListener{
 
-	private ICtxBroker ctxBroker;
+
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
-	private PrivateContextCache contextCache;
+
 	private ArrayList<CtxAttributeIdentifier> attrList;
 	private Hashtable<CtxIdentifier, ArrayList<IMonitor>> clients;
+
+	private PrivacyPreferenceManager privPrefMgr;
 	
-	public ContextCacheUpdater(ICtxBroker broker, PrivateContextCache cache){
-		this.ctxBroker = broker;
-		this.contextCache = cache;
+	public ContextCacheUpdater(PrivacyPreferenceManager privPrefMgr){
+
+		this.privPrefMgr = privPrefMgr;
 		this.attrList = new ArrayList<CtxAttributeIdentifier>();
 		this.clients = new Hashtable<CtxIdentifier, ArrayList<IMonitor>>();
 	}
@@ -64,7 +66,7 @@ public class ContextCacheUpdater /*extends EventListener*/ implements CtxChangeE
 		try {
 			//this.broker.registerUpdateNotification(this, id);
 			
-			this.ctxBroker.registerForChanges(this, id);
+			this.privPrefMgr.getCtxBroker().registerForChanges(this, id);
 			this.logging.debug("Registered for context events for : "+id.getType()+" ID: "+id.toUriString());
 		} catch (CtxException e) {
 			this.logging.debug("Unable to register for context events for : "+id.getType()+" ID: "+id.toUriString());
@@ -103,7 +105,7 @@ public class ContextCacheUpdater /*extends EventListener*/ implements CtxChangeE
 		try {
 			//this.broker.registerUpdateNotification(this, id);
 			
-			this.ctxBroker.registerForChanges(this, id);
+			this.privPrefMgr.getCtxBroker().registerForChanges(this, id);
 			this.logging.debug("Registered for context events for : "+id.getType()+" ID: "+id.toUriString());
 		} catch (CtxException e) {
 			this.logging.debug("Unable to register for context events for : "+id.getType()+" ID: "+id.toUriString());
@@ -148,13 +150,13 @@ public class ContextCacheUpdater /*extends EventListener*/ implements CtxChangeE
 	public void onModification(CtxChangeEvent event) {
 		CtxIdentifier ctxId = event.getId();
 		try {
-			CtxAttribute ctxAttr = (CtxAttribute) ctxBroker.retrieve(ctxId).get();
+			CtxAttribute ctxAttr = (CtxAttribute) privPrefMgr.getCtxBroker().retrieve(ctxId).get();
 			if (ctxAttr!=null){
 				String type = ctxAttr.getType();
 				String value = ctxAttr.getStringValue();
 				this.logging.debug("Event received: type: "+type+" value: "+value);
 				
-				this.contextCache.updateCache(ctxAttr);
+				this.privPrefMgr.getContextCache().updateCache(ctxAttr);
 				
 				if (this.clients.containsKey(ctxId)){
 					ArrayList<IMonitor> arrayList = this.clients.get(ctxId);

@@ -29,11 +29,10 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
-import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
 
 
@@ -43,14 +42,14 @@ public class PreferenceConditionExtractor {
 		
 	}
 	public List<CtxIdentifier> extractConditions(IPrivacyPreferenceTreeModel pModel){
-		IPrivacyPreference p = pModel.getRootPreference();
+		PrivacyPreference p = pModel.getRootPreference();
 		return this.extractConditions(p);
 	}
-	public List<CtxIdentifier> extractConditions(IPrivacyPreference p){
+	public List<CtxIdentifier> extractConditions(PrivacyPreference p){
 		
 		ArrayList<CtxIdentifier> list = new ArrayList<CtxIdentifier>();
 		
-		Enumeration<IPrivacyPreference> newNodeEnum = p.depthFirstEnumeration();
+		Enumeration<PrivacyPreference> newNodeEnum = p.depthFirstEnumeration();
 		if (p.getUserObject()!=null){
 			if (p.getUserObject() instanceof IPrivacyPreferenceCondition){
 				IPrivacyPreferenceCondition condition = p.getCondition();
@@ -63,7 +62,7 @@ public class PreferenceConditionExtractor {
 		}
 		
 		while (newNodeEnum.hasMoreElements()){
-			IPrivacyPreference temp = newNodeEnum.nextElement();
+			PrivacyPreference temp = newNodeEnum.nextElement();
 			if (temp.getUserObject()!=null){
 				if (temp.getUserObject() instanceof IPrivacyPreferenceCondition){
 					IPrivacyPreferenceCondition condition = temp.getCondition();

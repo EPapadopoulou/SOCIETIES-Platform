@@ -23,6 +23,8 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JButton;
 
+import ac.hw.personis.component.Accordion;
+
 public class test extends JFrame implements ActionListener{
 
 	private JPanel contentPane;

@@ -6,6 +6,7 @@ package ac.hw.personis;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyAgreeme
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyNegotiationManager;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.AgreementEnvelope;
 import org.societies.api.internal.privacytrust.privacyprotection.util.model.privacypolicy.AgreementUtils;
+import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.servicelifecycle.ServiceModelUtils;
 import org.societies.api.osgi.event.IEventMgr;
@@ -42,18 +44,21 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Request
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
+import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPolicyManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager;
 import org.societies.privacytrust.privacyprotection.api.identity.IIdentitySelection;
 import org.societies.privacytrust.privacyprotection.api.policy.ConditionRanges;
 
-import ac.hw.personis.dataInit.PolicyFileLoader;
-import ac.hw.personis.dataInit.RangesBBC;
-import ac.hw.personis.dataInit.RangesGoogle;
-import ac.hw.personis.dataInit.RangesHWU;
-import ac.hw.personis.dataInit.RangesITunes;
-import ac.hw.personis.dataInit.XMLPolicyReader;
+import ac.hw.personis.dataInit.policies.PolicyFileLoader;
+import ac.hw.personis.dataInit.policies.RangesBBC;
+import ac.hw.personis.dataInit.policies.RangesGoogle;
+import ac.hw.personis.dataInit.policies.RangesHWU;
+import ac.hw.personis.dataInit.policies.RangesITunes;
+import ac.hw.personis.dataInit.policies.XMLPolicyReader;
 import ac.hw.personis.event.NegotiationListener;
+import ac.hw.personis.internalwindows.apps.Apps;
+import ac.hw.personis.internalwindows.apps.Appsv2;
 
 /**
  * @author PUMA
@@ -69,15 +74,16 @@ public class PersonisHelper {
 	private IPrivacyPreferenceManager privacyPreferenceManager;
 	private IEventMgr eventMgr;
 	private IIdentitySelection identitySelection;
+	private IPrivacyDataManagerInternal privacyDataManagerInternal;
+	private ITrustBroker trustBroker;
 	
 	private Application application;
-
 	private RequestorServiceBean googleRequestor;
 	private RequestorServiceBean hwuRequestor;
 	private RequestorServiceBean bbcRequestor;
 	private RequestorServiceBean itunesRequestor;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
-	private Apps appsPage;
+	private Appsv2 appsPage;
 	
 	private NegotiationListener negotiationResultListener;
 	public static final String HWU_CAMPUS_GUIDE_APP = "HWU Campus Guide App";
@@ -95,6 +101,7 @@ public class PersonisHelper {
 
 	public PersonisHelper(){
 
+	
 		UIManager.put("ClassLoader", getClass().getClassLoader());
 		this.agreementsTable = new Hashtable<String, Agreement>();
 		this.requestDataTypesPerService = new Hashtable<String, List<String>>();
@@ -431,6 +438,36 @@ public class PersonisHelper {
 		if (installedApps==null) setupServices();
 		return installedApps;
 	}
+	
+	public Hashtable<String, List<String>> getServicesByUserIdentity(){
+		
+		
+		Hashtable<String, List<String>> table = new Hashtable<String, List<String>>();
+		Collection<Agreement> values = this.agreementsTable.values();
+		for (Agreement agreement : values){
+			RequestorBean requestor = agreement.getRequestor();
+			String requestorName = "";
+			if (RequestorUtils.equals(requestor, googleRequestor)){
+				requestorName = GOOGLE_VENUE_FINDER;
+			}else if (RequestorUtils.equals(requestor, hwuRequestor)){
+				requestorName = HWU_CAMPUS_GUIDE_APP;
+			}else if (RequestorUtils.equals(requestor, bbcRequestor)){
+				requestorName = BBC_NEWS_APP;
+			}else if (RequestorUtils.equals(requestor, itunesRequestor)){
+				requestorName = ITUNES_MUSIC_APP;
+			}
+			String userIdentity = agreement.getUserIdentity();
+			if (table.containsKey(userIdentity)){
+				table.get(userIdentity).add(requestorName);
+			}else{
+				List<String> services = new ArrayList<String>();
+				services.add(requestorName);
+				table.put(userIdentity, services);
+			}
+		}
+		
+		return table;
+	}
 	private void setupServices(){
 		this.storeApps = new ArrayList<String>();
 		this.installedApps = new ArrayList<String>();
@@ -506,6 +543,22 @@ public class PersonisHelper {
 
 	public void setIdentitySelection(IIdentitySelection identitySelection) {
 		this.identitySelection = identitySelection;
+	}
+
+	public IPrivacyDataManagerInternal getPrivacyDataManagerInternal() {
+		return privacyDataManagerInternal;
+	}
+
+	public void setPrivacyDataManagerInternal(IPrivacyDataManagerInternal privacyDataManagerInternal) {
+		this.privacyDataManagerInternal = privacyDataManagerInternal;
+	}
+
+	public ITrustBroker getTrustBroker() {
+		return trustBroker;
+	}
+
+	public void setTrustBroker(ITrustBroker trustBroker) {
+		this.trustBroker = trustBroker;
 	}
 
 

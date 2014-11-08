@@ -33,12 +33,9 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import javax.swing.JOptionPane;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.model.CtxAttributeIdentifier;
-import org.societies.api.context.model.CtxEntityIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.util.SerialisationHelper;
 import org.societies.api.identity.IIdentity;
@@ -65,9 +62,7 @@ import org.societies.api.osgi.event.IEventMgr;
 import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.NegotiationStatus;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestPolicyUtils;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponseItemUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponsePolicyUtils;
 import org.societies.api.schema.identity.DataIdentifierScheme;
 import org.societies.api.schema.identity.RequestorBean;
@@ -84,7 +79,6 @@ import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManage
 import org.societies.privacytrust.privacyprotection.api.identity.IIdentityOption;
 import org.societies.privacytrust.privacyprotection.api.identity.IIdentitySelection;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.PrivacyPolicyNegotiationManager;
-import org.societies.privacytrust.privacyprotection.privacynegotiation.identityCreation.gui.IdentitySelectionWindow;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.negotiation.client.data.DataHelper;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.ClientResponseChecker;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.ClientResponsePolicyGenerator;
@@ -281,8 +275,74 @@ public class NegotiationClient implements INegotiationClient {
 		}
 
 	}
+	private IIdentity getIdentity(Agreement agreement, List<IIdentity> list){
+		
 
-	private IIdentity selectIdentity(List<IIdentityOption> idOptions, Agreement agreement) {
+		IIdentity recommendedIdentity = privPrefMgr.evaluateIDSPreferences(agreement, list );
+		
+		if (list.size()==0){
+			
+			//create new identity
+			Hashtable<String, List<CtxIdentifier>> identityInformation = idS.showIdentityCreationGUI(agreement);
+			
+			if (identityInformation.isEmpty()){
+				return null;
+			}
+			Enumeration<String> keys = identityInformation.keys();
+
+			String idName = keys.nextElement();
+			List<CtxIdentifier> ctxIDList = identityInformation.get(idName);
+
+			IIdentity identity = idS.createIdentity(idName, ctxIDList);
+
+			
+			for (CtxIdentifier ctxID : ctxIDList){
+				CtxIdentifier newCtxID = CtxIDChanger.changeOwner(identity.getBareJid(), (CtxAttributeIdentifier) ctxID);
+				System.out.println("Replaced owner in ctxID:"+newCtxID.getOwnerId()+" full ID: "+newCtxID.getUri());
+				for (ResponseItem item : agreement.getRequestedItems()){
+					if (item.getRequestItem().getResource().getDataType().equalsIgnoreCase(newCtxID.getType())){
+						item.getRequestItem().getResource().setDataIdUri(newCtxID.getUri());
+					}
+				}
+			}
+			agreement.setUserIdentity(identity.getJid());
+			InternalEvent event = new InternalEvent(
+					EventTypes.IDENTITY_CREATED, "",
+					INegotiationClient.class.getName(), AgreementUtils.copyOf(agreement));
+			try {
+				this.eventMgr.publishInternalEvent(event);
+			} catch (EMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return identity;
+		}else{
+			//select from identity list
+			List<IIdentity> identities = new ArrayList<IIdentity>();
+			
+			
+			
+			IIdentity identity = idS.showIdentitySelectionGUI(list, recommendedIdentity);
+			if(identity==null){
+				return getIdentity(agreement, new ArrayList<IIdentity>());
+			}
+			
+			List<CtxIdentifier> ctxIDList = idS.getLinkedAttributes(identity);
+			for (CtxIdentifier ctxID : ctxIDList){
+				for (ResponseItem item : agreement.getRequestedItems()){
+					if (item.getRequestItem().getResource().getDataType().equalsIgnoreCase(ctxID.getType())){
+						item.getRequestItem().getResource().setDataIdUri(ctxID.getUri());
+					}
+				}
+			}
+			
+			return identity;
+		}
+	}
+	
+/*	private IIdentity selectIdentity(Agreement agreement) {
+		List<IIdentityOption> idOptions = this.idS.processIdentityContext(agreement);
 
 		List<IIdentity> list = new ArrayList<IIdentity>();
 		for (IIdentityOption option: idOptions){
@@ -295,6 +355,9 @@ public class NegotiationClient implements INegotiationClient {
 			//create new identity
 			Hashtable<String, List<CtxIdentifier>> identityInformation = this.idS.showIdentityCreationGUI(agreement);
 			
+			if (identityInformation.isEmpty()){
+				return selectIdentity(agreement);
+			}
 			Enumeration<String> keys = identityInformation.keys();
 
 			String idName = keys.nextElement();
@@ -334,7 +397,7 @@ public class NegotiationClient implements INegotiationClient {
 			
 			IIdentity identity = this.idS.showIdentitySelectionGUI(identities, recommendedIdentity);
 			if(identity==null){
-				return selectIdentity(new ArrayList<IIdentityOption>(), agreement);
+				return selectIdentity(agreement);
 			}
 			
 			List<CtxIdentifier> ctxIDList = this.idS.getLinkedAttributes(identity);
@@ -351,7 +414,7 @@ public class NegotiationClient implements INegotiationClient {
 			
 			return identity;
 		}
-	}
+	}*/
 
 
 	private String getMessage(RequestorBean requestor) {
@@ -378,8 +441,16 @@ public class NegotiationClient implements INegotiationClient {
 			
 			agreement.setRequestedItems(policy.getResponseItems());
 			agreement.setRequestor(policy.getRequestor());
-			List<IIdentityOption> idOptions = this.idS.processIdentityContext(agreement);
-			IIdentity selectedIdentity = this.selectIdentity(idOptions,	agreement);
+			List<IIdentityOption> idOptions = idS.processIdentityContext(agreement);
+
+			List<IIdentity> list = new ArrayList<IIdentity>();
+			for (IIdentityOption option: idOptions){
+				list.add(option.getReferenceIdentity());
+			}
+			IIdentity selectedIdentity = null;
+			while (selectedIdentity==null){
+				selectedIdentity = getIdentity(agreement, list);
+			}
 			agreement.setUserIdentity(selectedIdentity.getBareJid());
 			this.logging.debug("Identity selected: "+ selectedIdentity.getJid());
 			this.agreements.put(policy.getRequestor(), agreement);
@@ -437,14 +508,7 @@ public class NegotiationClient implements INegotiationClient {
 								.toAgreementEnvelope(envelope, this.idm));
 
 				this.logging.debug("Agreement stored");
-				List<ResponseItem> requests = envelope.getAgreement()
-						.getRequestedItems();
-				for (ResponseItem responseItem : requests) {
-					privacyDataManager.updatePermission(
-							requestor, 
-							responseItem);
-				}
-				this.logging.debug("Permissions updated");
+
 				InternalEvent event = this
 						.createSuccessfulNegotiationEvent(envelope);
 				try {

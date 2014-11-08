@@ -55,14 +55,12 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.Pri
 public class DObfPreferenceCreator {
 
 	final PrivacyPreferenceManager privPrefMgr;
-	final ICtxBroker ctxBroker;
 	
 	public DObfPreferenceCreator(PrivacyPreferenceManager manager){
 		this.privPrefMgr = manager;
-		this.ctxBroker = this.privPrefMgr.getCtxBroker();
 	}
 	
-	public void createPreference(RequestorBean requestor, Resource resource, double obfuscationLevel){
+	public void createPreference(RequestorBean requestor, Resource resource, Integer obfuscationLevel){
 		
 		DObfPreferenceDetailsBean details = new DObfPreferenceDetailsBean();
 		details.setRequestor(requestor);
@@ -75,14 +73,14 @@ public class DObfPreferenceCreator {
 			DataIdentifier dataIdentifier = ResourceUtils.getDataIdentifier(resource);
 			if (dataIdentifier.getScheme().equals(DataIdentifierScheme.CONTEXT)){
 				if (dataIdentifier instanceof CtxIdentifier){
-					CtxModelObject ctxModelObject = this.ctxBroker.retrieve((CtxIdentifier) dataIdentifier).get();
+					CtxModelObject ctxModelObject = this.privPrefMgr.getCtxBroker().retrieve((CtxIdentifier) dataIdentifier).get();
 					if (ctxModelObject instanceof CtxAttribute){
-						if (!(((CtxAttribute) ctxModelObject).getQuality().getOriginType().equals(CtxOriginType.MANUALLY_SET))){
+						//if (!(((CtxAttribute) ctxModelObject).getQuality().getOriginType().equals(CtxOriginType.MANUALLY_SET))){
 							String val = ((CtxAttribute) ctxModelObject).getStringValue();
 							IPrivacyPreferenceCondition condition = new ContextPreferenceCondition(ctxModelObject.getId(), OperatorConstants.EQUALS, val);
 							preference = new PrivacyPreference(condition);
 							preference.add(new PrivacyPreference(dobfOutcome));
-						}
+						//}
 						
 					}
 				}
@@ -104,9 +102,28 @@ public class DObfPreferenceCreator {
 		if (preference==null){
 			preference = new PrivacyPreference(dobfOutcome);
 		}
+		
+		DObfPreferenceTreeModel existingDObfModel = privPrefMgr.getDObfPreference(details);
+		DObfPreferenceTreeModel newDObfModel = new DObfPreferenceTreeModel(details, preference);
 
-		DObfPreferenceTreeModel model = new DObfPreferenceTreeModel(details, preference);
-		privPrefMgr.storeDObfPreference(details, model);
+		if (existingDObfModel==null){
+			
+			privPrefMgr.storeDObfPreference(details, newDObfModel);
+			return;
+		}
+
+		PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(privPrefMgr);
+		
+		DObfPreferenceTreeModel mergeDObfPreference = merger.mergeDObfPreference(existingDObfModel, newDObfModel);
+		
+		if (mergeDObfPreference==null){
+			privPrefMgr.storeDObfPreference(details, newDObfModel);
+			return;
+		}
+		
+		privPrefMgr.storeDObfPreference(details, mergeDObfPreference);
+		
+
 		
 	}
 }

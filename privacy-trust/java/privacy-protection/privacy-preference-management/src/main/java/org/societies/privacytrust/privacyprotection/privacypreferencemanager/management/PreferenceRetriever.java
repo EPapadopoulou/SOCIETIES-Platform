@@ -33,9 +33,8 @@ import org.societies.api.context.CtxException;
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.util.SerialisationHelper;
-import org.societies.api.identity.IIdentityManager;
+import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.InvalidFormatException;
-import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceTreeModelBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceTreeModelBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPrivacyPreferenceTreeModelBean;
@@ -44,6 +43,7 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.preferen
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.util.PrivacyPreferenceUtils;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 
 /**
  * @author Elizabeth
@@ -52,12 +52,14 @@ import org.societies.privacytrust.privacyprotection.api.util.PrivacyPreferenceUt
 public class PreferenceRetriever {
 
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
-	private ICtxBroker ctxBroker;
-	private final IIdentityManager idMgr; 
 
-	public PreferenceRetriever(ICtxBroker ctxBroker, IIdentityManager idMgr){
-		this.ctxBroker = ctxBroker;
-		this.idMgr = idMgr;
+	private final IIdentity userIdentity;
+
+	private PrivacyPreferenceManager privPrefMgr;
+
+	public PreferenceRetriever(PrivacyPreferenceManager privPrefMgr){
+		this.privPrefMgr = privPrefMgr;
+		this.userIdentity = privPrefMgr.getIdm().getThisNetworkNode();
 	}
 
 	/*
@@ -68,33 +70,33 @@ public class PreferenceRetriever {
 	public IPrivacyPreferenceTreeModel retrievePreference(CtxIdentifier id) throws PrivacyException{
 		try{
 			//retrieve directly the attribute in context that holds the preference as a blob value
-			CtxAttribute attrPref = (CtxAttribute) ctxBroker.retrieve(id).get();
+			CtxAttribute attrPref = (CtxAttribute) privPrefMgr.getCtxBroker().retrieve(id).get();
 			//cast the blob value to type IPreference and return it
 			Object obj = SerialisationHelper.deserialise(attrPref.getBinaryValue(), this.getClass().getClassLoader());
 
 			if (obj instanceof PPNPrivacyPreferenceTreeModelBean){
 				this.logging.debug("Returning ppn preference");
-				return PrivacyPreferenceUtils.toPPNPrivacyPreferenceTreeModel((PPNPrivacyPreferenceTreeModelBean) obj, this.idMgr);
+				return PrivacyPreferenceUtils.toPPNPrivacyPreferenceTreeModel((PPNPrivacyPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 			}
 
 			if (obj instanceof IDSPrivacyPreferenceTreeModelBean){
 				this.logging.debug("Returning ids preference");
-				return PrivacyPreferenceUtils.toIDSPrivacyPreferenceTreeModel((IDSPrivacyPreferenceTreeModelBean) obj, idMgr);
+				return PrivacyPreferenceUtils.toIDSPrivacyPreferenceTreeModel((IDSPrivacyPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 			}
 
 			if (obj instanceof DObfPrivacyPreferenceTreeModelBean){
 				this.logging.debug("Returning dobf preference");
-				return PrivacyPreferenceUtils.toDObfPreferenceTreeModel((DObfPrivacyPreferenceTreeModelBean) obj, idMgr);
+				return PrivacyPreferenceUtils.toDObfPreferenceTreeModel((DObfPrivacyPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 			}
 
 			if (obj instanceof AccessControlPreferenceTreeModelBean){
 				this.logging.debug("Returning accCtrl preference");
-				return PrivacyPreferenceUtils.toAccCtrlPreferenceTreeModel((AccessControlPreferenceTreeModelBean) obj, idMgr);
+				return PrivacyPreferenceUtils.toAccCtrlPreferenceTreeModel((AccessControlPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 			}
 			
 			if (obj instanceof AttributeSelectionPreferenceTreeModelBean){
 				this.logging.debug("Returning attrSel preference");
-				return PrivacyPreferenceUtils.toAttSelPreferenceTreeModel((AttributeSelectionPreferenceTreeModelBean) obj, idMgr);
+				return PrivacyPreferenceUtils.toAttSelPreferenceTreeModel((AttributeSelectionPreferenceTreeModelBean) obj, privPrefMgr.getIdm());
 			}
 
 		}

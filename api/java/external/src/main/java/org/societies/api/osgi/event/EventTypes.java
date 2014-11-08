@@ -156,4 +156,6 @@ public class EventTypes {
     
     public static final String IDENTITY_SELECTED = "org/societies/privacytrust/privacyprotection/api/identity/IdentitySelected";
     
+    public static final String PERSONIS_NOTIFICATION_REQUEST = "org/societies/personis/request";
+    public static final String PERSONIS_NOTIFICATION_RESPONSE = "org/societies/personis/response";
 }

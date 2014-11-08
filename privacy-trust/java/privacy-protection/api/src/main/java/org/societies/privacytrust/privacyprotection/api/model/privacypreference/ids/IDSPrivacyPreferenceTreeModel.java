@@ -30,14 +30,14 @@ import java.io.Serializable;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
 
 /**
  * This class is used to represent a privacy preference for IIdentity selection. This class represents a node in a tree. 
- * If the node is a branch, then the embedded object of the node is a condition (IPrivacyPreferenceCondition), otherwise, 
+ * If the node is a branch, then the embedded object of the node is a condition (PrivacyPreferenceCondition), otherwise, 
  * if it's a leaf, the embedded object is an IIdentitySelectionPreferenceOutcome.
  * @author Elizabeth
  *
@@ -46,28 +46,21 @@ public class IDSPrivacyPreferenceTreeModel extends DefaultTreeModel implements I
 
 
 	private final IDSPreferenceDetailsBean details;
-	private IPrivacyPreference pref;
+	private PrivacyPreference pref;
 
-	public IDSPrivacyPreferenceTreeModel(IDSPreferenceDetailsBean details,  IPrivacyPreference preference){
+	public IDSPrivacyPreferenceTreeModel(IDSPreferenceDetailsBean details,  PrivacyPreference preference){
 		super(preference);
 		this.details = details;
 		this.pref = preference;
 	}
 
 
-	/* (non-Javadoc)
-	 * @see org.personalsmartspace.spm.preference.api.platform.IPrivacyPreferenceTreeModel#getPrivacyType()
-	 */
-	@Override
 	public PrivacyPreferenceTypeConstants getPrivacyType() {
 		return PrivacyPreferenceTypeConstants.IDENTITY_SELECTION;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.personalsmartspace.spm.preference.api.platform.IPrivacyPreferenceTreeModel#getRootPreference()
-	 */
-	@Override
-	public IPrivacyPreference getRootPreference() {
+
+	public PrivacyPreference getRootPreference() {
 		return this.pref;
 	}
 

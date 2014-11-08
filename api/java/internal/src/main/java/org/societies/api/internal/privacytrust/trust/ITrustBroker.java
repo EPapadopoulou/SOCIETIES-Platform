@@ -47,6 +47,8 @@ import org.societies.api.privacytrust.trust.model.TrustedEntityId;
  */
 public interface ITrustBroker extends org.societies.api.privacytrust.trust.ITrustBroker {
 	
+	
+	public void updateTrustValue(TrustQuery query, Double trustValue) throws TrustException;
 	/**
 	 * Retrieves the trust relationships matching the supplied trust query. The
 	 * method returns an <i>empty</i> list if no matching trust relationship is

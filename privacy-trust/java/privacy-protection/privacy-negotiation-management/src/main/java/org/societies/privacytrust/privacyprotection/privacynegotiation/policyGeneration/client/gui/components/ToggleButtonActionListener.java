@@ -20,11 +20,9 @@ public class ToggleButtonActionListener implements ActionListener{
 		JToggleButton btn = (JToggleButton) e.getSource();
 		if (btn.isSelected()){
 			btn.setText("Allow Access");
-			panel.setEnabledPanels(true);
 		}else{
 			
 			btn.setText("Deny Access");
-			panel.setEnabledPanels(false);
 		}
 	}
 	

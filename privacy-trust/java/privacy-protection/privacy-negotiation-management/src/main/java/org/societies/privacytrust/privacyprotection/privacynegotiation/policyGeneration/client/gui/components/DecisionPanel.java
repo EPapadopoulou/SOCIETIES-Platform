@@ -20,8 +20,9 @@ public class DecisionPanel extends JPanel {
 	
 	/**
 	 * Create the panel.
+	 * @param btnActionListener 
 	 */
-	public DecisionPanel(ToggleButtonActionListener actionListener, Decision decision) {
+	public DecisionPanel(Decision decision, ToggleButtonActionListener btnActionListener) {
 
 		System.out.println("Initialising Decision Panel with: "+decision);
 		this.decision = decision;
@@ -30,7 +31,7 @@ public class DecisionPanel extends JPanel {
 		tglbtnNewToggleButton.setBounds(0, 0, 127, 23);
 		
 		tglbtnNewToggleButton.setSelected(true);
-		tglbtnNewToggleButton.addActionListener(actionListener);
+		tglbtnNewToggleButton.addActionListener(btnActionListener);
 		setLayout(null);
 
 		setBounds(0,0, 130, 25);

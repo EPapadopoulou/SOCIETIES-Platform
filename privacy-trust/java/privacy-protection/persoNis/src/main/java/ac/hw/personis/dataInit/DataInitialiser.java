@@ -32,6 +32,8 @@ import org.societies.api.context.model.IndividualCtxEntity;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.context.broker.ICtxBroker;
 
+import ac.hw.personis.component.DatePicker;
+
 public class DataInitialiser extends JDialog implements ActionListener {
 
 /*	private static final String FULLNAME = "name";
@@ -89,45 +91,45 @@ public class DataInitialiser extends JDialog implements ActionListener {
 		this.ctxBroker = ctxBroker;
 		this.userId = userId;
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 450, 363);
+		setBounds(100, 100, 451, 410);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
 		JPanel mainPanel = new JPanel();
-		mainPanel.setBounds(5, 11, 424, 231);
+		mainPanel.setBounds(5, 11, 424, 275);
 		contentPane.add(mainPanel);
 		mainPanel.setLayout(null);
 
 		JLabel lblNewLabel = new JLabel("Your name:");
-		lblNewLabel.setBounds(0, 0, 187, 20);
+		lblNewLabel.setBounds(10, 0, 169, 25);
 		mainPanel.add(lblNewLabel);
 
 		txtName = new JTextField();
 		lblNewLabel.setLabelFor(txtName);
-		txtName.setBounds(210, 0, 204, 20);
+		txtName.setBounds(210, 0, 204, 25);
 		mainPanel.add(txtName);
 		txtName.setColumns(10);
 
 		JLabel lblNewLabel_1 = new JLabel("Your email:");
-		lblNewLabel_1.setBounds(0, 30, 187, 20);
+		lblNewLabel_1.setBounds(10, 35, 169, 25);
 		mainPanel.add(lblNewLabel_1);
 
 		txtEmail = new JTextField();
 		lblNewLabel_1.setLabelFor(txtEmail);
-		txtEmail.setBounds(210, 30, 204, 20);
+		txtEmail.setBounds(210, 35, 204, 25);
 		mainPanel.add(txtEmail);
 		txtEmail.setColumns(10);
 
 		JLabel lblYourAge = new JLabel("Your birthday:");
-		lblYourAge.setBounds(0, 60, 187, 20);
+		lblYourAge.setBounds(10, 70, 169, 25);
 		mainPanel.add(lblYourAge);
 
 		
 		txtBirthday = new JTextField();
 		lblYourAge.setLabelFor(txtBirthday);
-		txtBirthday.setBounds(210, 60, 204, 20);
+		txtBirthday.setBounds(210, 70, 204, 25);
 		txtBirthday.addMouseListener(new MouseAdapter() {
 			 	public void mouseClicked(MouseEvent e){
 					txtBirthday.setText(new DatePicker(DataInitialiser.this).setPickedDate());
@@ -136,51 +138,51 @@ public class DataInitialiser extends JDialog implements ActionListener {
 		mainPanel.add(txtBirthday);
 
 		JLabel lblNewLabel_5 = new JLabel("Gender:");
-		lblNewLabel_5.setBounds(0, 90, 187, 20);
+		lblNewLabel_5.setBounds(10, 105, 169, 25);
 		mainPanel.add(lblNewLabel_5);
 
 		String[] genderOptions = new String[]{"male", "female"};
 		cmbSex = new JComboBox(genderOptions);
 		lblNewLabel_5.setLabelFor(cmbSex);
-		cmbSex.setBounds(210, 90, 204, 20);
+		cmbSex.setBounds(210, 105, 204, 25);
 		mainPanel.add(cmbSex);
 
 		JLabel lblNewLabel_2 = new JLabel("Your occupation:");
-		lblNewLabel_2.setBounds(0, 120, 187, 20);
+		lblNewLabel_2.setBounds(10, 140, 169, 25);
 		mainPanel.add(lblNewLabel_2);
 
 		txtJob = new JTextField();
 		lblNewLabel_2.setLabelFor(txtJob);
-		txtJob.setBounds(210, 120, 204, 20);
+		txtJob.setBounds(210, 140, 204, 25);
 		mainPanel.add(txtJob);
 		txtJob.setColumns(10);
 
 		JLabel lblNewLabel_3 = new JLabel("Your interests:");
-		lblNewLabel_3.setBounds(0, 150, 187, 20);
+		lblNewLabel_3.setBounds(10, 175, 169, 25);
 		mainPanel.add(lblNewLabel_3);
 
 		txtInterests = new JTextField();
 		lblNewLabel_3.setLabelFor(txtInterests);
-		txtInterests.setBounds(210, 150, 204, 20);
+		txtInterests.setBounds(210, 175, 204, 25);
 		mainPanel.add(txtInterests);
 		txtInterests.setColumns(10);
 
 		JLabel lblNewLabel_4 = new JLabel("Languages you speak:");
-		lblNewLabel_4.setBounds(0, 180, 187, 20);
+		lblNewLabel_4.setBounds(10, 215, 169, 25);
 		mainPanel.add(lblNewLabel_4);
 
 		txtLanguages = new JTextField();
 		lblNewLabel_4.setLabelFor(txtLanguages);
-		txtLanguages.setBounds(210, 180, 204, 20);
+		txtLanguages.setBounds(210, 215, 204, 25);
 		mainPanel.add(txtLanguages);
 		txtLanguages.setColumns(10);
 
 		JPanel btnPanel = new JPanel();
-		btnPanel.setBounds(5, 253, 424, 67);
+		btnPanel.setBounds(5, 300, 424, 67);
 		contentPane.add(btnPanel);
 
 		JButton btnSave = new JButton("Save details");
-		btnSave.setBounds(0, 11, 424, 49);
+		btnSave.setBounds(0, 11, 424, 45);
 		btnSave.addActionListener(this);
 		btnPanel.setLayout(null);
 		btnPanel.add(btnSave);
@@ -250,7 +252,7 @@ public class DataInitialiser extends JDialog implements ActionListener {
 			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.LANGUAGES, this.txtLanguages.getText());
 			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.OCCUPATION, this.txtJob.getText());
 			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.LOCATION_COORDINATES, this.getHWUCoordinates());
-			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.LOCATION_SYMBOLIC, "PumaLab");
+			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.LOCATION_SYMBOLIC, "EM1.69, MACS, Riccarton, EH14 4AS, Edinburgh, Scotland, UK");
 			
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block

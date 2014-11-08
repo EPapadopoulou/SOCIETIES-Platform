@@ -55,6 +55,7 @@ public class IdentityWindow {
 	public IdentityWindow(List<IIdentity> identities, IIdentity recommendedIdentity) {
 		initialize();
 		idsDialog = new IdentitySelectionGUIDialog(frame, identities, recommendedIdentity);
+		idsDialog.setAlwaysOnTop(true);
 	}
 
 	public IIdentity getSelectedIdentity(){
@@ -67,6 +68,7 @@ public class IdentityWindow {
 	public IdentityWindow(Agreement agreement, IdentitySelection identitySelection, IIdentity userId, List<IIdentity> list){
 		initialize();
 		idcDialog = new IdentityCreationGUIDialog(frame, agreement, identitySelection, userId, list);
+		idcDialog.setAlwaysOnTop(true);
 	}
 
 	/**
@@ -75,7 +77,8 @@ public class IdentityWindow {
 	private void initialize() {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 450, 300);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		
 	}
 
 	public Hashtable<String, List<CtxIdentifier>> getIdentityInformation() {

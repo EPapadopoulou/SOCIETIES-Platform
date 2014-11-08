@@ -24,7 +24,6 @@
  */
 package org.societies.privacytrust.privacyprotection.api.util;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -37,7 +36,6 @@ import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.util.RequestorUtils;
-import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccCtrlMappings;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlOutcomeBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
@@ -70,12 +68,9 @@ import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
-import org.societies.api.privacytrust.trust.model.MalformedTrustedEntityIdException;
-import org.societies.api.privacytrust.trust.model.TrustModelBeanTranslator;
 import org.societies.api.schema.context.model.CtxAttributeIdentifierBean;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
@@ -173,7 +168,7 @@ public class PrivacyPreferenceUtils {
 		AttributeSelectionPreferenceTreeModel model = new AttributeSelectionPreferenceTreeModel(bean.getDetails(), toAttrSelPrivacyPreference(bean.getPref(), idmgr));
 		return model;
 	}
-	public static IPrivacyPreference toAttrSelPrivacyPreference(AttributeSelectionPreferenceBean bean, IIdentityManager idmgr) throws MalformedCtxIdentifierException {
+	public static PrivacyPreference toAttrSelPrivacyPreference(AttributeSelectionPreferenceBean bean, IIdentityManager idmgr) throws MalformedCtxIdentifierException {
 		if (bean.getCondition()!=null){
 			PrivacyPreference preference = new PrivacyPreference(toPrivacyPreferenceCondition(bean.getCondition()));
 			List<AttributeSelectionPreferenceBean> beans = bean.getChildren();
@@ -451,7 +446,7 @@ public class PrivacyPreferenceUtils {
 		return bean;
 	}
 	public static AttributeSelectionPreferenceBean toAttributeSelectionPreferenceBean(
-			IPrivacyPreference rootPreference) {
+			PrivacyPreference rootPreference) {
 		AttributeSelectionPreferenceBean bean = new AttributeSelectionPreferenceBean();
 		
 		if (rootPreference.isLeaf()){
@@ -480,7 +475,7 @@ public class PrivacyPreferenceUtils {
 
 
 	public static PPNPreferenceBean toPPNPreferenceBean(
-			IPrivacyPreference rootPreference) {
+			PrivacyPreference rootPreference) {
 		PPNPreferenceBean bean = new PPNPreferenceBean();
 
 
@@ -509,7 +504,7 @@ public class PrivacyPreferenceUtils {
 	}
 
 	public static IDSPreferenceBean toIDSPreferenceBean(
-			IPrivacyPreference rootPreference) {
+			PrivacyPreference rootPreference) {
 
 		if (rootPreference.isLeaf()){
 			IDSPreferenceBean bean = new IDSPreferenceBean();
@@ -533,7 +528,7 @@ public class PrivacyPreferenceUtils {
 		return bean;
 	}
 
-	public static AccessControlPreferenceBean toAccessControlPreferenceBean(IPrivacyPreference rootPreference){
+	public static AccessControlPreferenceBean toAccessControlPreferenceBean(PrivacyPreference rootPreference){
 		if (rootPreference.isLeaf()){
 			AccessControlPreferenceBean bean = new AccessControlPreferenceBean();
 			bean.setOutcome(toAccessControlOutcomeBean((AccessControlOutcome) rootPreference.getOutcome()));
@@ -557,7 +552,7 @@ public class PrivacyPreferenceUtils {
 	}
 
 
-	public static DObfPreferenceBean toDObfPreferenceBean(IPrivacyPreference rootPreference){
+	public static DObfPreferenceBean toDObfPreferenceBean(PrivacyPreference rootPreference){
 		DObfPreferenceBean bean = new DObfPreferenceBean();
 		if (rootPreference.isLeaf()){
 			bean.setOutcome(toDObfOutcomeBean((DObfOutcome) rootPreference.getOutcome()));
@@ -703,6 +698,45 @@ public class PrivacyPreferenceUtils {
 		return PrivacyOutcomeConstantsBean.BLOCK;
 	}
 
+
+
+
+	public static boolean equals (AccessControlPreferenceDetailsBean bean1, Object bean2){
+
+		if (bean1 == bean2) {
+			return true;
+		}
+		if (bean2 == null) {
+			return false;
+		}
+		if (!(bean2 instanceof AccessControlPreferenceDetailsBean)) {
+			return false;
+		}
+		AccessControlPreferenceDetailsBean other = (AccessControlPreferenceDetailsBean) bean2;
+		if (bean1.getAction() == null) {
+			if (other.getAction() != null) {
+				return false;
+			}
+		} else if (!ActionUtils.equal(bean1.getAction(), other.getAction())){
+			return false;
+		}
+		if (bean1.getRequestor() == null) {
+			if (other.getRequestor() != null) {
+				return false;
+			}
+		} else if (!RequestorUtils.equals(bean1.getRequestor(), other.getRequestor())){
+			return false;
+		}
+		if (bean1.getResource() == null) {
+			if (other.getResource() != null) {
+				return false;
+			}
+		} else if (!ResourceUtils.equal(bean1.getResource(), other.getResource())){
+			return false;
+		}
+		return true;
+	}
+	
 	public static boolean equals (PPNPreferenceDetailsBean detail1, Object detail2){
 		logging.debug("Equals PPN");
 		if (detail1 == detail2) {
@@ -754,76 +788,49 @@ public class PrivacyPreferenceUtils {
 		return true;
 	}
 
-
-	public static boolean equals (AccessControlPreferenceDetailsBean bean1, Object bean2){
-
-		if (bean1 == bean2) {
-			return true;
-		}
-		if (bean2 == null) {
-			return false;
-		}
-		if (!(bean2 instanceof AccessControlPreferenceDetailsBean)) {
-			return false;
-		}
-		AccessControlPreferenceDetailsBean other = (AccessControlPreferenceDetailsBean) bean2;
-		if (bean1.getAction() == null) {
-			if (other.getAction() != null) {
-				return false;
-			}
-		} else if (!ActionUtils.equal(bean1.getAction(), other.getAction())){
-			return false;
-		}
-		if (bean1.getRequestor() == null) {
-			if (other.getRequestor() != null) {
-				return false;
-			}
-		} else if (!RequestorUtils.equals(bean1.getRequestor(), other.getRequestor())){
-			return false;
-		}
-		if (bean1.getResource() == null) {
-			if (other.getResource() != null) {
-				return false;
-			}
-		} else if (!ResourceUtils.equal(bean1.getResource(), other.getResource())){
-			return false;
-		}
-		return true;
-	}
-
 	public static boolean equals (AttributeSelectionPreferenceDetailsBean bean1, Object bean2){
-
+		logging.debug("Equals AttrSel");
 		if (bean1 == bean2) {
+			logging.debug("detail1==detail2 true");
 			return true;
 		}
 		if (bean2 == null) {
+			logging.debug("detail2 is null, false");
 			return false;
 		}
-		if (!(bean2 instanceof AccessControlPreferenceDetailsBean)) {
+		if (!(bean2 instanceof AttributeSelectionPreferenceDetailsBean)) {
+			logging.debug("detail2 not instance of AttributeSelectionPreferenceDetailsBean, false");
 			return false;
 		}
 		AttributeSelectionPreferenceDetailsBean other = (AttributeSelectionPreferenceDetailsBean) bean2;
 		if (bean1.getActions() == null) {
 			if (other.getActions() != null) {
+				logging.debug("detail1 actions null but not detail2 actions");
 				return false;
 			}
 		} else if (!ActionUtils.equal(bean1.getActions(), other.getActions())){
+			logging.debug("detail1 actions don't match detail2 actions, false");
 			return false;
 		}
 		if (bean1.getRequestor() == null) {
 			if (other.getRequestor() != null) {
+				logging.debug("detail1 requestor null but detail2 requestor not null, false");
 				return false;
 			}
 		} else if (!RequestorUtils.equals(bean1.getRequestor(), other.getRequestor())){
+			logging.debug("requestors don't match, false");
 			return false;
 		}
 		if (bean1.getDataType() == null) {
 			if (other.getDataType() != null) {
+				logging.debug("detail1 datatype null, but not detail2, false");
 				return false;
 			}
 		} else if ((!bean1.getDataType().equalsIgnoreCase(other.getDataType()))){
+			logging.debug("datatypes don't match, false");
 			return false;
 		}
+		logging.debug("all match, true");
 		return true;
 	}
 	

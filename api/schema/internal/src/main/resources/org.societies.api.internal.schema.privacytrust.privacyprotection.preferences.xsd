@@ -340,7 +340,7 @@
 
 	<xs:complexType name="DObfOutcomeBean">
 		<xs:sequence>
-			<xs:element name="obfuscationLevel" type="xs:double"
+			<xs:element name="obfuscationLevel" type="xs:int"
 				minOccurs="1" maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
 			<xs:element name="currentStage" type="Stage"></xs:element>

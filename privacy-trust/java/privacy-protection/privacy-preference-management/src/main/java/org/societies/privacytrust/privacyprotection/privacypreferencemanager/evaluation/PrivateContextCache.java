@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import javax.swing.JOptionPane;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.CtxException;
@@ -39,8 +37,8 @@ import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelType;
-import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 
 public class PrivateContextCache {
 	
@@ -55,15 +53,15 @@ public class PrivateContextCache {
 	 */
 	private Hashtable<String, CtxIdentifier> mapping;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
-	private ICtxBroker ctxBroker;
 	private ContextCacheUpdater updater;
+	private PrivacyPreferenceManager privPrefMgr;
 	
 	
-	public PrivateContextCache(ICtxBroker broker){
-		this.ctxBroker = broker;
+	public PrivateContextCache(PrivacyPreferenceManager privPrefMgr){
+		this.privPrefMgr = privPrefMgr;
 		this.mapping = new Hashtable<String, CtxIdentifier>();
 		this.cache = new Hashtable<CtxIdentifier, String>();
-		this.updater = new ContextCacheUpdater(broker,this);
+		this.updater = new ContextCacheUpdater(this.privPrefMgr);
 	}
 	
 	public ContextCacheUpdater getContextCacheUpdater(){
@@ -105,11 +103,11 @@ public class PrivateContextCache {
 		this.printCache();
 		
 		try {
-			Future<List<CtxIdentifier>> futureAttrList =ctxBroker.lookup(CtxModelType.ATTRIBUTE, type); 
+			Future<List<CtxIdentifier>> futureAttrList =privPrefMgr.getCtxBroker().lookup(CtxModelType.ATTRIBUTE, type); 
 			List<CtxIdentifier> attrList = futureAttrList.get();
 			if (attrList.size()>0){
 				CtxIdentifier id = (CtxIdentifier) attrList.get(0);
-				CtxAttribute attr =  (CtxAttribute) ctxBroker.retrieve(id);
+				CtxAttribute attr =  (CtxAttribute) privPrefMgr.getCtxBroker().retrieve(id);
 				String val = attr.getStringValue();
 				this.mapping.put(type, id);
 				this.cache.put(id,val);
@@ -131,7 +129,7 @@ public class PrivateContextCache {
 		//JOptionPane.showMessageDialog(null, "contacting context DB for retrieving id"+id.toUriString());
 		this.logging.debug("contacting context DB for retrieving id"+id.toUriString());
 		try {
-			CtxAttribute attr = (CtxAttribute) ctxBroker.retrieve(id).get();
+			CtxAttribute attr = (CtxAttribute) privPrefMgr.getCtxBroker().retrieve(id).get();
 			if (null!=attr){
 				this.logging.debug ("found id: "+id.toUriString()+" in context DB");
 				String val = attr.getStringValue();

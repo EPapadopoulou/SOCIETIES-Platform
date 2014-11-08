@@ -24,7 +24,13 @@
  */
 package org.societies.privacytrust.privacyprotection.datamanagement;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -39,12 +45,14 @@ import org.societies.api.cis.management.ICisManager;
 import org.societies.api.cis.management.ICisOwned;
 import org.societies.api.cis.management.ICisParticipant;
 import org.societies.api.comm.xmpp.interfaces.ICommManager;
+import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IdentityType;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.util.DataIdentifierUtils;
 import org.societies.api.identity.util.RequestorUtils;
+import org.societies.api.internal.context.model.CtxAttributeTypes;
 import org.societies.api.internal.logging.IPerformanceMessage;
 import org.societies.api.internal.logging.PerformanceMessage;
 import org.societies.api.internal.privacytrust.privacy.util.dataobfuscation.DataWrapperFactory;
@@ -75,6 +83,7 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Respons
 import org.societies.privacytrust.privacyprotection.api.IDataObfuscationManager;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager;
+import org.societies.privacytrust.privacyprotection.api.dataobfuscation.ObfuscationLevels;
 import org.societies.privacytrust.privacyprotection.datamanagement.util.PrivacyDataManagerUtility;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -118,6 +127,7 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 
 	@Override
 	public List<ResponseItem> checkPermission(RequestorBean requestor, List<DataIdentifier> dataIds, List<Action> actions) throws PrivacyException {
+		LOG.debug("public List<ResponseItem> checkPermission(RequestorBean requestor, List<DataIdentifier> dataIds, List<Action> actions)");
 		// -- Verify parameters
 		if (null == requestor) {
 			throw new PrivacyException("[Parameters] Not enought information: requestor or owner id is missing");
@@ -145,18 +155,24 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 		}
 
 		// -- Retrieve stored permissions
-		try {
-			permissions = privacyDataManagerInternal.getPermissions(requestor, dataIds, actions);
-			// All decisions already stored
-			if (null != permissions && permissions.size() == dataIds.size()) {
-				return permissions;  // no re-storage
-			}
-		} catch (Exception e) {
-			LOG.warn("Error when retrieving stored decisions. Let's continue without storage", e);
-		}
-		if (null == permissions) {
-			permissions = new ArrayList<ResponseItem>();
-		}
+		//Eliza disabling database requests:
+
+//		try {
+//			permissions = privacyDataManagerInternal.getPermissions(requestor, dataIds, actions);
+//			
+//			
+//			// All decisions already stored
+//			if (null != permissions && permissions.size() == dataIds.size()) {
+//				return permissions;  // no re-storage
+//			}
+//		} catch (Exception e) {
+//			LOG.warn("Error when retrieving stored decisions. Let's continue without storage", e);
+//		}
+
+		
+//		if (null == permissions) {
+//			permissions = new ArrayList<ResponseItem>();
+//		}
 		List<DataIdentifier> availableDataIds = ResponseItemUtils.getDataIdentifiers(permissions);
 		if (null != availableDataIds) {
 			remainingDataIds.removeAll(availableDataIds);
@@ -296,12 +312,12 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 					boolean allRequestedActionsMatch = ActionUtils.contains(actionsDeepCopy, request.getActions(), actionsThatMatch);
 					boolean canBeSharedWith3pServices = false;				
 					boolean canBeSharedWithCisMembersOnly = false;
-					
+
 					for (Condition con : request.getConditions()){
 						if (con.getConditionConstant().equals(ConditionConstants.SHARE_WITH_3RD_PARTIES)){
 							if (con.getValue()==PrivacyConditionsConstantValues.getBetterSharedValue(con.getValue(), PrivacyConditionsConstantValues.getValues(con.getConditionConstant())[2]))
-							canBeSharedWithCisMembersOnly = true;
-							
+								canBeSharedWithCisMembersOnly = true;
+
 							if (con.getValue()==PrivacyConditionsConstantValues.getBetterSharedValue(con.getValue(), PrivacyConditionsConstantValues.getValues(con.getConditionConstant())[3])){
 								canBeSharedWith3pServices = true;
 							}
@@ -313,7 +329,7 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 						permissions.add(permissionPermit);
 						return permissions;
 					}
-					
+
 
 
 					// Retrieve Cis member list
@@ -357,7 +373,7 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 		LOG.debug("[CIS access control] No requested items are matching, or an error appears, or anyway they are privates: always DENY");
 		permissions.clear();
 		permissions.add(permissionDeny);
-		
+
 		// -- Store new permission retrieved from PrivacyPreferenceManager
 		try {
 			privacyDataManagerInternal.updatePermissions(requestor, permissions);
@@ -511,8 +527,7 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 	@Async
 	@Override
 	public Future<List<CtxModelObject>> obfuscateData(RequestorBean requestor, List<CtxModelObject> ctxDataList) throws PrivacyException {
-		Map<String, List<CtxModelObject>> obfuscableGroups = DataWrapperFactory.sortByObfuscability(ctxDataList);
-		List<CtxModelObject> obfuscatedCtxDataList = new ArrayList<CtxModelObject>();
+		/*Map<String, List<CtxModelObject>> obfuscableGroups = DataWrapperFactory.sortByObfuscability(ctxDataList);
 		Map<String, Future<DataWrapper>> futureResults = new HashMap<String, Future<DataWrapper>>();
 		// -- Launch obfuscations
 		for (Entry<String, List<CtxModelObject>> group : obfuscableGroups.entrySet()) {
@@ -537,8 +552,203 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 				LOG.error("Can't retrieve some obfuscated data: {}", group.getKey(), e);
 				obfuscatedCtxDataList.addAll(originalCtxDataList);
 			}
+		}*/
+		List<CtxModelObject> obfuscatedCtxDataList = new ArrayList<CtxModelObject>();
+
+		HashMap<CtxModelObject, Integer> obfuscationLevels = this.privacyPreferenceManager.getObfuscationLevel(requestor, ctxDataList);
+		LOG.debug("Found "+obfuscationLevels.size()+" obfuscationLevels from privacyPreferenceManager");
+		for (CtxModelObject obj : ctxDataList){
+			Iterator<CtxModelObject> iterator = obfuscationLevels.keySet().iterator();
+			boolean obfuscated = false;
+			while (iterator.hasNext()){
+				CtxModelObject ctxModelObject = iterator.next();
+				if (ctxModelObject.getId().equals(obj.getId())){
+					obfuscatedCtxDataList.add(getObfuscatedContext(obfuscationLevels.get(ctxModelObject), ctxModelObject));
+					LOG.debug("Obfuscated: "+ctxModelObject.getType()+" value: "+((CtxAttribute) ctxModelObject).getStringValue());
+					obfuscated = true;
+				}
+			}
+			if (!obfuscated){
+				obfuscatedCtxDataList.add(obj);
+			}
 		}
+		LOG.debug("obfuscated: {}", obfuscatedCtxDataList);
 		return new AsyncResult<List<CtxModelObject>>(obfuscatedCtxDataList);
+	}
+
+	/*
+	 * Eliza edit
+	 */
+	private CtxModelObject getObfuscatedContext(Integer obfuscationLevel, CtxModelObject ctxModelObj){
+		List<String> obfuscatableTypes = new ArrayList<String>();
+
+		Collections.addAll(obfuscatableTypes, new String[]{
+				CtxAttributeTypes.LOCATION_SYMBOLIC, 
+				CtxAttributeTypes.NAME, 
+				CtxAttributeTypes.BIRTHDAY, 
+				CtxAttributeTypes.EMAIL});
+		if (ctxModelObj instanceof CtxAttribute){
+			CtxAttribute ctxAttribute = (CtxAttribute) ctxModelObj;
+			if (obfuscatableTypes.contains(ctxAttribute.getType())){
+				LOG.debug("CtxModelObj "+ctxModelObj.getType()+" is obfuscatable");
+				return obfuscate(obfuscationLevel, ctxAttribute);
+			}else{
+				LOG.debug("CtxModelObj "+ctxModelObj.getType()+" is NOT obfuscatable");
+			}
+		}
+
+		return ctxModelObj;
+	}
+
+	/*
+	 * Eliza edit
+	 */
+	private CtxModelObject obfuscate(Integer obfuscationLevel,
+			CtxAttribute ctxAttribute) {
+		
+		LOG.debug("Obfuscating to level: "+obfuscationLevel+" {}", ctxAttribute);
+		String stringValue = ctxAttribute.getStringValue();
+		if (stringValue==null || stringValue.isEmpty()){
+			LOG.error("Can't obfuscate ctxModelObj "+ctxAttribute.getType()+" with empty value");
+			return ctxAttribute;
+		}
+		if (ctxAttribute.getType().equalsIgnoreCase(CtxAttributeTypes.LOCATION_SYMBOLIC)){
+			LOG.debug("Obfuscating location");
+			Integer levels = ObfuscationLevels.getApplicableObfuscationLevels(CtxAttributeTypes.LOCATION_SYMBOLIC);
+			if (obfuscationLevel==levels){
+				LOG.debug("Obfuscating location to Earth");
+				ctxAttribute.setStringValue("Earth");
+				return ctxAttribute;
+			}
+			if (obfuscationLevel==(levels-1)){
+				ctxAttribute.setStringValue("Europe");
+				LOG.debug("Obfuscating location to Europe");
+				return ctxAttribute;
+			}
+			String[] split = stringValue.split(",");
+			StringBuilder sb = new StringBuilder();
+			if (split.length==7){
+				for (int i = obfuscationLevel; i<split.length; i++){
+					sb.append(split[i].trim());
+					if (i<(split.length-1)){
+						sb.append(",");
+					}
+				}
+			}else if (split.length==1){
+				String defaultLocation = "MACS, Riccarton, EH14 4AS, Edinburgh, Scotland, UK";
+				ctxAttribute.setStringValue(stringValue+", "+defaultLocation);
+				
+				return obfuscate(obfuscationLevel, ctxAttribute);
+			}
+			ctxAttribute.setStringValue(sb.toString());
+
+		}else if (ctxAttribute.getType().equalsIgnoreCase(CtxAttributeTypes.NAME)){
+			LOG.debug("Obfuscating name");
+			if (obfuscationLevel==0){
+				LOG.debug("No obfuscation required");
+				return ctxAttribute;
+			}
+			String[] split = stringValue.trim().split(" ");
+			if (split.length>1){
+				StringBuilder sb = new StringBuilder();
+				switch (obfuscationLevel){
+				case 1: 
+					sb = new StringBuilder();
+					for (int i = 0; i <split.length-1; i++){
+						sb.append(split[i].charAt(0));
+						sb.append(". ");
+					}
+					sb.append(split[split.length-1]);
+					ctxAttribute.setStringValue(sb.toString().trim());
+					break;
+				case 2: 
+					sb = new StringBuilder();
+					sb.append(split[0]);
+					for (int i = 1; i< split.length; i++){
+						sb.append(" ");
+						sb.append(split[i].charAt(0));
+						sb.append(".");
+					}
+					ctxAttribute.setStringValue(sb.toString().trim());
+					break;
+				case 3:
+					sb = new StringBuilder();
+
+					for (int i = 0; i< split.length; i++){
+						sb.append(split[i].charAt(0));
+						sb.append(". ");
+					}
+					ctxAttribute.setStringValue(sb.toString().trim());
+					break;
+				case 4:
+					ctxAttribute.setStringValue("user");
+					break;
+				}
+			}
+		}else if (ctxAttribute.getType().equalsIgnoreCase(CtxAttributeTypes.BIRTHDAY)){
+			if (obfuscationLevel==0){
+				return ctxAttribute;
+			}
+
+			String delim = " ";
+			if (stringValue.contains("/")){
+				delim = "/";
+			}
+			else if (stringValue.contains("-")){
+				delim = "-";
+			}
+			System.out.println("Delim is: "+delim);
+
+
+			try {
+				SimpleDateFormat sdf=new SimpleDateFormat("dd"+delim+"MM"+delim+"yyyy");	
+				Date parsedDate = sdf.parse(stringValue);
+				System.out.println("parsed date "+parsedDate.toString()+" obf: "+obfuscationLevel );
+				switch (obfuscationLevel){
+				case 1:
+					System.out.println("Case 1");
+					SimpleDateFormat sdfCase1 = new SimpleDateFormat("MMM yyyy");
+					System.out.println(sdfCase1.format(parsedDate));
+					ctxAttribute.setStringValue(sdfCase1.format(parsedDate));
+					break;
+				case 2:
+					System.out.println("Case 2");
+					SimpleDateFormat sdfCase2 = new SimpleDateFormat("yyyy");
+					ctxAttribute.setStringValue(sdfCase2.format(parsedDate));
+					break;
+				case 3:
+					System.out.println("Case 3");
+					Calendar cal = Calendar.getInstance();
+					cal.add(Calendar.YEAR, -18);
+					
+					Calendar birthday = Calendar.getInstance();
+					birthday.setTime(parsedDate);
+					
+					SimpleDateFormat sdfCase3 = new SimpleDateFormat("yyyy");
+					if (birthday.after(cal)){
+						
+						ctxAttribute.setStringValue("After "+sdfCase3.format(cal.getTime()));
+					}else{
+						
+						ctxAttribute.setStringValue("Before "+sdfCase3.format(cal.getTime()));
+					}
+					
+					
+				}
+			} catch (ParseException e) {
+
+				System.out.println("Could not parse date from string "+stringValue);
+				e.printStackTrace();
+				return ctxAttribute;
+			}
+		}else if (ctxAttribute.getType().equalsIgnoreCase(CtxAttributeTypes.EMAIL)){
+			if (obfuscationLevel==1){
+				ctxAttribute.setStringValue("anonymous230489324");
+
+			}
+		}
+		return ctxAttribute;
+
 	}
 
 	@Async

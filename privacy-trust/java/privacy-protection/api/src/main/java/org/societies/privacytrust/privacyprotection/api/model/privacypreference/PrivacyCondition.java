@@ -37,11 +37,7 @@ public class PrivacyCondition implements IPrivacyPreferenceCondition{
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("PrivacyCondition [condition=");
-		builder.append(ConditionUtils.toXmlString(condition));
-		builder.append("]");
-		return builder.toString();
+		return condition.getConditionConstant()+" == "+condition.getValue();
 	}
 
 

@@ -37,6 +37,6 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  *
  */
 public interface IPrivacyPreferenceTreeModel extends TreeModel,Serializable {
-	public IPrivacyPreference getRootPreference();
+	public PrivacyPreference getRootPreference();
 	public PrivacyPreferenceTypeConstants getPrivacyType();
 }

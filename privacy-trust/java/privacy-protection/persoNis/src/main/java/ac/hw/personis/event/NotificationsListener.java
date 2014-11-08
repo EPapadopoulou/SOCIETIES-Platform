@@ -1,0 +1,46 @@
+package ac.hw.personis.event;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent;
+import org.societies.api.osgi.event.CSSEvent;
+import org.societies.api.osgi.event.EventListener;
+import org.societies.api.osgi.event.EventTypes;
+import org.societies.api.osgi.event.InternalEvent;
+
+import ac.hw.personis.PersonisHelper;
+import ac.hw.personis.notification.NotificationsPanel;
+
+public class NotificationsListener extends EventListener{
+	private Logger logging = LoggerFactory.getLogger(this.getClass());
+
+	private PersonisHelper personisHelper;
+	private NotificationsPanel notifPanel;
+
+	public NotificationsListener(PersonisHelper personisHelper, NotificationsPanel notifPanel){
+		this.personisHelper = personisHelper;
+		this.notifPanel = notifPanel;
+		String[] eventTypes = new String[]{EventTypes.PERSONIS_NOTIFICATION_REQUEST};
+		this.personisHelper.getEventMgr().subscribeInternalEvent(this, eventTypes, null);
+		
+	}
+	@Override
+	public void handleInternalEvent(InternalEvent event) {
+		logging.debug("Received event: {}", event.geteventType());
+		if (event.geteventInfo() instanceof NotificationEvent){
+			NotificationEvent notifEvent = (NotificationEvent) event.geteventInfo();
+			notifPanel.addNotification(notifEvent.getUuid(), notifEvent.getMessage());	
+		}else{
+			logging.debug("Received event of unknown Class {}", event.geteventInfo());
+		}
+		
+		
+	}
+
+	@Override
+	public void handleExternalEvent(CSSEvent event) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

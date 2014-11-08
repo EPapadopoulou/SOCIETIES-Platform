@@ -57,5 +57,45 @@ public class TrustPreferenceCondition implements IPrivacyPreferenceCondition, Se
 		return trustThreshold;
 	}
 
+	@Override
+	public String toString(){
+		return "TrustValue >="+trustThreshold;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((myType == null) ? 0 : myType.hashCode());
+		long temp;
+		temp = Double.doubleToLongBits(trustThreshold);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		TrustPreferenceCondition other = (TrustPreferenceCondition) obj;
+		if (myType != other.myType) {
+			return false;
+		}
+		if (Double.doubleToLongBits(trustThreshold) != Double
+				.doubleToLongBits(other.trustThreshold)) {
+			return false;
+		}
+		return true;
+	}
+	
+	
+	
 
 }

@@ -142,6 +142,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		//this.getContentPane().validate();
 		//this.getContentPane().repaint();
 		System.out.println("Initialised");
+		
 	}
 
 	private String printDetails() {

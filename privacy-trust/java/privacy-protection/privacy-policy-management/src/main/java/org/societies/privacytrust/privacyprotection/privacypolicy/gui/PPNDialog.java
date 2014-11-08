@@ -66,7 +66,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 	 */
 
 	public PPNDialog(JFrame frame, RequestPolicy policy){
-		super(frame, "Privacy Policy Negotiation Form", true);
+		super(frame, "Privacy Policy Configuration form", true);
 		UIManager.put("ClassLoader", getClass().getClassLoader());
 		frame.setAlwaysOnTop(true);
 		initialize();
@@ -144,6 +144,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		//this.getContentPane().validate();
 		//this.getContentPane().repaint();
 		System.out.println("Initialised");
+		
 	}
 
 	/**

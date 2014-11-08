@@ -13,11 +13,14 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 
+import org.societies.api.context.model.CtxAttributeTypes;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.identity.RequestorServiceBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.AccessControlResponseItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestorScopeValues;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
+import org.societies.privacytrust.privacyprotection.api.dataobfuscation.ObfuscationLevels;
 
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -55,24 +58,17 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 		"UK",
 		"Europe",
 		"Earth"};
+	private static final String[] names = new String[]{"John Smith", "J. Smith", "John S.", "J.S", "user"};
+	private static final String[] birthdays = new String[]{"5/8/1995","July 1995", "1995", "Before 1994"};
+	private static final String[] emails = new String[]{"j.smith@hw.ac.uk","anonymous21312@societies.eu"};
 	
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		try {
-			AccessControlDialog dialog = new AccessControlDialog();
-			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-			dialog.setVisible(true);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * Create the dialog.
 	 */
-	public AccessControlDialog() {
+	public AccessControlDialog(RequestorBean requestor, ResponseItem requestedItem) {
+		this.requestor = requestor;
+		this.requestedItem = requestedItem;
 		setTitle("Access Request");
 		setAlwaysOnTop(true);
 		setModal(true);
@@ -130,7 +126,7 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 		slider.setMajorTickSpacing(1);
 		slider.setMinorTickSpacing(1);
 		slider.setMinimum(0);
-		slider.setMaximum(locations.length-1);
+		slider.setMaximum(ObfuscationLevels.getApplicableObfuscationLevels(requestedItem.getRequestItem().getResource().getDataType())-1);
 		slider.setSnapToTicks(true);
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
@@ -145,6 +141,7 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 		slider.setLabelTable( labelTable );
 		slider.addChangeListener(this);
 
+		
 
 	}
 
@@ -170,10 +167,10 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 		return sb.toString();
 	}
 
-	public AccessControlResponseItem getAccessControlResponseItem(RequestorBean requestor, ResponseItem requestedItem){
-		this.requestor = requestor;
-		this.requestedItem = requestedItem;
+	public AccessControlResponseItem getAccessControlResponseItem(){
+
 		this.questionLabel.setText(this.getQuestionText());
+		
 		this.setVisible(true);
 		return this.accessControlResponseItem;
 	}
@@ -191,6 +188,7 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 		accessControlResponseItem.setRequestItem(this.requestedItem.getRequestItem());
 		accessControlResponseItem.setObfuscationLevel(slider.getValue());
 		accessControlResponseItem.setObfuscationInput(chckbxObfuscate.isSelected());
+		
 		this.dispose();
 	}
 
@@ -202,8 +200,16 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 	@Override
 	public void stateChanged(ChangeEvent e) {
 		this.obfValueLabel.setText("Slider level: "+slider.getValue());
-		
-		this.obfValueLabel.setText(locations[slider.getValue()]);
+		String dataType = requestedItem.getRequestItem().getResource().getDataType();
+		if (dataType.equalsIgnoreCase(CtxAttributeTypes.LOCATION_SYMBOLIC)){
+			this.obfValueLabel.setText(locations[slider.getValue()]);
+		}else if (dataType.equalsIgnoreCase(CtxAttributeTypes.NAME)){
+			this.obfValueLabel.setText(names[slider.getValue()]);
+		}if (dataType.equalsIgnoreCase(CtxAttributeTypes.BIRTHDAY)){
+			this.obfValueLabel.setText(birthdays[slider.getValue()]);
+		}if (dataType.equalsIgnoreCase(CtxAttributeTypes.EMAIL)){
+			this.obfValueLabel.setText(emails[slider.getValue()]);
+		}
 		
 
 	}

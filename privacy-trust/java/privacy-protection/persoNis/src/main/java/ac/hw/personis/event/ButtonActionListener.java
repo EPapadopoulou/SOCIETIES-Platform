@@ -27,7 +27,13 @@ import ac.hw.personis.services.GoogleMapsService;
  */
 public class ButtonActionListener implements ActionListener{
 
-	private PersonisHelper personisHelper;
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+/*	private PersonisHelper personisHelper;
 	private int negotiationCounter = 0;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	private RequestorServiceBean requestor;
@@ -64,4 +70,12 @@ public class ButtonActionListener implements ActionListener{
 			}
 		}
 	}
+
+	public RequestorServiceBean getRequestor() {
+		return requestor;
+	}
+
+	public void setRequestor(RequestorServiceBean requestor) {
+		this.requestor = requestor;
+	}*/
 }

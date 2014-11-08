@@ -7,14 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.PPNegotiationEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.util.model.privacypolicy.AgreementUtils;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
 import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResponseItemUtils;
 import org.societies.api.privacytrust.trust.TrustException;
@@ -23,13 +21,9 @@ import org.societies.api.privacytrust.trust.model.MalformedTrustedEntityIdExcept
 import org.societies.api.privacytrust.trust.model.TrustedEntityId;
 import org.societies.api.privacytrust.trust.model.TrustedEntityType;
 import org.societies.api.schema.identity.RequestorBean;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.TrustPreferenceCondition;
@@ -63,7 +57,7 @@ public class PPNPreferenceMerger {
 			try {
 				TrustedEntityId trusteeID = new TrustedEntityId(TrustedEntityType.SVC, requestor.getRequestorId());
 
-				TrustedEntityId trustorID = new TrustedEntityId(TrustedEntityType.CIS, this.privacyPreferenceManager.getCommsMgr().getIdManager().getThisNetworkNode().getBareJid());
+				TrustedEntityId trustorID = new TrustedEntityId(TrustedEntityType.CSS, this.privacyPreferenceManager.getCommsMgr().getIdManager().getThisNetworkNode().getBareJid());
 				TrustQuery trustQuery = new TrustQuery(trustorID);
 				trustQuery.setTrusteeId(trusteeID);
 				Double trustValue = trustBroker.retrieveTrustValue(trustQuery).get();
@@ -147,13 +141,13 @@ public class PPNPreferenceMerger {
 	}
 
 	private PPNPrivacyPreferenceTreeModel mergePPNPreference(RequestorBean requestor, Resource resource, Condition condition, PPNPrivacyPreferenceTreeModel ppnPreference) throws PrivacyException {
-		PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(this.privacyPreferenceManager.getCtxBroker(), this.privacyPreferenceManager);
+		PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(this.privacyPreferenceManager);
 
 		return merger.mergePPNPreference(createPPNPreference(requestor, resource, condition), ppnPreference);
 	}
 
 	private PPNPrivacyPreferenceTreeModel mergePPNPreference(Double trustValue, Resource resource, Condition condition, PPNPrivacyPreferenceTreeModel ppnPreference) throws PrivacyException {
-		PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(this.privacyPreferenceManager.getCtxBroker(), this.privacyPreferenceManager);
+		PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger( this.privacyPreferenceManager);
 		return merger.mergePPNPreference(createPPNPreference(trustValue, resource, condition), ppnPreference);
 		
 	}
@@ -176,7 +170,7 @@ public class PPNPreferenceMerger {
 		PPNPOutcome outcome = new PPNPOutcome(condition);
 		PrivacyPreference outcomePreference = new PrivacyPreference(outcome);
 		TrustPreferenceCondition trustCondition = new TrustPreferenceCondition(trustValue);
-		IPrivacyPreference preference = new PrivacyPreference(trustCondition);
+		PrivacyPreference  preference = new PrivacyPreference(trustCondition);
 		preference.add(outcomePreference);
 		this.logging.debug("##$$@ Creating preference with outcome: "+outcomePreference.toString());
 		PPNPreferenceDetailsBean details = new PPNPreferenceDetailsBean();

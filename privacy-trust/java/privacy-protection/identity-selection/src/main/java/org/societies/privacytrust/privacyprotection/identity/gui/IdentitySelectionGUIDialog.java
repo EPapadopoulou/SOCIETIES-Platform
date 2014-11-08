@@ -96,6 +96,7 @@ public class IdentitySelectionGUIDialog extends JDialog implements ActionListene
 				getRootPane().setDefaultButton(okButton);
 			}
 		}
+		
 	}
 
 	public IIdentity getSelectedIdentity(){

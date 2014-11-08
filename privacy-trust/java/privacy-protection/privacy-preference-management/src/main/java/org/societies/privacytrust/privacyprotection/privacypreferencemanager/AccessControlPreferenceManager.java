@@ -28,30 +28,32 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.CtxException;
 import org.societies.api.context.model.CtxAttribute;
+import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxEntity;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
-import org.societies.api.identity.IIdentityManager;
-import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.Requestor;
 import org.societies.api.identity.util.RequestorUtils;
-import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.context.model.CtxAttributeTypes;
-import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyAgreementManager;
-import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.AgreementEnvelope;
-import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.IAgreement;
-import org.societies.api.internal.privacytrust.trust.ITrustBroker;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseEvent.Response;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyOutcomeConstantsBean;
-import org.societies.api.internal.useragent.feedback.IUserFeedback;
+import org.societies.api.osgi.event.CSSEvent;
+import org.societies.api.osgi.event.EMSException;
+import org.societies.api.osgi.event.EventListener;
+import org.societies.api.osgi.event.EventTypes;
+import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
 import org.societies.api.schema.identity.DataIdentifier;
@@ -59,68 +61,50 @@ import org.societies.api.schema.identity.DataIdentifierScheme;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.AccessControlResponseItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
-import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.OperatorConstants;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PreferenceEvaluator;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PrivateContextCache;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.gui.AccessControlDialog;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.cache.PreferenceCache;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.DObfPreferenceCreator;
+import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.PrivacyPreferenceMerger;
 
 /**
  * @author Eliza
  *
  */
-public class AccessControlPreferenceManager {
+public class AccessControlPreferenceManager extends EventListener{
 
 	private final static Logger logging = LoggerFactory.getLogger(AccessControlPreferenceManager.class);
-	private final PreferenceCache prefCache;
-	private final PrivateContextCache contextCache;
-	private final IUserFeedback userFeedback;
-	private final ITrustBroker trustBroker;
-	private final ICtxBroker ctxBroker;
-	private final IPrivacyAgreementManager agreementMgr;
-	private final IIdentityManager idMgr;
-	private final DObfPreferenceCreator dobfPrefCreator;
-	private IPrivacyDataManagerInternal privacyDataManagerInternal;
+
 	private String[] sensedDataTypes;
 	private IIdentity userIdentity;
+	private PrivacyPreferenceManager privPrefMgr;
+	private Hashtable<String, UserResponseEvent> userResponses;
 
+	public AccessControlPreferenceManager(PrivacyPreferenceManager privPrefMgr){
+		this.userResponses = new Hashtable<String, UserResponseEvent>();
+		this.privPrefMgr = privPrefMgr;
 
-
-	public AccessControlPreferenceManager(PreferenceCache prefCache, PrivateContextCache contextCache, IUserFeedback userFeedback, ITrustBroker trustBroker, ICtxBroker ctxBroker, IPrivacyAgreementManager agreementMgr, IIdentityManager idMgr, DObfPreferenceCreator dobfPrefCreator, IPrivacyDataManagerInternal privacyDataManagerInternal){
-		this.prefCache = prefCache;
-		this.contextCache = contextCache;
-		this.userFeedback = userFeedback;
-		this.trustBroker = trustBroker;
-		this.ctxBroker = ctxBroker;
-		this.agreementMgr = agreementMgr;
-		this.idMgr = idMgr;
-		userIdentity = idMgr.getThisNetworkNode();
-		this.dobfPrefCreator = dobfPrefCreator;
-		this.privacyDataManagerInternal = privacyDataManagerInternal;
+		userIdentity = privPrefMgr.getIdm().getThisNetworkNode();
 		sensedDataTypes = new String[]{CtxAttributeTypes.TEMPERATURE, 
 				CtxAttributeTypes.STATUS,
 				CtxAttributeTypes.LOCATION_SYMBOLIC,
 				CtxAttributeTypes.LOCATION_COORDINATES,
 				CtxAttributeTypes.ACTION};
-
-
+		String[] eventTypes = new String[]{EventTypes.PERSONIS_NOTIFICATION_RESPONSE};
+		this.privPrefMgr.getEventMgr().subscribeInternalEvent(this, eventTypes, null);
 	}
+
+
 
 
 	private boolean isAttributeSensed(String type) {
@@ -136,8 +120,8 @@ public class AccessControlPreferenceManager {
 
 
 
-	public IPrivacyOutcome evaluatePreference(IPrivacyPreference privPref, List<Condition> conditions, RequestorBean requestor){
-		PreferenceEvaluator ppE = new PreferenceEvaluator(this.contextCache, trustBroker, requestor, this.userIdentity);
+	public IPrivacyOutcome evaluatePreference(PrivacyPreference privPref, List<Condition> conditions, RequestorBean requestor){
+		PreferenceEvaluator ppE = new PreferenceEvaluator(this.privPrefMgr, requestor, this.userIdentity);
 		Hashtable<IPrivacyOutcome, List<CtxIdentifier>> results = ppE.evaluateAccessCtrlPreference(privPref, conditions);
 		Enumeration<IPrivacyOutcome> outcomes = results.keys();
 		//JOptionPane.showMessageDialog(null, results.size());
@@ -155,7 +139,18 @@ public class AccessControlPreferenceManager {
 	 * @see org.societies.privacytrust.privacyprotection.api.IPrivacyPreferenceManager#checkPermission(org.societies.api.identity.Requestor, org.societies.api.context.model.CtxAttributeIdentifier, java.util.List)
 	 */
 	public List<ResponseItem> checkPermission(RequestorBean requestor, List<DataIdentifier> dataIds, Action action) throws PrivacyException{
-		if (null==dataIds || dataIds.size()==0){
+		logging.debug("public List<ResponseItem> checkPermission(RequestorBean requestor, List<DataIdentifier> dataIds, Action action)");
+		
+		
+		List<ResponseItem> permissions = new ArrayList<ResponseItem>();
+		
+		
+		for (DataIdentifier dataID : dataIds){
+			ResponseItem checkPermission = this.checkPermission(requestor, dataID, action);
+			permissions.add(checkPermission);
+		}
+		return permissions;
+/*		if (null==dataIds || dataIds.size()==0){
 			this.logging.debug("requested permission without specifying data identifiers!");
 			throw new PrivacyException("requested permission without specifying data identifiers!");
 		}
@@ -182,27 +177,9 @@ public class AccessControlPreferenceManager {
 		}		
 		this.logging.debug("checkPermission: \nRequestor: "+requestor.toString()+"\n"+strToPrint+"\n and action: "+action.getActionConstant());
 
-		/**
+		*//**
 		 * retrieve agreed conditions from agreement.
-		 */
-		try {
-
-			AgreementEnvelope agreementEnv = this.agreementMgr.getAgreement(RequestorUtils.toRequestor(requestor, this.idMgr));
-			if (agreementEnv!=null){
-				IAgreement agreement = agreementEnv.getAgreement();
-				for (ResponseItem item: agreement.getRequestedItems()){
-					for (String dataType : dataTypes){
-						if (dataType.equalsIgnoreCase(item.getRequestItem().getResource().getDataType())){
-							conditions.put(item, item.getRequestItem().getConditions());
-						}
-					}
-				}
-
-			}
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		 *//*
 
 		List<ResponseItem> permissions = new ArrayList<ResponseItem>();
 
@@ -243,28 +220,32 @@ public class AccessControlPreferenceManager {
 			
 			List<AccessControlResponseItem> list = new ArrayList<AccessControlResponseItem>();
 			for (ResponseItem item :preferencesDoNotExist){
-				AccessControlDialog dialog = new AccessControlDialog();
-				AccessControlResponseItem accessControlResponseItem = dialog.getAccessControlResponseItem(requestor, item);
+				AccessControlDialog dialog = new AccessControlDialog(requestor, item);
+				AccessControlResponseItem accessControlResponseItem = dialog.getAccessControlResponseItem();
 				list.add(accessControlResponseItem);
 			}
 			
 			for (AccessControlResponseItem item: list){
 				if (item.isRemember()){
-					this.privacyDataManagerInternal.updatePermission(requestor, item);
+					this.privPrefMgr.getprivacyDataManagerInternal().updatePermission(requestor, item);
 					this.storeDecision(requestor, item.getRequestItem().getResource(), item.getRequestItem().getConditions(), action, item.getDecision());
 					this.logging.debug("Stored access control feedback as preference");
 				}else{
 					this.logging.debug("One-off access granted. Permission not stored permanently");
 				}
 				if (item.isObfuscationInput()){
-					this.dobfPrefCreator.createPreference(requestor, item.getRequestItem().getResource(), item.getObfuscationLevel());
+					this.logging.debug("item: {}", item);
+					this.logging.debug("item resource {}", item.getRequestItem().getResource());
+					this.privPrefMgr.getDobfPreferenceCreator().createPreference(requestor, item.getRequestItem().getResource(), item.getObfuscationLevel());
 					this.logging.debug("Stored DObf preference based on user input to the access control feedback popup.");
 				}
 			}
 			permissions.addAll(list);
+			logging.debug("checkPermission(RequestorBean requestor, List<DataIdentifier> dataIds, Action action): {}", permissions);
 			return permissions;
 		}
-		return permissions;
+		logging.debug("checkPermission(RequestorBean requestor, List<DataIdentifier> dataIds, Action action): {}", permissions);
+		return permissions;*/
 	}
 
 	private List<Condition> getConditionsHelperMethod(DataIdentifier dataId, Enumeration<ResponseItem> fromAgreementItems){
@@ -281,6 +262,7 @@ public class AccessControlPreferenceManager {
 	 * OK
 	 */
 	public ResponseItem checkPermission(RequestorBean requestor, DataIdentifier dataId, Action action) throws PrivacyException{
+		this.logging.debug("public ResponseItem checkPermission(RequestorBean requestor, DataIdentifier dataId, Action action)");
 		if (null==dataId){
 			this.logging.debug("requested permission for null CtxIdentifier. returning : null");
 			throw new PrivacyException("requested permission for null CtxIdentifier!");
@@ -294,29 +276,7 @@ public class AccessControlPreferenceManager {
 		List<Condition> conditions = new ArrayList<Condition>();
 		this.logging.debug("checkPermission: \nRequestor: "+requestor.toString()+"\nctxId: "+dataId.getUri()+"\n and action: "+action.getActionConstant());
 
-		/**
-		 * retrieve agreed conditions from agreement.
-		 */
-		try {
-			AgreementEnvelope agreementEnv = this.agreementMgr.getAgreement(RequestorUtils.toRequestor(requestor, this.idMgr));
-			if (agreementEnv!=null){
-				IAgreement agreement = agreementEnv.getAgreement();
-				for (ResponseItem item: agreement.getRequestedItems()){
-					if (item.getRequestItem().getResource().getDataType().equals(dataId.getType())){
-						conditions = item.getRequestItem().getConditions();
-						//JOptionPane.showMessageDialog(null, "Found conditions in agreement");
-					}
-				}
-
-			}
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		if (conditions==null){
-			conditions = new ArrayList<Condition>();
-		}
+		
 		AccessControlPreferenceDetailsBean details = new AccessControlPreferenceDetailsBean();
 		details.setAction(action);
 		details.setRequestor(requestor);
@@ -339,36 +299,125 @@ public class AccessControlPreferenceManager {
 			responseItems.add(responseItem);
 
 			//TODO! AC GUI (SEE LINES 412,413)
-			AccessControlDialog dialog = new AccessControlDialog();
-			AccessControlResponseItem accessControlResponseItem = dialog.getAccessControlResponseItem(requestor, responseItem);
+			AccessControlDialog dialog = new AccessControlDialog(requestor, responseItem);
+			AccessControlResponseItem accessControlResponseItem = dialog.getAccessControlResponseItem();
 			
 
 			//AccessControlResponseItem accessControlResponseItem = resultlist.get(0);
 			
 			if (accessControlResponseItem.isRemember()){
-				this.privacyDataManagerInternal.updatePermission(requestor, accessControlResponseItem);
+				privPrefMgr.getprivacyDataManagerInternal().updatePermission(requestor, accessControlResponseItem);
 				this.storeDecision(requestor, resource, accessControlResponseItem.getRequestItem().getConditions(), action, accessControlResponseItem.getDecision());
 				this.logging.debug("Stored access control feedback as preference");
 			}else{
 				this.logging.debug("One-off access granted. Permission not stored permanently");
 			}
 			if (accessControlResponseItem.isObfuscationInput()){
-				this.dobfPrefCreator.createPreference(requestor, accessControlResponseItem.getRequestItem().getResource(), accessControlResponseItem.getObfuscationLevel());
+				privPrefMgr.getDobfPreferenceCreator().createPreference(requestor, accessControlResponseItem.getRequestItem().getResource(), accessControlResponseItem.getObfuscationLevel());
 				this.logging.debug("Stored DObf preference based on user input to the access control feedback popup.");
 			}else{
 				this.logging.debug("Obfuscation not requested in the access control");
 			}
+			logging.debug("checkPermission(RequestorBean requestor, DataIdentifier dataId, Action action): "+accessControlResponseItem);
+			
 			return accessControlResponseItem;
 			//responseItem.setDecision(Decision.DENY);
 			//return responseItem;
 		}else{
+			logging.debug("checkPermission(RequestorBean requestor, DataIdentifier dataId, Action action): "+evaluateAccCtrlPreference);
+			//TODO: change text to say that preferences sugggest ...
+			StringBuilder sb = new StringBuilder();
+			if (evaluateAccCtrlPreference.getDecision()==Decision.PERMIT){
+				sb.append("Your preferences suggest that I give access to");
+			}else{
+				sb.append("Your preferences suggest that I block access to");
+			}
+			sb.append(requestor.getRequestorId());
+			sb.append(" to ");
+			sb.append(action.getActionConstant().toString().toLowerCase()); 
+			sb.append(" your data: ");
+			sb.append(resource.getDataType());
+			String uuid = UUID.randomUUID().toString();
+			
+			NotificationEvent notifEvent = new NotificationEvent(uuid, sb.toString());
+			InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_REQUEST, "", this.getClass().getName(), notifEvent);
+			try {
+				this.privPrefMgr.getEventMgr().publishInternalEvent(event);
+			} catch (EMSException e) {
+				// TODO Auto-generated catch block
+				logging.error("Error publishing internal event: {}", event);
+				return evaluateAccCtrlPreference;
+			}
+			while (!this.userResponses.containsKey(uuid)){
+				synchronized (this.userResponses) {
+					try {
+						this.userResponses.wait();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+			//inform the user and then return it
+			if (this.userResponses.containsKey(uuid)){
+				UserResponseEvent userResponseEvent = userResponses.get(uuid);
+				if (userResponseEvent.getResponse().equals(Response.ABORT)){
+					/*
+					 * copy paste:
+					 */
+					AccessControlResponseItem responseItem = new AccessControlResponseItem();
+
+					RequestItem requestItem = new RequestItem();
+					List<Action> actions = new ArrayList<Action>();
+					actions.add(action);
+					requestItem.setActions(actions);
+					requestItem.setConditions(conditions);
+					requestItem.setResource(resource);
+					responseItem.setRequestItem(requestItem);
+					List<AccessControlResponseItem> responseItems = new ArrayList<AccessControlResponseItem>();
+					responseItems.add(responseItem);
+					AccessControlDialog dialog = new AccessControlDialog(requestor, responseItem);
+					AccessControlResponseItem accessControlResponseItem = dialog.getAccessControlResponseItem();
+					
+
+					//AccessControlResponseItem accessControlResponseItem = resultlist.get(0);
+					
+					if (accessControlResponseItem.isRemember()){
+						privPrefMgr.getprivacyDataManagerInternal().updatePermission(requestor, accessControlResponseItem);
+						this.storeDecision(requestor, resource, accessControlResponseItem.getRequestItem().getConditions(), action, accessControlResponseItem.getDecision());
+						this.logging.debug("Stored access control feedback as preference");
+					}else{
+						this.logging.debug("One-off access granted. Permission not stored permanently");
+					}
+					if (accessControlResponseItem.isObfuscationInput()){
+						privPrefMgr.getDobfPreferenceCreator().createPreference(requestor, accessControlResponseItem.getRequestItem().getResource(), accessControlResponseItem.getObfuscationLevel());
+						this.logging.debug("Stored DObf preference based on user input to the access control feedback popup.");
+					}else{
+						this.logging.debug("Obfuscation not requested in the access control");
+					}
+					logging.debug("checkPermission(RequestorBean requestor, DataIdentifier dataId, Action action): "+accessControlResponseItem);
+					
+					return accessControlResponseItem;
+					/*
+					 * end copy paste
+					 */
+					
+					
+				}else{
+					logging.debug("Received input, all OK, returning preference evaluation result");
+					return evaluateAccCtrlPreference;
+				}
+			}else{
+				logging.error("Error retrieving response from user. Returning preference evaluation result");
 			return evaluateAccCtrlPreference;
+			}
 		}
 
+		
 	}
 
 
-	private void storeDecision(RequestorBean requestor, DataIdentifier dataId, List<Condition> conditions,Action action,  PrivacyOutcomeConstantsBean decision){
+/*	private void storeDecision(RequestorBean requestor, DataIdentifier dataId, List<Condition> conditions,Action action,  PrivacyOutcomeConstantsBean decision){
 		Resource resource = new Resource();
 		resource.setDataIdUri(dataId.getUri());
 		resource.setScheme(dataId.getScheme());
@@ -388,14 +437,14 @@ public class AccessControlPreferenceManager {
 			detailsBean.setRequestor(requestor);
 			detailsBean.setAction(action);
 			detailsBean.setResource(resource);
-			this.prefCache.addAccCtrlPreference(detailsBean, model);
+			storeAccCtrlPreference(detailsBean, model);
 		} catch (PrivacyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		//}
-	}
+	}*/
 
 
 	private void storeDecision(RequestorBean requestor, Resource resource, List<Condition> conditions,Action action,  Decision decision){
@@ -418,7 +467,19 @@ public class AccessControlPreferenceManager {
 			detailsBean.setRequestor(requestor);
 			detailsBean.setAction(action);
 			detailsBean.setResource(resource);
-			this.prefCache.addAccCtrlPreference(detailsBean, model);
+			
+			AccessControlPreferenceTreeModel accCtrlPreference = getAccCtrlPreference(detailsBean);
+			if (accCtrlPreference==null){
+				storeAccCtrlPreference(detailsBean, model);
+				return;
+			}
+			PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(privPrefMgr);
+			PrivacyPreference mergeAccCtrlPreference = merger.mergeAccCtrlPreference(detailsBean, accCtrlPreference.getRootPreference(), model.getRootPreference());
+			if (mergeAccCtrlPreference==null){
+				storeAccCtrlPreference(detailsBean, model);
+				return;
+			}
+			storeAccCtrlPreference(detailsBean, new AccessControlPreferenceTreeModel(detailsBean, mergeAccCtrlPreference));
 		} catch (PrivacyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -434,7 +495,7 @@ public class AccessControlPreferenceManager {
 			try {
 				// 2013-04-16: updated by Olivier to replace CtxAttributeIdentifier to CtxIdentifier. Add logic to handle also CtxEntity and not just CtxAttribute
 				CtxIdentifier ctxIdentifier = (CtxIdentifier) ResourceUtils.getDataIdentifier(resource);
-				CtxModelObject ctxModelObject = this.ctxBroker.retrieve(ctxIdentifier).get();
+				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().retrieve(ctxIdentifier).get();
 				ContextPreferenceCondition condition;
 				PrivacyPreference conditionPreference;
 				// -- CtxAttribute
@@ -518,10 +579,7 @@ public class AccessControlPreferenceManager {
 		actions.add(action);
 		reqItem.setActions(actions);
 		reqItem.setConditions(conditions);
-		Resource resource = new Resource();
-		resource.setDataIdUri(dataId.getUri());
-		resource.setDataType(dataId.getType());
-		resource.setScheme(dataId.getScheme());
+		Resource resource = ResourceUtils.create(dataId);
 		reqItem.setResource(resource);
 		ResponseItem respItem = new ResponseItem();
 		respItem.setDecision(decision);
@@ -538,7 +596,7 @@ public class AccessControlPreferenceManager {
 
 	public boolean deleteAccCtrlPreference(
 			AccessControlPreferenceDetailsBean details) {
-		return this.prefCache.removeAccCtrlPreference(details);
+		return privPrefMgr.getPrefCache().removeAccCtrlPreference(details);
 	}
 
 
@@ -546,7 +604,7 @@ public class AccessControlPreferenceManager {
 	public ResponseItem evaluateAccCtrlPreference(
 			AccessControlPreferenceDetailsBean details, List<Condition> conditions) throws PrivacyException {
 
-		AccessControlPreferenceTreeModel model = this.prefCache.getAccCtrlPreference(details);
+		AccessControlPreferenceTreeModel model = privPrefMgr.getPrefCache().getAccCtrlPreference(details);
 
 		if (model!=null){
 			try {
@@ -581,16 +639,28 @@ public class AccessControlPreferenceManager {
 
 	public AccessControlPreferenceTreeModel getAccCtrlPreference(
 			AccessControlPreferenceDetailsBean details) {
-		return this.prefCache.getAccCtrlPreference(details);
+		return privPrefMgr.getPrefCache().getAccCtrlPreference(details);
 	}
 	public List<AccessControlPreferenceDetailsBean> getAccCtrlPreferenceDetails() {
-		return this.prefCache.getAccCtrlPreferenceDetails();
+		return privPrefMgr.getPrefCache().getAccCtrlPreferenceDetails();
 	}
 
 	public boolean storeAccCtrlPreference(
 			AccessControlPreferenceDetailsBean details,
 			AccessControlPreferenceTreeModel model) {
-		return this.prefCache.addAccCtrlPreference(details, model);
+		Hashtable<CtxIdentifier, ArrayList<AccessControlPreferenceDetailsBean>> newDetails = new Hashtable<CtxIdentifier, ArrayList<AccessControlPreferenceDetailsBean>>();
+		try {
+			CtxAttributeIdentifier ctxId = new CtxAttributeIdentifier(details.getResource().getDataIdUri());
+			ArrayList<AccessControlPreferenceDetailsBean> list = new ArrayList<AccessControlPreferenceDetailsBean>();
+			list.add(details);
+			newDetails.put(ctxId, list); 
+			privPrefMgr.getAccCtrlMonitor().monitorThisContext(newDetails);	
+		} catch (MalformedCtxIdentifierException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return privPrefMgr.getPrefCache().addAccCtrlPreference(details, model);
 	}
 
 
@@ -626,12 +696,12 @@ public class AccessControlPreferenceManager {
 						//JOptionPane.showMessageDialog(null, "Requestor: "+RequestorUtils.toString(detail.getRequestor())+" vs "+RequestorUtils.toString(RequestorUtils.toRequestorBean(requestor)));
 						//retrieve the preference, iterate through it, and retrieve all the conditions
 						AccessControlPreferenceTreeModel accCtrlPreference = this.getAccCtrlPreference(detail);
-						IPrivacyPreference rootPreference = accCtrlPreference.getRootPreference();
-						Enumeration<IPrivacyPreference> postorderEnumeration = rootPreference.postorderEnumeration();
+						PrivacyPreference rootPreference = accCtrlPreference.getRootPreference();
+						Enumeration<PrivacyPreference> postorderEnumeration = rootPreference.postorderEnumeration();
 						ArrayList<CtxIdentifier> ctxIds = new ArrayList<CtxIdentifier>();
 						while (postorderEnumeration.hasMoreElements()){
 
-							IPrivacyPreference nextElement = postorderEnumeration.nextElement();
+							PrivacyPreference nextElement = postorderEnumeration.nextElement();
 
 							if (nextElement.getUserObject()!=null){
 								//JOptionPane.showMessageDialog(null, "Processing element "+nextElement.getUserObject().toString());
@@ -675,29 +745,39 @@ public class AccessControlPreferenceManager {
 
 		return false;
 	}
-	public static void main(String[] args){
-		AccessControlPreferenceManager prefMgr = new AccessControlPreferenceManager(null, null, null, null, null, null, null, null, null);
 
-		List<Condition> conditions = new ArrayList<Condition>();
-		Condition condition = new Condition();
-		condition.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
-		condition.setValue("No");
-		Condition condition2 = new Condition();
-		condition2.setConditionConstant(ConditionConstants.DATA_RETENTION);
-		condition2.setValue("24");
-		conditions.add(condition2);
-		conditions.add(condition);
-		Action action = new Action();
-		action.setActionConstant(ActionConstants.READ);
-		AccessControlOutcome outcome = new AccessControlOutcome(PrivacyOutcomeConstantsBean.ALLOW);
-		PrivacyPreference pref = prefMgr.createPreferenceWithPrivacyConditions(conditions, action, outcome);
-		System.out.println(pref.getRoot());
-
-	}
 
 
 	public boolean deleteAccCtrlPreferences() {
-		return this.prefCache.removeAccCtrlPreferences();
+		return privPrefMgr.getPrefCache().removeAccCtrlPreferences();
+	}
+
+
+
+
+	@Override
+	public void handleInternalEvent(InternalEvent event) {
+		this.logging.debug("Received event: {}", event.geteventType());
+		if (event.geteventInfo() instanceof UserResponseEvent){
+			UserResponseEvent uREvent = (UserResponseEvent) event.geteventInfo();
+			this.userResponses.put(uREvent.getUuid(), uREvent);
+			synchronized (this.userResponses) {
+				this.userResponses.notifyAll();	
+			}
+			
+		}else{
+			logging.error("Received unknown eventInfo object {}", event.geteventInfo());
+		}
+		
+	}
+
+
+
+
+	@Override
+	public void handleExternalEvent(CSSEvent event) {
+		// TODO Auto-generated method stub
+		
 	}
 
 

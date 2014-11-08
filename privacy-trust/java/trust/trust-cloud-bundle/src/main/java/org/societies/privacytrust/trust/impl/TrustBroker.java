@@ -24,6 +24,7 @@
  */
 package org.societies.privacytrust.trust.impl;
 
+import java.util.Hashtable;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -57,6 +58,14 @@ import org.springframework.stereotype.Service;
 @Lazy(value = false)
 public class TrustBroker implements org.societies.api.privacytrust.trust.ITrustBroker, ITrustBroker {
 
+	Hashtable<String, Double> trusts;
+	public TrustBroker(){
+		trusts = new Hashtable<String, Double>();
+		trusts.put("google", 45.0);
+		trusts.put("hwu", 80.0);
+		trusts.put("bbc", 75.0);
+		trusts.put("itunes", 65.0);
+	}
 	@Override
 	public Future<Set<TrustRelationship>> retrieveTrustRelationships(
 			TrustQuery query) throws TrustException {
@@ -96,14 +105,17 @@ public class TrustBroker implements org.societies.api.privacytrust.trust.ITrustB
 				return new AsyncResult<Double>(0.0);
 			}
 			if (entityId.toLowerCase().contains("google")){
-				return new AsyncResult<Double>(45.0);
+				return new AsyncResult<Double>(this.trusts.get("google"));
 			}else if (entityId.toLowerCase().contains("hwu")){
-				return new AsyncResult<Double>(80.0);
+				return new AsyncResult<Double>(this.trusts.get("hwu"));
 			}else if (entityId.toLowerCase().contains("bbc")){
-				return new AsyncResult<Double>(75.0);
+				return new AsyncResult<Double>(this.trusts.get("bbc"));
 			}else if (entityId.toLowerCase().contains("itunes")){
-				return new AsyncResult<Double>(60.0);
+				return new AsyncResult<Double>(this.trusts.get("itunes"));
 			}else{
+				if (this.trusts.containsKey(entityId)){
+					return new AsyncResult<Double>(this.trusts.get(entityId));
+				}
 				return new AsyncResult<Double>(50.0);
 			}
 		}else{
@@ -111,6 +123,36 @@ public class TrustBroker implements org.societies.api.privacytrust.trust.ITrustB
 		}
 	}
 
+	@Override
+	public void updateTrustValue(TrustQuery query, Double trustValue) throws TrustException{
+		if (query==null){
+			throw new TrustInvalidArgumentException("TrustQuery is null");
+		}
+		if (trustValue == null){
+			throw new TrustInvalidArgumentException("Trust value is null");
+		}
+		TrustedEntityId trusteeId = query.getTrusteeId();
+		if (trusteeId.getEntityType().equals(TrustedEntityType.SVC)){
+			
+			String entityId = trusteeId.getEntityId();
+			if (entityId!=null){
+				if (entityId.toLowerCase().contains("google")){
+					this.trusts.put("google", trustValue);
+				}
+				else if (entityId.toLowerCase().contains("hwu")){
+					this.trusts.put("hwu", trustValue);
+				}else if (entityId.toLowerCase().contains("bbc")){
+					this.trusts.put("bbc", trustValue);
+				}else if (entityId.toLowerCase().contains("itunes")){
+					this.trusts.put("itunes", trustValue);
+				}else{
+					this.trusts.put(entityId, trustValue);
+				}
+			}
+		}else{
+			throw new TrustInvalidArgumentException("Trust entity type : "+trusteeId.getEntityType()+" is not allowed");
+		}
+	}
 	@Override
 	public Future<Boolean> removeTrustRelationships(TrustQuery query)
 			throws TrustException {

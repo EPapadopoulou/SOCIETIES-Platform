@@ -31,53 +31,45 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.JOptionPane;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.CtxException;
 import org.societies.api.context.model.CtxAttribute;
-import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelType;
 import org.societies.api.identity.IIdentity;
-import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
-import org.societies.api.identity.Requestor;
-import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
 import org.societies.api.schema.identity.RequestorBean;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
-import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.TrustPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.OperatorConstants;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPrivacyPreferenceTreeModel;
-import org.societies.privacytrust.privacyprotection.api.util.PrivacyPreferenceUtils;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.CtxTypes;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 
 
 public class PrivacyPreferenceMerger {
 
-	private ICtxBroker broker;
-	private PrivacyPreferenceManager ppMgr;
-	private IIdentityManager idMgr;
+	private PrivacyPreferenceManager privPrefMgr;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
-	public PrivacyPreferenceMerger(ICtxBroker broker, PrivacyPreferenceManager ppMgr){
-		this.broker = broker;
-		this.ppMgr = ppMgr;
-		this.idMgr = ppMgr.getIdm();
+	public PrivacyPreferenceMerger(PrivacyPreferenceManager ppMgr){
+		
+		this.privPrefMgr = ppMgr;
+		
 
 	}
 
@@ -86,25 +78,25 @@ public class PrivacyPreferenceMerger {
 		IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
 		details.setAffectedIdentity(selectedDPI.getJid());
 		details.setRequestor(requestor);
-		IPrivacyPreferenceTreeModel existingModel = ppMgr.getIDSPreference(details);
+		IPrivacyPreferenceTreeModel existingModel = privPrefMgr.getIDSPreference(details);
 		if (existingModel==null){
 			IDSPrivacyPreferenceTreeModel model;
 			try {
 			
 				model = new IDSPrivacyPreferenceTreeModel(details, this.createIDSPreference(snapshot, details));
-				this.ppMgr.storeIDSPreference(details, model);
+				this.privPrefMgr.storeIDSPreference(details, model);
 			} catch (InvalidFormatException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
 		}else{
-			IPrivacyPreference mergedPreference;
+			PrivacyPreference mergedPreference;
 			try {
 				mergedPreference = this.mergeIDSPreference(details, existingModel.getRootPreference(), snapshot);
 				if (mergedPreference!=null){
 					IDSPrivacyPreferenceTreeModel model = new IDSPrivacyPreferenceTreeModel(details, mergedPreference);
-					this.ppMgr.storeIDSPreference(details, model);
+					this.privPrefMgr.storeIDSPreference(details, model);
 				}
 			} catch (InvalidFormatException e) {
 				// TODO Auto-generated catch block
@@ -116,12 +108,12 @@ public class PrivacyPreferenceMerger {
 
 
 
-	public IPrivacyPreference mergeIDSPreference(IDSPreferenceDetailsBean d, IPrivacyPreference node, ContextSnapshot snapshot) throws InvalidFormatException{
+	public PrivacyPreference mergeIDSPreference(IDSPreferenceDetailsBean d, PrivacyPreference node, ContextSnapshot snapshot) throws InvalidFormatException{
 
 
 		if (node.isLeaf()){
-			this.logging.debug("existing node does not contain context condition. merging as leaf");
-			IPrivacyPreference p = new PrivacyPreference();
+			System.out.println("existing node does not contain context condition. merging as leaf");
+			PrivacyPreference p = new PrivacyPreference();
 			p.add(this.createIDSPreference(snapshot, d));
 			p = p.getRoot();
 			p.add(node);
@@ -132,13 +124,13 @@ public class PrivacyPreferenceMerger {
 		ArrayList<SingleRule> singleRules = this.convertToSingleRules(snapshot);
 
 
-		IPrivacyPreference mergedTree = node;
+		PrivacyPreference mergedTree = node;
 		for (int i = 0; i< singleRules.size(); i++){
 
 			SingleRule sr = singleRules.get(i);
-			//logging.debug("Merging new Single Rule: "+sr.toString());
-			//logging.debug("\twith: "+mergedTree.toTreeString());
-			IPrivacyPreference temp = merge(mergedTree, sr);
+			//System.out.println("Merging new Single Rule: "+sr.toString());
+			//System.out.println("\twith: "+mergedTree.toTreeString());
+			PrivacyPreference temp = merge(mergedTree, sr);
 			if (temp==null){
 				return null;
 			}
@@ -149,11 +141,11 @@ public class PrivacyPreferenceMerger {
 		return mergedTree;
 	}
 
-	public IPrivacyPreference mergeAccCtrlPreference(AccessControlPreferenceDetailsBean d, IPrivacyPreference existingPreference, IPrivacyPreference newPreference){
+	public PrivacyPreference mergeAccCtrlPreference(AccessControlPreferenceDetailsBean d, PrivacyPreference existingPreference, PrivacyPreference newPreference){
 		if (existingPreference.isLeaf()){
-			this.logging.debug("existing node does not contain context condition. merging as leaf");
+			System.out.println("existing node does not contain context condition. merging as leaf");
 			newPreference = newPreference.getRoot();
-			IPrivacyPreference p = new PrivacyPreference();
+			PrivacyPreference p = new PrivacyPreference();
 			p.add(newPreference);
 			p.add(existingPreference);
 			return p;
@@ -161,10 +153,10 @@ public class PrivacyPreferenceMerger {
 		
 		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
 		
-		IPrivacyPreference mergedTree = existingPreference;
+		PrivacyPreference mergedTree = existingPreference;
 		
 		for (SingleRule sr : newSingleRules){
-			IPrivacyPreference temp = merge(mergedTree, sr);
+			PrivacyPreference temp = merge(mergedTree, sr);
 			if (temp==null){
 				return null;
 			}
@@ -174,18 +166,41 @@ public class PrivacyPreferenceMerger {
 	}
 
 
+	public PrivacyPreference mergeAttrSelPreference(AttributeSelectionPreferenceDetailsBean d, PrivacyPreference existingPreference, PrivacyPreference newPreference){
+		if (existingPreference.isLeaf()){
+			System.out.println("existing node does not contain context condition. merging as leaf");
+			newPreference = newPreference.getRoot();
+			PrivacyPreference p = new PrivacyPreference();
+			p.add(newPreference);
+			p.add(existingPreference);
+			return p;
+		}
+		
+		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
+		
+		PrivacyPreference mergedTree = existingPreference;
+		
+		for (SingleRule sr : newSingleRules){
+			PrivacyPreference temp = merge(mergedTree, sr);
+			if (temp==null){
+				return null;
+			}
+			mergedTree = temp;
+		}
+		return mergedTree;
+	}
 
-	private IPrivacyPreference merge(IPrivacyPreference oldTree, SingleRule sr){
+	private PrivacyPreference merge(PrivacyPreference oldTree, SingleRule sr){
 		//IPreference newTree = null;
 		ArrayList<SingleRule> oldRules = this.convertToSingleRules(oldTree);
 
 		//check if we're in Situation 1 (same conditions different outcomes)
 		ArrayList<SingleRule> temp = this.checkConflicts(oldRules, sr);
 		if (temp.size()>0){
-			this.logging.debug("Situation 1, conflict can't be resolved");
+			System.out.println("Situation 1, conflict can't be resolved");
 			return null;
 		}
-		this.logging.debug("Not in situation 1");
+		System.out.println("Not in situation 1");
 
 		//check if we're in Situation 2 (100% match)
 		temp = this.checkMatches(oldRules, sr);
@@ -193,19 +208,19 @@ public class PrivacyPreferenceMerger {
 			//the confidence level of the matching outcome has been updated in the SingleRule. This should be reflected in the tree by reference
 			return oldTree;
 		}
-		this.logging.debug("Not in Situation 2");
+		System.out.println("Not in Situation 2");
 
 		//we're going to find a branch that has the most common conditions with this rule.
-		IPrivacyPreference commonNode = this.findCommonNode(oldTree, sr);
-
-
-
+		PrivacyPreference commonNode = this.findCommonNode(oldTree, sr);
+		
+		System.out.println("Found commonNode: "+commonNode);
 		if (null==commonNode){
-			IPrivacyPreference root = (IPrivacyPreference) oldTree.getRoot();
+			System.out.println("Did not find commonNode, adding to root of tree");
+			PrivacyPreference root = (PrivacyPreference ) oldTree.getRoot();
 			if (null==root.getUserObject()){
-				return this.addToNode((IPrivacyPreference) oldTree.getRoot(),sr);
+				return this.addToNode((PrivacyPreference ) oldTree.getRoot(),sr);
 			}
-			IPrivacyPreference newRoot = new PrivacyPreference();
+			PrivacyPreference newRoot = new PrivacyPreference();
 			newRoot.add(root);
 			return this.addToNode(newRoot, sr);
 		}
@@ -242,17 +257,17 @@ public class PrivacyPreferenceMerger {
 
 
 
-	private IPrivacyPreference findCommonNode(IPrivacyPreference ptn, SingleRule sr){
+	private PrivacyPreference findCommonNode(PrivacyPreference ptn, SingleRule sr){
 
 		CommonNodeCounter cnc = new CommonNodeCounter();
 
 		//if it's an empty root, we have to repeat with all its children
 		if (ptn.getUserObject() == null){
-			this.logging.debug("current node is empty root");
-			Enumeration<IPrivacyPreference> e = ptn.children();
+			System.out.println("current node is empty root");
+			Enumeration<PrivacyPreference> e = ptn.children();
 			while (e.hasMoreElements()){
-				IPrivacyPreference p = e.nextElement();
-				this.logging.debug("processing child :"+p.toString()+" which is child of: "+ptn.toString());
+				PrivacyPreference p = e.nextElement();
+				System.out.println("processing child :"+p.toString()+" which is child of: "+ptn.toString());
 				cnc = findCommonNode(p,sr, cnc);
 			}
 		}else{
@@ -263,20 +278,20 @@ public class PrivacyPreferenceMerger {
 		return cnc.getMostCommonNode();
 	}
 
-	private CommonNodeCounter findCommonNode(IPrivacyPreference ptn, SingleRule sr, CommonNodeCounter cnc){
+	private CommonNodeCounter findCommonNode(PrivacyPreference ptn, SingleRule sr, CommonNodeCounter cnc){
 
 		//unlikely
 		if (ptn.isLeaf()){
-			this.logging.debug("current node is leaf. returning common node counter");
+			System.out.println("current node is leaf. returning common node counter");
 			return cnc;
 		}
 
 		IPrivacyPreferenceCondition pc = (IPrivacyPreferenceCondition) ptn.getUserObject();
 		//if they have a common condition, go to the children, otherwise, return and continue with siblings
 		if (sr.hasCondition(pc)){
-			this.logging.debug("Single rule: "+sr.toString()+" has common node: "+pc.toString());
+			System.out.println("Single rule: "+sr.toString()+" has common node: "+pc.toString());
 			cnc.add(ptn, ptn.getLevel());
-			Enumeration<IPrivacyPreference> e = ptn.children();
+			Enumeration<PrivacyPreference> e = ptn.children();
 			while (e.hasMoreElements()){
 				cnc = findCommonNode(e.nextElement(),sr,cnc);
 			}
@@ -290,7 +305,7 @@ public class PrivacyPreferenceMerger {
 		for (int i=0; i< oldRules.size(); i++){
 			SingleRule sr = oldRules.get(i);
 			if (sr.conflicts(newRule)){
-				this.logging.debug("single rule: "+sr.toString()+" conflicts with: "+newRule.toString());
+				System.out.println("single rule: "+sr.toString()+" conflicts with: "+newRule.toString());
 				oldRules.set(i, this.resolveConflict(sr, newRule));
 				return oldRules;
 			}
@@ -304,13 +319,13 @@ public class PrivacyPreferenceMerger {
 		return oldRule;
 	}
 
-	public ArrayList<SingleRule> convertToSingleRules(IPrivacyPreference ptn){
+	public ArrayList<SingleRule> convertToSingleRules(PrivacyPreference ptn){
 		ArrayList<SingleRule> singleRules = new ArrayList<SingleRule>();
 		//Enumeration<IPreference> newNodeEnum = ptn.depthFirstEnumeration();
-		Enumeration<IPrivacyPreference> newNodeEnum = ptn.preorderEnumeration();
+		Enumeration<PrivacyPreference> newNodeEnum = ptn.preorderEnumeration();
 		//we're going to construct SingleRule objects from the new tree to use as input to merge with the old tree
 		while (newNodeEnum.hasMoreElements()){
-			IPrivacyPreference temp = (IPrivacyPreference) newNodeEnum.nextElement();
+			PrivacyPreference temp = (PrivacyPreference ) newNodeEnum.nextElement();
 			if (temp.isLeaf()){
 				Object[] userObjs = temp.getUserObjectPath();
 				SingleRule sr = new SingleRule();
@@ -329,7 +344,7 @@ public class PrivacyPreferenceMerger {
 		}	
 
 		for (int i=0; i<singleRules.size(); i++){
-			logging.debug("::"+singleRules.get(i).toString());
+			System.out.println("::"+singleRules.get(i).toString());
 		}
 		return singleRules;
 	}
@@ -346,12 +361,12 @@ public class PrivacyPreferenceMerger {
 		srlist.add(sr);
 		return srlist;
 	}
-	private IPrivacyPreference createIDSPreference(ContextSnapshot snapshot, IDSPreferenceDetailsBean details) throws InvalidFormatException{
-		IdentitySelectionPreferenceOutcome outcome = new IdentitySelectionPreferenceOutcome(this.idMgr.fromJid(details.getAffectedIdentity()));
-		IPrivacyPreference p = new PrivacyPreference(outcome);
+	private PrivacyPreference createIDSPreference(ContextSnapshot snapshot, IDSPreferenceDetailsBean details) throws InvalidFormatException{
+		IdentitySelectionPreferenceOutcome outcome = new IdentitySelectionPreferenceOutcome(this.privPrefMgr.getIdm().fromJid(details.getAffectedIdentity()));
+		PrivacyPreference p = new PrivacyPreference(outcome);
 		List<SingleContextAttributeSnapshot> list = snapshot.getList();
 		for (SingleContextAttributeSnapshot s : list){
-			IPrivacyPreference temp = new PrivacyPreference(this.getContextConditionPreference(s));
+			PrivacyPreference temp = new PrivacyPreference(this.getContextConditionPreference(s));
 			temp.add(p);
 			p = temp;
 
@@ -362,7 +377,7 @@ public class PrivacyPreferenceMerger {
 
 	private IPrivacyPreferenceCondition getContextConditionPreference(SingleContextAttributeSnapshot attrSnapshot){
 		ContextPreferenceCondition condition = new ContextPreferenceCondition(attrSnapshot.getId(),OperatorConstants.EQUALS, attrSnapshot.getValue());
-		//IPrivacyPreference pref = new PrivacyPreference(condition); 
+		//PrivacyPreference pref = new PrivacyPreference(condition); 
 		return condition;
 	}
 	private ContextSnapshot takeSnapshot(){
@@ -385,12 +400,12 @@ public class PrivacyPreferenceMerger {
 	private SingleContextAttributeSnapshot takeAttributeSnapshot(String type){
 		CtxIdentifier id;
 		try {
-			List<CtxIdentifier> l = this.broker.lookup(CtxModelType.ATTRIBUTE, type).get();
+			List<CtxIdentifier> l = this.privPrefMgr.getCtxBroker().lookup(CtxModelType.ATTRIBUTE, type).get();
 			if (l.size()==0){
 				return null;
 			}
 			id = l.get(0);
-			CtxAttribute attr = (CtxAttribute) this.broker.retrieve(id);
+			CtxAttribute attr = (CtxAttribute) this.privPrefMgr.getCtxBroker().retrieve(id);
 			SingleContextAttributeSnapshot attrSnapshot = new SingleContextAttributeSnapshot(attr);
 			return attrSnapshot;
 		} catch (CtxException e) {
@@ -407,48 +422,69 @@ public class PrivacyPreferenceMerger {
 	}
 
 
-	private IPrivacyPreference addToNode(IPrivacyPreference ptn, SingleRule sr){
+	private PrivacyPreference addToNode(PrivacyPreference ptn, SingleRule sr){
 
-		logging.debug("BEFORE REMOVAL: "+sr.toString());
+		System.out.println("BEFORE REMOVAL: "+sr.toString());
 		if (null!=ptn.getUserObject()){
-			logging.debug(" found common node: "+ptn.getUserObject().toString());
+			System.out.println(" found common node: "+ptn.getUserObject().toString());
 			//IPreferenceCondition[] cons = new IPreferenceCondition[ptn.getLevel()];
 			Object[] objs = ptn.getUserObjectPath();
 
 			for (int i = 0; i< objs.length; i++){
 				if (objs[i] instanceof ContextPreferenceCondition){
 					ContextPreferenceCondition con = (ContextPreferenceCondition) objs[i];
-					logging.debug(" removing conditions");
+					System.out.println(" removing conditions");
 					if (sr.hasCondition(con)){
 						sr.removeCondition(con);
-						logging.debug(" REMOVED "+con.toString());
+						System.out.println(" REMOVED "+con.toString());
+					}
+				}else 
+				if (objs[i] instanceof TrustPreferenceCondition){
+					TrustPreferenceCondition con = (TrustPreferenceCondition) objs[i];
+					System.out.println(" removing conditions");
+					if (sr.hasCondition(con)){
+						sr.removeCondition(con);
+						System.out.println(" REMOVED "+con.toString());
+					}
+				}else if (objs[i] instanceof PrivacyCondition){
+					PrivacyCondition con = (PrivacyCondition) objs[i];
+					System.out.println(" removing conditions");
+					if (sr.hasCondition(con)){
+						sr.removeCondition(con);
+						System.out.println(" REMOVED "+con.toString());
 					}
 				}
+					
 			}
 			if (ptn.getUserObject() instanceof ContextPreferenceCondition){
 				if (sr.hasCondition((ContextPreferenceCondition) ptn.getUserObject())){
 					sr.removeCondition((ContextPreferenceCondition) ptn.getUserObject());
+				}else if (sr.hasCondition((TrustPreferenceCondition) ptn.getUserObject())){
+					sr.removeCondition((TrustPreferenceCondition) ptn.getUserObject());
+				}else if (sr.hasCondition((PrivacyCondition) ptn.getUserObject())){
+					sr.removeCondition((PrivacyCondition) ptn.getUserObject());
 				}
+				
 			}
 		}else{
-			logging.debug(" not found common node");
+			System.out.println(" not found common node");
 		}
 
 
-		logging.debug("AFTER REMOVAL: "+sr.toString());
-		IPrivacyPreference leaf = new PrivacyPreference(sr.getOutcome());
+		System.out.println("AFTER REMOVAL: "+sr.toString());
+		PrivacyPreference leaf = new PrivacyPreference(sr.getOutcome());
 		for (int i = 0; i< sr.getConditions().size(); i++){
 			/*ContextPreferenceCondition pc = (ContextPreferenceCondition) ptn.getUserObject();
 			if (null==pc){
-				logging.debug("weird");
+				System.out.println("weird");
 			}
 			if (sr.getConditions().get(i) == null){
-				logging.debug("even weirder");
+				System.out.println("even weirder");
 			}
 			*/
 			//log("pc: "+pc.toString());
-			logging.debug("sr con: "+sr.getConditions().get(i).toString());
-			IPrivacyPreference temp = new PrivacyPreference(sr.getConditions().get(i));
+			System.out.println("sr con: "+sr.getConditions().get(i).toString());
+			PrivacyPreference temp = new PrivacyPreference(sr.getConditions().get(i));
 			ptn.add(temp);
 			ptn = temp;
 
@@ -456,17 +492,17 @@ public class PrivacyPreferenceMerger {
 		}
 
 		ptn.add(leaf);
-		return (IPrivacyPreference) ptn.getRoot();
+		return (PrivacyPreference ) ptn.getRoot();
 	}
 
 	public PPNPrivacyPreferenceTreeModel mergePPNPreference(
 			PPNPrivacyPreferenceTreeModel newModel,
 			PPNPrivacyPreferenceTreeModel existingModel) {
 		
-		IPrivacyPreference existingPreference = existingModel.getRootPreference();
-		IPrivacyPreference newPreference = newModel.getRootPreference();
+		PrivacyPreference existingPreference = existingModel.getRootPreference();
+		PrivacyPreference newPreference = newModel.getRootPreference();
 		if (existingPreference.isLeaf()){
-			this.logging.debug("existing node does not contain context condition. merging as leaf");
+			System.out.println("existing node does not contain context condition. merging as leaf");
 			if (newPreference.isLeaf()){
 				PPNPOutcome newOutcome = (PPNPOutcome) newPreference.getOutcome();
 				PPNPOutcome existingOutcome = (PPNPOutcome) existingPreference.getOutcome();
@@ -475,7 +511,7 @@ public class PrivacyPreferenceMerger {
 					return existingModel;
 				}
 			}
-			IPrivacyPreference p = new PrivacyPreference();
+			PrivacyPreference p = new PrivacyPreference();
 			p.add(newPreference);
 			p.add(existingPreference);
 			PPNPrivacyPreferenceTreeModel model = new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(), p);
@@ -485,12 +521,12 @@ public class PrivacyPreferenceMerger {
 		
 		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
 		
-		this.logging.debug(" [Merging] new tree is: "+newSingleRules.toString()+" and old tree is: "+this.convertToSingleRules(existingPreference).toString());
+		System.out.println(" [Merging] new tree is: "+newSingleRules.toString()+" and old tree is: "+this.convertToSingleRules(existingPreference).toString());
 		
-		IPrivacyPreference mergedTree = existingPreference;
+		PrivacyPreference mergedTree = existingPreference;
 		
 		for (SingleRule sr : newSingleRules){
-			IPrivacyPreference temp = merge(mergedTree, sr);
+			PrivacyPreference temp = merge(mergedTree, sr);
 			if (temp==null){
 				return null;
 			}
@@ -500,6 +536,51 @@ public class PrivacyPreferenceMerger {
 		PPNPrivacyPreferenceTreeModel model = new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(), mergedTree);
 		return model;
 	}
+
+	public DObfPreferenceTreeModel mergeDObfPreference(DObfPreferenceTreeModel existingDObfModel,
+			DObfPreferenceTreeModel newDObfModel) {
+		PrivacyPreference existingPreference = existingDObfModel.getRootPreference();
+		PrivacyPreference newPreference = newDObfModel.getRootPreference();
+		
+		if (existingPreference.isLeaf()){
+			System.out.println("existing node does not contain context condition merging as leaf");
+			if (newPreference.isLeaf()){
+				System.out.println("existing and new preferences are leaf prefs");
+				DObfOutcome newOutcome = (DObfOutcome) newPreference.getOutcome();
+				DObfOutcome existingOutcome = (DObfOutcome) existingPreference.getOutcome();
+				if (newOutcome.equals(existingOutcome)){
+					existingOutcome.updateConfidenceLevel(true);
+					return existingDObfModel;
+				}
+			}
+			PrivacyPreference p = new PrivacyPreference();
+			p.add(newPreference);
+			p.add(existingPreference);
+			DObfPreferenceTreeModel model = new DObfPreferenceTreeModel(existingDObfModel.getDetails(), p);
+			return model;
+		}
+		
+		
+		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
+		
+		System.out.println(" [Merging] new tree is: "+newSingleRules.toString()+" and old tree is: "+this.convertToSingleRules(existingPreference).toString());
+		
+		PrivacyPreference mergedTree = existingPreference;
+		
+		for (SingleRule sr : newSingleRules){
+			PrivacyPreference temp = merge(mergedTree, sr);
+			if (temp==null){
+				return null;
+			}
+			mergedTree = temp;
+		}
+		
+		DObfPreferenceTreeModel model = new  DObfPreferenceTreeModel(existingDObfModel.getDetails(), mergedTree);
+		return model;
+		
+	}
+
+
 
 
 

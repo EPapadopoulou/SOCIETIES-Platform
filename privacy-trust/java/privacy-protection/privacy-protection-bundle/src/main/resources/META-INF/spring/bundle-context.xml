@@ -40,6 +40,8 @@
 		<property name="privacyPreferenceManager" ref="privacyPreferenceManager"></property>
 		<property name="privacyAgreementManager" ref="privacyAgreementManager"></property>
 		<property name="identitySelection" ref="identitySelection"></property>
+		<property name="privacyDataManagerInternal" ref="privacyDataManagerInternal"></property>
+		<property name="trustBroker" ref="trustBroker"></property>
 		</bean>
 	<!-- ## Privacy Data Management Configuration ## -->
 

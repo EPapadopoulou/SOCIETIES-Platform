@@ -25,15 +25,17 @@
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging;
 
 import java.util.ArrayList;
-import java.util.List;
 
+import javax.swing.tree.TreeNode;
+
+import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.TrustPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionOutcome;
@@ -55,6 +57,27 @@ public class SingleRule{
 		this.conditions = new ArrayList<IPrivacyPreferenceCondition>();
 	}
 
+	public SingleRule(PrivacyPreference pref) throws PrivacyException{
+		this.conditions = new ArrayList<IPrivacyPreferenceCondition>();
+		if (pref.isBranch()){
+			throw new PrivacyException("Preference is not leaf");
+		}
+		TreeNode[] path = pref.getPath();
+
+		for (TreeNode node : path){
+			if (node instanceof PrivacyPreference){
+				PrivacyPreference prefNode = (PrivacyPreference) node;
+				if (prefNode.isLeaf()){
+					this.outcome = prefNode.getOutcome();
+				}else{
+					if (prefNode.getUserObject()!=null){
+						this.conditions.add(prefNode.getCondition());
+					}
+				}
+
+			}
+		}
+	}
 	public void setConditions(ArrayList<IPrivacyPreferenceCondition> conditions) {
 		this.conditions = conditions;
 	}
@@ -86,39 +109,39 @@ public class SingleRule{
 		if (condition instanceof ContextPreferenceCondition){
 			return "ContextCondition: "+condition.getType()+" == "+((ContextPreferenceCondition) condition).getValue();
 		}
-		
+
 		if (condition instanceof PrivacyCondition){
 			return "PrivacyCondition: "+((PrivacyCondition) condition).getCondition().getConditionConstant()+" == "+((PrivacyCondition) condition).getCondition().getValue();
 		}
-		
+
 		if (condition instanceof TrustPreferenceCondition){
 			return "TrustCondition: trust =="+((TrustPreferenceCondition) condition).getTrustThreshold();
 		}
-		
+
 		return "condition type not recognised";
 	}
-	
+
 	private String toStringOutcome(IPrivacyOutcome outcome){
 		StringBuilder sb = new StringBuilder();
 		sb.append("Outcome: ");
 		if (outcome instanceof PPNPOutcome){
 			sb.append(ConditionUtils.toString(((PPNPOutcome) outcome).getCondition()));
 		}else		
-		if (outcome instanceof AccessControlOutcome){
-			sb.append(((AccessControlOutcome) outcome).getEffect().toString());
-		}else
-		
-		if (outcome instanceof IdentitySelectionPreferenceOutcome){
-			sb.append("Select identity: "+((IdentitySelectionPreferenceOutcome) outcome).getIdentity());
-		}else
-		
-		if (outcome instanceof AttributeSelectionOutcome){
-			sb.append("Use ctxID: "+((AttributeSelectionOutcome) outcome).getCtxID().getUri());
-		}else
-		
-		if (outcome instanceof DObfOutcome){
-			sb.append("Apply DOBF level "+((DObfOutcome) outcome).getObfuscationLevel());
-		}
+			if (outcome instanceof AccessControlOutcome){
+				sb.append(((AccessControlOutcome) outcome).getEffect().toString());
+			}else
+
+				if (outcome instanceof IdentitySelectionPreferenceOutcome){
+					sb.append("Select identity: "+((IdentitySelectionPreferenceOutcome) outcome).getIdentity());
+				}else
+
+					if (outcome instanceof AttributeSelectionOutcome){
+						sb.append("Use ctxID: "+((AttributeSelectionOutcome) outcome).getCtxID().getUri());
+					}else
+
+						if (outcome instanceof DObfOutcome){
+							sb.append("Apply DOBF level "+((DObfOutcome) outcome).getObfuscationLevel());
+						}
 		return sb.toString();
 	}
 	public boolean hasCondition(IPrivacyPreferenceCondition pc){
@@ -161,17 +184,43 @@ public class SingleRule{
 
 	public void removeCondition(IPrivacyPreferenceCondition pc){
 		//CtxAttributeIdentifier ctxId = pc.getCtxIdentifier();
-		String contextType = ((ContextPreferenceCondition) pc).getCtxIdentifier().getType();
-		String value = ((ContextPreferenceCondition) pc).getValue();
-		OperatorConstants op = ((ContextPreferenceCondition) pc).getOperator();
+		if (pc instanceof ContextPreferenceCondition){
+			String contextType = ((ContextPreferenceCondition) pc).getCtxIdentifier().getType();
+			String value = ((ContextPreferenceCondition) pc).getValue();
+			OperatorConstants op = ((ContextPreferenceCondition) pc).getOperator();
 
 
-		for (int i=0; i< this.conditions.size(); i++){
-			IPrivacyPreferenceCondition con = this.conditions.get(i);
-			if (((ContextPreferenceCondition) con).getCtxIdentifier().getType().equals(contextType) && ((ContextPreferenceCondition) con).getValue().equals(value) && ((ContextPreferenceCondition) con).getOperator().equals(op)){
-				this.conditions.remove(i);
+			for (int i=0; i< this.conditions.size(); i++){
+				IPrivacyPreferenceCondition con = this.conditions.get(i);
+				if (con instanceof ContextPreferenceCondition){
+				if (((ContextPreferenceCondition) con).getCtxIdentifier().getType().equals(contextType) && ((ContextPreferenceCondition) con).getValue().equals(value) && ((ContextPreferenceCondition) con).getOperator().equals(op)){
+					this.conditions.remove(i);
+				}
+				}
+			}
+		}else if (pc instanceof PrivacyCondition){
+			Condition condition = ((PrivacyCondition) pc).getCondition();
+			
+			for (int i=0; i<this.conditions.size(); i++){
+				IPrivacyPreferenceCondition con = this.conditions.get(i);
+				if (con instanceof PrivacyCondition){
+					if (((PrivacyCondition) con).getCondition().getConditionConstant().equals(condition.getConditionConstant()) && ((PrivacyCondition) con).getCondition().getValue().equals(condition.getValue())){
+						this.conditions.remove(i);
+					}
+				}
+			}
+		}else if (pc instanceof TrustPreferenceCondition){
+			Double trustValue = ((TrustPreferenceCondition) pc).getTrustThreshold();
+			for (int i=0; i<this.conditions.size(); i++){
+				IPrivacyPreferenceCondition con = this.conditions.get(i);
+				if (con instanceof TrustPreferenceCondition){
+					if (((TrustPreferenceCondition) con).getTrustThreshold()==trustValue){
+						this.conditions.remove(i);
+					}
+				}
 			}
 		}
+
 	}
 
 	public boolean equals(SingleRule sr){
@@ -212,7 +261,7 @@ public class SingleRule{
 		return this.hasSameConditions(sr);
 
 	}
-	
-	
+
+
 }
 

@@ -54,14 +54,14 @@ import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.internal.useragent.feedback.IUserFeedback;
 import org.societies.api.osgi.event.IEventMgr;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Action;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Condition;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestItem;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.RequestPolicy;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.Resource;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ActionConstants;
-import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.ConditionConstants;
 import org.societies.api.schema.identity.DataIdentifierScheme;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
+import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
 import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.CtxTypes;
@@ -75,7 +75,7 @@ import org.springframework.scheduling.annotation.AsyncResult;
  *
  */
 public class TestEvaluation {
-
+/*
 	ICtxBroker ctxBroker = Mockito.mock(ICtxBroker.class);
 	ITrustBroker trustBroker = Mockito.mock(ITrustBroker.class);
 	IPrivacyDataManagerInternal  privacyDataManager = Mockito.mock(IPrivacyDataManagerInternal.class);
@@ -203,5 +203,5 @@ public class TestEvaluation {
 		IIdentity cisId = new MyIdentity(IdentityType.CIS, "Holidays", "domain.com");
 		return new RequestorCis(requestorId, cisId);
 	}
-	
+	*/
 }

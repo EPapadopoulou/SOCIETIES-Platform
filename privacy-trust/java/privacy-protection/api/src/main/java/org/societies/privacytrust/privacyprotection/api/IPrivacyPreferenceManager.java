@@ -30,6 +30,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import org.societies.api.context.model.CtxIdentifier;
+import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
@@ -128,7 +129,7 @@ public interface IPrivacyPreferenceManager {
 	 * @param details	the details to which the preference refers to
 	 * @return			the obfuscation level that should be set 
 	 */
-	public double evaluateDObfPreference(DObfPreferenceDetailsBean details);
+	public Integer evaluateDObfPreference(DObfPreferenceDetailsBean details);
 
 	/**
 	 * Method to evaluate the access control preferences for the specified details
@@ -318,6 +319,9 @@ public interface IPrivacyPreferenceManager {
 	 * @return			true if successfully deleted, false otherwise
 	 */
 	public boolean deleteAttSelPreferences();
+	
+	
+	public HashMap<CtxModelObject, Integer> getObfuscationLevel(RequestorBean requestor, List<CtxModelObject> ctxDataList);
 	
 	
 		

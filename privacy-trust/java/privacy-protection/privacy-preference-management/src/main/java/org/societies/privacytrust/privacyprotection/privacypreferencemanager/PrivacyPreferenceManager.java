@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.comm.xmpp.interfaces.ICommManager;
 import org.societies.api.context.model.CtxIdentifier;
+import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
@@ -112,10 +113,10 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 	private IDSPreferenceManager idsMgr;
 	private AttrSelPreferenceManager attrSelPrefMgr;
 	private IEventMgr eventMgr;
-	
+
 	private AccCtrlMonitor accCtrlMonitor;
-	
-	
+
+
 	private AccessControlPreferenceCreator accCtrlPreferenceCreator;
 	private DObfPreferenceCreator dobfPreferenceCreator;
 	private PPNPreferenceMerger ppnPreferenceMerger;
@@ -132,58 +133,59 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 	public void initialisePrivacyPreferenceManager(ICtxBroker ctxBroker, ITrustBroker trustBroker){
 		this.ctxBroker = ctxBroker;
 		this.trustBroker = trustBroker;
-		this.privacyPCM = new PrivacyPreferenceConditionMonitor(ctxBroker, this, privacyDataManagerInternal, commsMgr);
-		prefCache = new PreferenceCache(ctxBroker, this.idm);
-		contextCache = new PrivateContextCache(ctxBroker);
+		this.initialisePrivacyPreferenceManager();
 
 	}
 
 	public void initialisePrivacyPreferenceManager(){
 		this.userIdentity = this.idm.getThisNetworkNode();
-		prefCache = new PreferenceCache(ctxBroker, this.idm);
-		
-		this.privacyPCM = new PrivacyPreferenceConditionMonitor(ctxBroker, this, this.privacyDataManagerInternal, commsMgr);
-		this.contextCache = new PrivateContextCache(ctxBroker);
+		prefCache = new PreferenceCache(this);
+
+		//this.privacyPCM = new PrivacyPreferenceConditionMonitor(this);
+		this.contextCache = new PrivateContextCache(this);
 		this.accCtrlPreferenceCreator = new AccessControlPreferenceCreator(this);
 		this.ppnPreferenceMerger = new PPNPreferenceMerger(this);
 		this.idsPreferenceCreator = new IDSPreferenceCreator(this);
 		this.attrSelPreferenceCreator = new AttrSelPreferenceCreator(this);
-		negotiationListener = new NegotiationListener(this);
+		this.negotiationListener = new NegotiationListener(this);
 		this.dobfPreferenceCreator = new DObfPreferenceCreator(this);
-		accCtrlMonitor = new AccCtrlMonitor(this);
+		this.accCtrlMonitor = new AccCtrlMonitor(this);
+		logging.debug("Initialised {}", this.getClass().getName());
 	}
 
 
 
 	public AccessControlPreferenceManager getAccessControlPreferenceManager(){
+
 		if (this.accCtrlMgr==null){
-			accCtrlMgr = new AccessControlPreferenceManager(prefCache, contextCache, userFeedback, trustBroker, ctxBroker, getAgreementMgr(), idm, dobfPreferenceCreator, privacyDataManagerInternal);
+			
+			accCtrlMgr = new AccessControlPreferenceManager(this);
 		}
 		return accCtrlMgr;
 	}
 
 	private PPNegotiationPreferenceManager getPPNegotiationPreferenceManager(){
 		if (this.ppnMgr==null){
-			ppnMgr = new PPNegotiationPreferenceManager(prefCache, contextCache, privacyPCM, trustBroker, this.userIdentity);
+			ppnMgr = new PPNegotiationPreferenceManager(this);
 		}
 		return ppnMgr;
 	}
 
 	private DObfPrivacyPreferenceManager getDObfPreferenceManager(){
-		DObfPrivacyPreferenceManager dobfMgr = new DObfPrivacyPreferenceManager(prefCache, contextCache, trustBroker, this.userIdentity);
+		DObfPrivacyPreferenceManager dobfMgr = new DObfPrivacyPreferenceManager(this);
 		return dobfMgr;
 	}
 
 	private IDSPreferenceManager getIDSPreferenceManager(){
 		if (idsMgr ==null){
-			idsMgr = new IDSPreferenceManager(prefCache, contextCache, trustBroker, this.userIdentity);
+			idsMgr = new IDSPreferenceManager(this);
 		}
 		return idsMgr;
 	}
 
 	private AttrSelPreferenceManager getAttrSelPreferenceManager(){
 		if (attrSelPrefMgr==null){
-			attrSelPrefMgr = new AttrSelPreferenceManager(this, this.prefCache);
+			attrSelPrefMgr = new AttrSelPreferenceManager(this);
 		}
 		return attrSelPrefMgr;
 	}
@@ -201,7 +203,7 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 		AccessControlPreferenceManager  accCtrlMgr = getAccessControlPreferenceManager();
 		if (dataIds.size()==1){
 			List<ResponseItem> permissions = new ArrayList<ResponseItem>();
-			
+
 			permissions.add(this.checkPermission(requestor, dataIds.get(0), action));
 			return permissions;
 		}else{
@@ -219,7 +221,7 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 					throws PrivacyException {
 		AccessControlPreferenceManager  accCtrlMgr = getAccessControlPreferenceManager();
 		ResponseItem item = accCtrlMgr.checkPermission(requestor, dataIds, action);
-		
+
 		this.logging.info("checkPermission for requestor: "+org.societies.api.identity.util.RequestorUtils.toString(requestor)+" on : "+item.getRequestItem().getResource().getDataType()+" for action: "+item.getRequestItem().getActions().get(0)+". Returning Decision: "+item.getDecision());
 
 		return item;
@@ -246,8 +248,8 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 		return permissions;
 	}
 
-	
-	
+
+
 
 	@Override
 	public boolean deleteAccCtrlPreference(
@@ -272,9 +274,9 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 	@Override
 	public boolean deleteAttSelPreference(
 			AttributeSelectionPreferenceDetailsBean details) {
-		
+
 		return this.getAttrSelPreferenceManager().deleteAttSelPreference(details);
-		
+
 	}
 
 
@@ -302,7 +304,7 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 		List<Condition> conditions = new ArrayList<Condition>();
 		try {
 			AgreementEnvelope agreementEnv = this.agreementMgr.getAgreement(RequestorUtils.toRequestor(details.getRequestor(), this.idm));
-			
+
 			if (agreementEnv!=null){
 				IAgreement agreement = agreementEnv.getAgreement();
 
@@ -338,7 +340,7 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 		return this.getAttrSelPreferenceManager().evaluateAttributeSelectionPreferences(agreement);
 	}
 	@Override
-	public double evaluateDObfPreference(DObfPreferenceDetailsBean details) {
+	public Integer evaluateDObfPreference(DObfPreferenceDetailsBean details) {
 		return this.getDObfPreferenceManager().evaluateDObfPreference(details);
 	}
 
@@ -353,7 +355,7 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 	public IIdentity evaluateIDSPreferences(Agreement agreement,
 			List<IIdentity> identities) {
 		return this.getIDSPreferenceManager().evaluateIDSPreferences(agreement, identities);
-		
+
 	}
 
 
@@ -672,8 +674,63 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 	}
 
 
+/*	@Override
+	public HashMap<CtxModelObject, Integer> getObfuscationLevel(
+			RequestorBean requestor, List<CtxModelObject> ctxDataList) {
+		HashMap<CtxModelObject, Integer> map = new HashMap<CtxModelObject, Integer>();
+		for (CtxModelObject ctxModelObject : ctxDataList){
+			DObfPreferenceDetailsBean details = new DObfPreferenceDetailsBean();
+			details.setRequestor(requestor);
+			CtxIdentifier ctxId = ctxModelObject.getId();
+			details.setResource(ResourceUtils.create(ctxId));
+			 Integer obfLevel = this.getDObfPreferenceManager().evaluateDObfPreference(details);
+			if (obfLevel>=0){
+				map.put(ctxModelObject, new Integer(obfLevel));
+			}else{
+				map.put(ctxModelObject, new Integer(0));
+			}
+		}
+
+		return map;
+	}
+
+*/
 
 
+	@Override
+	public HashMap<CtxModelObject, Integer> getObfuscationLevel(
+			RequestorBean requestor, List<CtxModelObject> ctxDataList) {
+		return this.getDObfPreferenceManager().getObfuscationLevel(requestor, ctxDataList);
+	}
 
+
+	public void setAccCtrlMonitor(AccCtrlMonitor accCtrlMonitor) {
+		this.accCtrlMonitor = accCtrlMonitor;
+	}
+
+
+	public DObfPreferenceCreator getDobfPreferenceCreator() {
+		return dobfPreferenceCreator;
+	}
+
+
+	public void setDobfPreferenceCreator(DObfPreferenceCreator dobfPreferenceCreator) {
+		this.dobfPreferenceCreator = dobfPreferenceCreator;
+	}
+
+
+	public void setContextCache(PrivateContextCache contextCache) {
+		this.contextCache = contextCache;
+	}
+
+
+	public PreferenceCache getPrefCache() {
+		return prefCache;
+	}
+
+
+	public void setPrefCache(PreferenceCache prefCache) {
+		this.prefCache = prefCache;
+	}
 }
 

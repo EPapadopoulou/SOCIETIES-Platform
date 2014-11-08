@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IdentityType;
-import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
@@ -42,13 +41,11 @@ import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.identity.RequestorCisBean;
 import org.societies.api.schema.identity.RequestorServiceBean;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PreferenceEvaluator;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PrivateContextCache;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.cache.PreferenceCache;
 
 /**
  * @author Eliza
@@ -56,18 +53,17 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.man
  */
 public class IDSPreferenceManager {
 
-	private final PreferenceCache prefCache;
-	private final PrivateContextCache contextCache;
-	private ITrustBroker trustBroker;
-	private IIdentity userIdentity;
+	
+	private final IIdentity userIdentity;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
+	private PrivacyPreferenceManager privPrefMgr;
 
 
-	public IDSPreferenceManager(PreferenceCache prefCache, PrivateContextCache contextCache, ITrustBroker trustBroker, IIdentity userIdentity){
-		this.prefCache = prefCache;
-		this.contextCache = contextCache;
-		this.trustBroker = trustBroker;
-		this.userIdentity = userIdentity;
+	
+	
+	public IDSPreferenceManager(PrivacyPreferenceManager privPrefMgr){
+		this.privPrefMgr = privPrefMgr;
+		this.userIdentity = privPrefMgr.getIdm().getThisNetworkNode();
 		
 	}
 	private IIdentity evaluateIDSPreferenceIrrespectiveOfRequestor(Agreement agreement, List<IIdentity> identities){
@@ -75,7 +71,7 @@ public class IDSPreferenceManager {
 		for (int i=0; i<identities.size(); i++){
 			IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
 			details.setAffectedIdentity(identities.get(i).getJid());
-			IPrivacyPreferenceTreeModel model = prefCache.getIDSPreference(details);
+			IPrivacyPreferenceTreeModel model = privPrefMgr.getPrefCache().getIDSPreference(details);
 
 			if (model!=null){
 				IdentitySelectionPreferenceOutcome outcome = (IdentitySelectionPreferenceOutcome) this.evaluatePreference(model.getRootPreference(), agreement.getRequestor());
@@ -166,7 +162,7 @@ public class IDSPreferenceManager {
 			IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
 			details.setAffectedIdentity(identities.get(i).getJid());
 			details.setRequestor(agreement.getRequestor());
-			IPrivacyPreferenceTreeModel model = prefCache.getIDSPreference(details);
+			IPrivacyPreferenceTreeModel model = privPrefMgr.getPrefCache().getIDSPreference(details);
 			if (model!=null){
 				IdentitySelectionPreferenceOutcome outcome = (IdentitySelectionPreferenceOutcome) this.evaluatePreference(model.getRootPreference(), agreement.getRequestor());
 				if (null!=outcome){
@@ -204,10 +200,10 @@ public class IDSPreferenceManager {
 			IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
 			details.setAffectedIdentity(identities.get(i).getJid());
 			details.setRequestor(agreement.getRequestor());
-			IPrivacyPreferenceTreeModel model = prefCache.getIDSPreference(details);
+			IPrivacyPreferenceTreeModel model = privPrefMgr.getPrefCache().getIDSPreference(details);
 			
 			/*			if (model == null){
-				JOptionPane.showMessageDialog(null, "prefCache returned null model for details:"+details.toString());
+				JOptionPane.showMessageDialog(null, "privPrefMgr.getPrefCache() returned null model for details:"+details.toString());
 			}*/
 			if (model!=null){
 				IdentitySelectionPreferenceOutcome outcome = (IdentitySelectionPreferenceOutcome) this.evaluatePreference(model.getRootPreference(), agreement.getRequestor());
@@ -241,8 +237,8 @@ public class IDSPreferenceManager {
 		return null;
 	}
 	
-	private IPrivacyOutcome evaluatePreference(IPrivacyPreference privPref, RequestorBean requestor){
-		PreferenceEvaluator ppE = new PreferenceEvaluator(this.contextCache, trustBroker, requestor, this.userIdentity);
+	private IPrivacyOutcome evaluatePreference(PrivacyPreference privPref, RequestorBean requestor){
+		PreferenceEvaluator ppE = new PreferenceEvaluator(this.privPrefMgr, requestor, this.userIdentity);
 		Hashtable<IPrivacyOutcome, List<CtxIdentifier>> results = ppE.evaluatePreference(privPref);
 		Enumeration<IPrivacyOutcome> outcomes = results.keys();
 		if (outcomes.hasMoreElements()){
@@ -256,7 +252,7 @@ public class IDSPreferenceManager {
 
 
 	public IIdentity evaluateIDSPreference(IDSPreferenceDetailsBean details) {
-		IDSPrivacyPreferenceTreeModel model = this.prefCache.getIDSPreference(details);
+		IDSPrivacyPreferenceTreeModel model = this.privPrefMgr.getPrefCache().getIDSPreference(details);
 		IPrivacyOutcome out = this.evaluatePreference(model.getRootPreference(), details.getRequestor());
 		if (out instanceof IdentitySelectionPreferenceOutcome){
 			return ((IdentitySelectionPreferenceOutcome) out).getIdentity();
@@ -265,7 +261,7 @@ public class IDSPreferenceManager {
 	}
 
 	public IIdentity evaluateIDSPreference(RequestorBean requestor){
-		List<IDSPreferenceDetailsBean> details = this.prefCache.getIDSPreferenceDetails();
+		List<IDSPreferenceDetailsBean> details = this.privPrefMgr.getPrefCache().getIDSPreferenceDetails();
 		List<IIdentity> identities = new ArrayList<IIdentity>();
 		for (IDSPreferenceDetailsBean detail : details){
 			if (detail.getRequestor().equals(requestor)){
@@ -389,29 +385,29 @@ public class IDSPreferenceManager {
 	 */
 	
 	public boolean deleteIDSPreference(IDSPreferenceDetailsBean details) {
-		return this.prefCache.removeIDSPreference(details);
+		return this.privPrefMgr.getPrefCache().removeIDSPreference(details);
 	}
 
 
 	public IDSPrivacyPreferenceTreeModel getIDSPreference(
 			IDSPreferenceDetailsBean details) {
-		return this.prefCache.getIDSPreference(details);
+		return this.privPrefMgr.getPrefCache().getIDSPreference(details);
 	}
 	
 	public List<IDSPreferenceDetailsBean> getIDSPreferenceDetails() {
-		return this.prefCache.getIDSPreferenceDetails();
+		return this.privPrefMgr.getPrefCache().getIDSPreferenceDetails();
 	}
 
 	public boolean storeIDSPreference(IDSPreferenceDetailsBean details,
 			IDSPrivacyPreferenceTreeModel model) throws PrivacyException {
 		if (model.getDetails().equals(details)){
-			return this.prefCache.addIDSPreference(details, model);
+			return this.privPrefMgr.getPrefCache().addIDSPreference(details, model);
 		}
 		
-		throw new PrivacyException("IDSPreferenceDetailsBean parameter did not match IDSPrivacyPreferenceTreeModel.getDetails()");		
+		throw new PrivacyException("IDSPreferenceDetailsBean parameter did not match IDSIPrivacyPreferenceTreeModel.getDetails()");		
 	}
 	public boolean deleteIDSPreferences() {
-		return this.prefCache.removeIDSPreferences();
+		return this.privPrefMgr.getPrefCache().removeIDSPreferences();
 	}
 
 }

@@ -31,85 +31,80 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.societies.api.comm.xmpp.interfaces.ICommManager;
+import org.societies.api.context.CtxException;
 import org.societies.api.context.event.CtxChangeEvent;
+import org.societies.api.context.event.CtxChangeEventListener;
 import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
-import org.societies.api.identity.IIdentityManager;
-import org.societies.api.identity.InvalidFormatException;
-import org.societies.api.identity.util.RequestorUtils;
-import org.societies.api.internal.context.broker.ICtxBroker;
-import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyAgreementManager;
-import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.AgreementEnvelope;
-import org.societies.api.internal.privacytrust.privacyprotection.model.privacypolicy.PPNegotiationEvent;
+import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
-import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyOutcomeConstantsBean;
 import org.societies.api.osgi.event.CSSEvent;
 import org.societies.api.osgi.event.EventListener;
 import org.societies.api.osgi.event.EventTypes;
-import org.societies.api.osgi.event.IEventMgr;
 import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
 import org.societies.api.schema.identity.DataIdentifier;
-import org.societies.api.schema.identity.RequestorBean;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Action;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
-import org.societies.privacytrust.privacyprotection.api.IPrivacyDataManagerInternal;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlPreferenceTreeModel;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.AccessControlPreferenceManager;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.PrivacyPreferenceManager;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.monitoring.IMonitor;
 /**
  * @author Eliza
  *
  */
-public class AccCtrlMonitor  extends EventListener implements IMonitor{
+public class AccCtrlMonitor  extends EventListener implements IMonitor, CtxChangeEventListener{
 
 
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
-	private final AccessControlPreferenceManager accCtrlManager;
 
 	/* this hashtable holds the context identifiers that appear as PreferenceCondition objs as keys
 	 * and the list of details of the preferences affected by these PreferenceCondition objs as values 
 	 */
 	private Hashtable<CtxIdentifier, ArrayList<AccessControlPreferenceDetailsBean>> monitoringTable = new Hashtable<CtxIdentifier, ArrayList<AccessControlPreferenceDetailsBean>>();
-	private final IPrivacyDataManagerInternal privDataManager;
-	private final IPrivacyAgreementManager agreementMgr;
-	private IIdentityManager idMgr;
-	private final ICommManager commMgr;
-	private final ICtxBroker ctxBroker;
-	private final PrivacyPreferenceManager privPrefMgr;
-	private IEventMgr eventMgr;
+
+	private IIdentity userIdentity;
+
+	private PrivacyPreferenceManager privPrefMgr;
 
 
 
 	public AccCtrlMonitor(PrivacyPreferenceManager privPrefMgr) {
 		this.privPrefMgr = privPrefMgr;
-		this.privDataManager = privPrefMgr.getprivacyDataManagerInternal();
-		this.accCtrlManager = privPrefMgr.getAccessControlPreferenceManager();
-		this.agreementMgr = privPrefMgr.getAgreementMgr();
-		this.commMgr = privPrefMgr.getCommsMgr();
-		this.ctxBroker = privPrefMgr.getCtxBroker();
-		this.idMgr = privPrefMgr.getIdm();
-		eventMgr = privPrefMgr.getEventMgr();
+		
+		userIdentity = this.privPrefMgr.getIdm().getThisNetworkNode();
 
-		eventMgr.subscribeInternalEvent(this, new String[]{EventTypes.PRIVACY_POLICY_NEGOTIATION_EVENT}, null);
-
+		this.privPrefMgr.getEventMgr().subscribeInternalEvent(this, new String[]{EventTypes.PRIVACY_POLICY_NEGOTIATION_EVENT}, null);
+		registerForInstalledApps();
 
 	}
 
 
-
-
-
+	private void registerForInstalledApps() {
+		
+		List<AccessControlPreferenceDetailsBean> accCtrlPreferenceDetails = privPrefMgr.getAccessControlPreferenceManager().getAccCtrlPreferenceDetails();
+		for (AccessControlPreferenceDetailsBean detail : accCtrlPreferenceDetails){
+			try {
+				CtxAttributeIdentifier ctxAttrID = new CtxAttributeIdentifier(detail.getResource().getDataIdUri());
+				if (this.monitoringTable.containsKey(ctxAttrID)){
+					this.monitoringTable.get(ctxAttrID).add(detail);
+				}else{
+					this.privPrefMgr.getCtxBroker().registerForChanges(this, ctxAttrID);
+					ArrayList<AccessControlPreferenceDetailsBean> list = new ArrayList<AccessControlPreferenceDetailsBean>();
+					list.add(detail);
+					this.monitoringTable.put(ctxAttrID, list);
+				}
+			} catch (MalformedCtxIdentifierException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (CtxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+	}
 
 	public void monitorThisContext(Hashtable<CtxIdentifier, ArrayList<AccessControlPreferenceDetailsBean>> newDetails){
 
@@ -120,17 +115,56 @@ public class AccCtrlMonitor  extends EventListener implements IMonitor{
 			if (this.monitoringTable.containsKey(nextElement)){
 				this.monitoringTable.get(nextElement).addAll(newDetails.get(nextElement));
 			}else{
-				privPrefMgr.getContextCache().getContextCacheUpdater().registerForContextEvent((CtxAttributeIdentifier) nextElement, this);
-				this.monitoringTable.put(nextElement, newDetails.get(nextElement));
+				try {
+					this.privPrefMgr.getCtxBroker().registerForChanges(this, nextElement);
+					this.monitoringTable.put(nextElement, newDetails.get(nextElement));
+				} catch (CtxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				//privPrefMgr.getContextCache().getContextCacheUpdater().registerForContextEvent((CtxAttributeIdentifier) nextElement, this);
+				
 			}
 		}
 
 	}
 
+	private void processChangedContext(CtxChangeEvent event) {
+		CtxIdentifier ctxIdentifier = event.getId();
+		ArrayList<AccessControlPreferenceDetailsBean> details = this.monitoringTable.get(ctxIdentifier);
+		for (AccessControlPreferenceDetailsBean detail : details){
+			try {
+				
+				ResponseItem evaluateAccCtrlPreference = this.privPrefMgr.getAccessControlPreferenceManager().evaluateAccCtrlPreference(detail, new ArrayList<Condition>());
+				logging.debug("evaluating preference due to context change event: detail={} evalResult={}", detail, evaluateAccCtrlPreference);
+				if (evaluateAccCtrlPreference!=null){
+					boolean updatePermission = this.privPrefMgr.getprivacyDataManagerInternal().updatePermission(detail.getRequestor(), evaluateAccCtrlPreference);
+					if(updatePermission){
+						logging.debug("Updated permission: {}", evaluateAccCtrlPreference);
+					}else{
+						logging.error("Error updating permission {}", evaluateAccCtrlPreference);
+					}
+				}else{
+					logging.debug("Preferences did not yield an outcome. Removing permissions");
+					boolean deletePermissions = this.privPrefMgr.getprivacyDataManagerInternal().deletePermissions(detail.getRequestor(), ctxIdentifier);
+					if(deletePermissions){
+						logging.debug("Deleted permission for : "+ctxIdentifier+" and req: "+ detail.getRequestor().getRequestorId());
+					}else{
+						logging.error("Error deleting permission for : "+ctxIdentifier+" and req: "+ detail.getRequestor().getRequestorId());
+					}
+					
+				}
+			} catch (PrivacyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+	}
 
 
-
-	private void processChangedContext(CtxChangeEvent event) throws PrivacyException, InvalidFormatException, MalformedCtxIdentifierException{
+/*	private void processChangedContext1(CtxChangeEvent event) throws PrivacyException, InvalidFormatException, MalformedCtxIdentifierException{
 		//JOptionPane.showMessageDialog(null, "Received context event: " + event.getId().getType());
 
 		Enumeration<CtxIdentifier> e = monitoringTable.keys();
@@ -186,7 +220,7 @@ public class AccCtrlMonitor  extends EventListener implements IMonitor{
 			}
 		}
 	}
-
+*/
 
 
 
@@ -238,20 +272,12 @@ public class AccCtrlMonitor  extends EventListener implements IMonitor{
 
 	@Override
 	public void onModification(CtxChangeEvent event) {
-		try {
-			this.processChangedContext(event);
-		} catch (MalformedCtxIdentifierException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (PrivacyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.processChangedContext(event);
 		
 	}
+
+
+
 
 
 
@@ -262,6 +288,39 @@ public class AccCtrlMonitor  extends EventListener implements IMonitor{
 	public String getMonitorID() {
 		// TODO Auto-generated method stub
 		return this.getClass().getName();
+	}
+
+
+
+
+
+
+	@Override
+	public void onCreation(CtxChangeEvent event) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+
+
+
+	@Override
+	public void onUpdate(CtxChangeEvent event) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+
+
+
+	@Override
+	public void onRemoval(CtxChangeEvent event) {
+		// TODO Auto-generated method stub
+		
 	}
 
 
