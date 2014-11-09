@@ -2,6 +2,7 @@ package ac.hw.personis.event;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationDobfEvent;
 import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent;
 import org.societies.api.osgi.event.CSSEvent;
 import org.societies.api.osgi.event.EventListener;
@@ -20,27 +21,38 @@ public class NotificationsListener extends EventListener{
 	public NotificationsListener(PersonisHelper personisHelper, NotificationsPanel notifPanel){
 		this.personisHelper = personisHelper;
 		this.notifPanel = notifPanel;
-		String[] eventTypes = new String[]{EventTypes.PERSONIS_NOTIFICATION_REQUEST};
+		String[] eventTypes = new String[]{
+				EventTypes.PERSONIS_NOTIFICATION_REQUEST,
+				EventTypes.PERSONIS_NOTIFICATION_DOBF_REQUEST
+				};
 		this.personisHelper.getEventMgr().subscribeInternalEvent(this, eventTypes, null);
-		
+
 	}
 	@Override
 	public void handleInternalEvent(InternalEvent event) {
 		logging.debug("Received event: {}", event.geteventType());
-		if (event.geteventInfo() instanceof NotificationEvent){
-			NotificationEvent notifEvent = (NotificationEvent) event.geteventInfo();
-			notifPanel.addNotification(notifEvent.getUuid(), notifEvent.getMessage());	
-		}else{
-			logging.debug("Received event of unknown Class {}", event.geteventInfo());
+		if (event.geteventType().equalsIgnoreCase(EventTypes.PERSONIS_NOTIFICATION_REQUEST)){
+			if (event.geteventInfo() instanceof NotificationEvent){
+				NotificationEvent notifEvent = (NotificationEvent) event.geteventInfo();
+				notifPanel.addAccessControlNotification(notifEvent);	
+			}else{
+				logging.debug("Received event of unknown Class {}", event.geteventInfo());
+			}
+
+		}else if (event.geteventType().equalsIgnoreCase(EventTypes.PERSONIS_NOTIFICATION_DOBF_REQUEST)){
+			if (event.geteventInfo() instanceof NotificationDobfEvent){
+				NotificationDobfEvent notifEvent = (NotificationDobfEvent) event.geteventInfo();
+				notifPanel.addDobfNotification(notifEvent);
+			}else{
+				logging.debug("Received event of unknown Class {}", event.geteventInfo());
+			}
 		}
-		
-		
 	}
 
 	@Override
 	public void handleExternalEvent(CSSEvent event) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

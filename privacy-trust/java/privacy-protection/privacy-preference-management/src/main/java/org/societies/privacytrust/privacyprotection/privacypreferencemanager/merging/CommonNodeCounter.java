@@ -39,8 +39,40 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 public class CommonNodeCounter {
 
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
+
+	
+	ArrayList<NodeCounter> nc;
+	
+	
+	
+	public CommonNodeCounter(){
+		nc = new ArrayList<NodeCounter>();
+	}
+	
+	public void add(PrivacyPreference ptn, int counter){
+		this.nc.add(new NodeCounter(ptn,counter));
+	}
+	
+	public PrivacyPreference getMostCommonNode(){
+		int counter = 0;
+		PrivacyPreference ptn = null;
+		logging.debug("nc size:"+this.nc.size());
+		for (int i = 0; i< this.nc.size(); i++){
+			int c = this.nc.get(i).getCounter();
+			if (counter <= c){
+				counter = c;
+				ptn = this.nc.get(i).getNode();
+			}
+		}
+		
+		return ptn;
+	}
+	
+	
+	
+	
 	private class NodeCounter{
-		PrivacyPreference node;
+		private final PrivacyPreference node;
 		int counter;
 		
 		NodeCounter(PrivacyPreference ptn, int c){
@@ -57,31 +89,5 @@ public class CommonNodeCounter {
 			return this.node;
 		}
 	}
-	
-	ArrayList<NodeCounter> nc;
-	public CommonNodeCounter(){
-		nc = new ArrayList<NodeCounter>();
-	}
-	
-	public void add(PrivacyPreference ptn, int counter){
-		this.nc.add(new NodeCounter(ptn,counter));
-	}
-	
-	public PrivacyPreference getMostCommonNode(){
-		int counter = 0;
-		PrivacyPreference ptn = null;
-		logging.debug("nc size:"+this.nc.size());
-		for (int i = 0; i< this.nc.size(); i++){
-			int c = this.nc.get(i).getCounter();
-			if (counter < c){
-				counter = c;
-				ptn = this.nc.get(i).getNode();
-			}
-		}
-		
-		return ptn;
-	}
-	
-
 }
 

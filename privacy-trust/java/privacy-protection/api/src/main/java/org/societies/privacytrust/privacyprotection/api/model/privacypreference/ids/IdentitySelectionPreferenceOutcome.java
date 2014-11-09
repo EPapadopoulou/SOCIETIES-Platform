@@ -25,6 +25,9 @@
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids;
 
 
+import java.io.Serializable;
+import java.util.UUID;
+
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.IIdentityManager;
 import org.societies.api.identity.InvalidFormatException;
@@ -42,23 +45,37 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  * @author Elizabeth
  *
  */
-public class IdentitySelectionPreferenceOutcome extends IPrivacyOutcome{
-
+public class IdentitySelectionPreferenceOutcome implements IPrivacyOutcome, Serializable {
+	private static final int MIN = 0;
+	private static final int MAX = 100;
 	private boolean shouldUseIdentity;
 	private IIdentity userIdentity;
 	private Stage currentStage; 
 	private int confidenceLevel;
+	private final String uuid;
 	
 	public IdentitySelectionPreferenceOutcome(IIdentity userIdentity) {
 		this.userIdentity = userIdentity;
 		this.confidenceLevel = 50;
 		this.currentStage = Stage.START;
-		
+		this.uuid = UUID.randomUUID().toString();
 	}
 	public IdentitySelectionPreferenceOutcome(IDSOutcomeBean bean, IIdentityManager idMgr) throws InvalidFormatException {
 		this.userIdentity = idMgr.fromJid(bean.getUserIdentity());
 		this.confidenceLevel = bean.getConfidenceLevel();
 		this.currentStage = bean.getCurrentStage();
+		uuid = bean.getUuid();
+	}
+	
+	public IDSOutcomeBean toBean() {
+		IDSOutcomeBean bean = new IDSOutcomeBean();
+		bean.setConfidenceLevel(confidenceLevel);
+		bean.setCurrentStage(currentStage);
+		bean.setShouldUseIdentity(shouldUseIdentity);
+		bean.setUserIdentity(userIdentity.getBareJid());
+		bean.setUuid(uuid);
+		return bean;
+	
 	}
 	/*
 	 * (non-Javadoc)
@@ -142,9 +159,50 @@ public class IdentitySelectionPreferenceOutcome extends IPrivacyOutcome{
 	public int getConfidenceLevel() {
 		return confidenceLevel;
 	}
+	public String getUuid() {
+		return uuid;
+	}
 
 	public void updateConfidenceLevel(boolean positive){
-		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
+		if (positive){
+			switch (currentStage){
+			case POSITIVE_1:
+				confidenceLevel+=20; 
+				currentStage = Stage.POSITIVE_2;
+				break;
+			case POSITIVE_2:
+				confidenceLevel+=30;
+				currentStage = Stage.POSITIVE_3;
+				break;
+			default: 
+				confidenceLevel+=10;
+				currentStage = Stage.POSITIVE_1;
+				break;
+			}
+			if (confidenceLevel>MAX){
+				confidenceLevel = 100;
+			}
+		}else{
+			switch (currentStage){
+			case NEGATIVE_1:
+				confidenceLevel-=20;
+				currentStage = Stage.NEGATIVE_2;
+				break;
+			case NEGATIVE_2:
+				confidenceLevel-=30;
+				currentStage = Stage.NEGATIVE_3;
+				break;
+			default:
+				confidenceLevel-=10;
+				currentStage = Stage.NEGATIVE_1;
+				break;
+			}
+			if (confidenceLevel<MIN){
+				confidenceLevel = 0;
+			}
+		}
+		
 	}
+
 }
 

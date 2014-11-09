@@ -24,6 +24,9 @@
  */
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf;
 
+import java.io.Serializable;
+import java.util.UUID;
+
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfOutcomeBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.Stage;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ConfidenceCalculator;
@@ -39,16 +42,19 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  * @version 1.0
  * @created 11-Nov-2011 17:06:54
  */
-public class DObfOutcome extends IPrivacyOutcome implements IDObfAction {
-
+public class DObfOutcome implements IPrivacyOutcome, Serializable  {
+	private static final int MIN = 0;
+	private static final int MAX = 100;
 	private Integer obfuscationLevel;
 	private Stage currentStage;
 	private int confidenceLevel;
+	private final String uuid;
 
 	public DObfOutcome(Integer obfuscationLevel){
 		this.obfuscationLevel = obfuscationLevel;
 		this.confidenceLevel = 50;
 		this.currentStage = Stage.START;
+		this.uuid = UUID.randomUUID().toString();
 	}
 
 
@@ -56,7 +62,20 @@ public class DObfOutcome extends IPrivacyOutcome implements IDObfAction {
 		this.obfuscationLevel = bean.getObfuscationLevel();
 		this.confidenceLevel = bean.getConfidenceLevel();
 		this.currentStage = bean.getCurrentStage();
+		this.uuid = bean.getUuid();
 	}
+	
+
+	public DObfOutcomeBean toBean() {
+		DObfOutcomeBean bean = new DObfOutcomeBean();
+		bean.setConfidenceLevel(confidenceLevel);
+		bean.setCurrentStage(currentStage);
+		bean.setObfuscationLevel(obfuscationLevel);
+		bean.setUuid(uuid);
+		return bean;
+	}
+
+	
 	public PrivacyPreferenceTypeConstants getOutcomeType(){
 		return PrivacyPreferenceTypeConstants.DATA_OBFUSCATION;
 	}
@@ -72,8 +91,52 @@ public class DObfOutcome extends IPrivacyOutcome implements IDObfAction {
 	public int getConfidenceLevel() {
 		return confidenceLevel;
 	}
-	public void updateConfidenceLevel(boolean positive){
-		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
+
+
+	public String getUuid() {
+		return uuid;
 	}
 
+
+	public void updateConfidenceLevel(boolean positive){
+		if (positive){
+			switch (currentStage){
+			case POSITIVE_1:
+				confidenceLevel+=20; 
+				currentStage = Stage.POSITIVE_2;
+				break;
+			case POSITIVE_2:
+				confidenceLevel+=30;
+				currentStage = Stage.POSITIVE_3;
+				break;
+			default: 
+				confidenceLevel+=10;
+				currentStage = Stage.POSITIVE_1;
+				break;
+			}
+			if (confidenceLevel>MAX){
+				confidenceLevel = 100;
+			}
+		}else{
+			switch (currentStage){
+			case NEGATIVE_1:
+				confidenceLevel-=20;
+				currentStage = Stage.NEGATIVE_2;
+				break;
+			case NEGATIVE_2:
+				confidenceLevel-=30;
+				currentStage = Stage.NEGATIVE_3;
+				break;
+			default:
+				confidenceLevel-=10;
+				currentStage = Stage.NEGATIVE_1;
+				break;
+			}
+			if (confidenceLevel<MIN){
+				confidenceLevel = 0;
+			}
+		}
+		
+	}
+	
 }

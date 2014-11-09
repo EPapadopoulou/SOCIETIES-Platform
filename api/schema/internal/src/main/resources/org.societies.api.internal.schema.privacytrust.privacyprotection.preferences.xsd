@@ -324,6 +324,7 @@
 				maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
 			<xs:element name="currentStage" type="Stage"></xs:element>
+			<xs:element name="uuid" type="xs:string" />
 		</xs:sequence>
 	</xs:complexType>
 
@@ -335,6 +336,7 @@
 				minOccurs="1" maxOccurs="1" />
 			<xs:element name="currentStage" type="Stage"></xs:element>
 			<xs:element name="confidenceLevel" type="xs:int" />
+			<xs:element name="uuid" type="xs:string" />
 		</xs:sequence>
 	</xs:complexType>
 
@@ -344,6 +346,7 @@
 				minOccurs="1" maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
 			<xs:element name="currentStage" type="Stage"></xs:element>
+			<xs:element name="uuid" type="xs:string" />
 		</xs:sequence>
 	</xs:complexType>
 
@@ -353,6 +356,7 @@
 				minOccurs="1" maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
 			<xs:element name="currentStage" type="Stage"></xs:element>
+			<xs:element name="uuid" type="xs:string" />
 		</xs:sequence>
 	</xs:complexType>
 
@@ -362,6 +366,7 @@
 				minOccurs="1" maxOccurs="1" />
 			<xs:element name="confidenceLevel" type="xs:int" />
 			<xs:element name="currentStage" type="Stage"></xs:element>
+			<xs:element name="uuid" type="xs:string" />
 		</xs:sequence>
 	</xs:complexType>
 

@@ -1,27 +1,31 @@
 package ac.hw.personis.notification;
 
 import java.awt.BorderLayout;
-import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationDobfEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent.NotificationType;
 
 import ac.hw.personis.PersonisHelper;
+import ac.hw.personis.event.NotificationPanelClosedListener;
 
 public class NotificationsPanel extends JPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
 
@@ -32,7 +36,7 @@ public class NotificationsPanel extends JPanel {
 	private PersonisHelper personisHelper;
 
 
-	private PanelClosedListener listener;
+	private NotificationPanelClosedListener listener;
 
 	/**
 	 * Create the panel.
@@ -61,20 +65,40 @@ public class NotificationsPanel extends JPanel {
 		//add(buttonPanel, BorderLayout.SOUTH);
 
 
-		listener = new PanelClosedListener(this);
+		listener = new NotificationPanelClosedListener(this);
 		addEmptyNotification();
 
 	}
 
-	public void addNotification(String uuid, String text){
+	public void addAccessControlNotification(NotificationEvent notifEvent){
+
 		logging.debug("Adding new notification panel");
-		NotificationPanel panel = new NotificationPanel(personisHelper, text, uuid, listener);
-		panels.add(panel);
-		resetPanels();
+		if (notifEvent.getNotificationType()==NotificationType.SIMPLE){
+			AccessControlPanel panel = new AccessControlPanel(personisHelper, notifEvent.getMessage(), notifEvent.getUuid(), listener, notifEvent.getEffect());
+			panels.add(panel);
+			resetPanels();
+		}else if (notifEvent.getNotificationType()==NotificationType.TIMED){
+			TimedAccessControlPanel panel = new TimedAccessControlPanel(personisHelper, notifEvent.getMessage(), notifEvent.getUuid(), listener, notifEvent.getEffect());
+			panels.add(panel);
+			resetPanels();
+		}
+	}
+	public void addDobfNotification(NotificationDobfEvent notifEvent) {
+		logging.debug("Adding new dobf notification panel");
+		if (notifEvent.getNotificationType()==NotificationType.SIMPLE){
+			DObfPanel panel = new DObfPanel(personisHelper, notifEvent.getMessage(), notifEvent.getUuid(), listener, notifEvent.getDataType(), notifEvent.getObfuscationLevel());
+			panels.add(panel);
+			resetPanels();
+		}else if (notifEvent.getNotificationType()==NotificationType.TIMED){
+			TimedDObfPanel panel = new TimedDObfPanel(personisHelper, notifEvent.getMessage(), notifEvent.getUuid(), listener, notifEvent.getDataType(), notifEvent.getObfuscationLevel());
+			panels.add(panel);
+			resetPanels();
+		} 
+		
 	}
 
 	private void addEmptyNotification(){
-		NotificationPanel panel = NotificationPanel.getEmptyNotificationPanel("Your notifications will appear in this area here. ", listener);
+		AccessControlPanel panel = AccessControlPanel.getEmptyNotificationPanel("Your notifications will appear in this area here. ", listener);
 		panels.add(panel);
 		resetPanels();
 	}
@@ -115,7 +139,12 @@ public class NotificationsPanel extends JPanel {
 			}else{
 				logging.debug("panel not removed from panels list");
 			}
+			
 		}
 
 	}
+
+
+
+
 }

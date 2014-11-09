@@ -140,7 +140,7 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 		dobfPanel.add(chckbxObfuscate);
 		slider.setLabelTable( labelTable );
 		slider.addChangeListener(this);
-
+		
 		
 
 	}
@@ -157,7 +157,7 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 		if (requestor instanceof RequestorServiceBean){
 			String serviceName = ((RequestorServiceBean) requestor).getRequestorServiceId().getServiceInstanceIdentifier();
 			String dataType = this.requestedItem.getRequestItem().getResource().getDataType().toLowerCase();
-			sb.append(serviceName+" requests access to "+action+" your "+dataType+". If you want to allow access, click Permit, otherwise click Deny.");
+			sb.append(serviceName+" requests access to <span style=\"color:blue; font-weight:bold;\"> "+action+" your "+dataType+"</span>. If you want to allow access, click Permit, otherwise click Deny.");
 			sb.append(System.getProperty( "line.separator" ));
 			sb.append("Use the obfuscation slider below to alter the quality of information.");
 

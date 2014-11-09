@@ -2,22 +2,33 @@ package org.societies.api.internal.privacytrust.privacyprotection.model.event;
 
 import java.io.Serializable;
 
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyOutcomeConstantsBean;
+
 public class UserResponseEvent implements Serializable{
 
-	public enum Response {ABORT, CONTINUE};
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final String uuid;
-	private final Response response;
+	private final PrivacyOutcomeConstantsBean effect;
+	private final boolean userClicked;
 
-	public UserResponseEvent(String uuid, Response response){
+	public UserResponseEvent(String uuid, PrivacyOutcomeConstantsBean effect, boolean userClicked){
 		this.uuid = uuid;
-		this.response = response;
+		this.effect = effect;
+		this.userClicked = userClicked;
 		
 	}
 	public String getUuid() {
 		return uuid;
 	}
-	public Response getResponse() {
-		return response;
+	public PrivacyOutcomeConstantsBean getEffect() {
+		return effect;
 	}
+	public boolean isUserClicked() {
+		return userClicked;
+	}
+
 	
 }

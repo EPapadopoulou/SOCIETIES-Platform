@@ -58,6 +58,7 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.TrustPreferenceCondition;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.OperatorConstants;
@@ -80,6 +81,7 @@ public class PreferenceEvaluator {
 		this.requestor = requestor;
 		this.userIdentity = userIdentity;
 	}
+
 
 	public Hashtable<IPrivacyOutcome,List<CtxIdentifier>> evaluatePreference(PrivacyPreference ptn){
 		Hashtable<IPrivacyOutcome,List<CtxIdentifier>> temp = new Hashtable<IPrivacyOutcome,List<CtxIdentifier>>();
@@ -166,8 +168,8 @@ public class PreferenceEvaluator {
 		//if more than one IOutcome objs is applicable, use conflict resolution and return the most applicable
 		else{
 			System.out.println("Resolving conflicts "+prefList);
-			ConflictResolver cr = new ConflictResolver();
-			PrivacyPreference io = cr.resolveConflicts(prefList);
+			
+			PrivacyPreference io = ConflictResolver.resolveConflicts(prefList);
 			//JOptionPane.showMessageDialog(null, "split PrefEvaluator> Returning: "+io.toString());
 			System.out.println("PrefEvaluator> Conflict Resolved Returning: "+io.toString());
 			return io;
@@ -447,9 +449,20 @@ public class PreferenceEvaluator {
 
 	}*/
 
-	public Hashtable<IPrivacyOutcome, List<CtxIdentifier>> evaluateAccessCtrlPreference(PrivacyPreference pref, List<Condition> conditions) {
+	public AccessControlOutcome evaluateAccessCtrlPreference(PrivacyPreference pref, List<Condition> conditions) {
+		
 		this.conditions = conditions;
-		return this.evaluatePreference(pref);
+		PrivacyPreference evaluatedPreference = evaluatePreferenceInternal(pref);
+		if (evaluatedPreference!=null){
+			
+			IPrivacyOutcome outcome = evaluatedPreference.getOutcome();
+			if (outcome instanceof AccessControlOutcome){
+				return ((AccessControlOutcome) outcome);
+			}
+		}
+			return null;
+		
+		
 	}
 
 	public CtxIdentifier evaluateAttrPreference(AttributeSelectionPreferenceTreeModel attrSelPreference, List<Condition> conditions) {

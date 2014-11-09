@@ -4,11 +4,17 @@
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference;
 
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.Stage;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPOutcome;
 
 /**
  * @author PUMA
  *
  */
+@Deprecated
 public class ConfidenceCalculator {
 
 	private static final int MIN = 0;
@@ -56,6 +62,5 @@ public class ConfidenceCalculator {
 		}
 		return confidenceLevel;
 	}
-	
 
 }

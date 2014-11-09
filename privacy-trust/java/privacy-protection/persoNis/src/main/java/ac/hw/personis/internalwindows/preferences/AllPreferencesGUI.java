@@ -488,34 +488,34 @@ public class AllPreferencesGUI extends JInternalFrame {
 			PPNPreferenceDetailsBean ppnDetailsBean = this.ppnDetailsTable.get(id);
 			PPNPrivacyPreferenceTreeModel ppnPrefModel = this.personisHelper.getPrivacyPreferenceManager().getPPNPreference(ppnDetailsBean);
 			//JOptionPane.showMessageDialog(this, ppnPrefModel.getRootPreference().toString());
-			PreferenceGUI ppnGui = new PreferenceGUI(ppnPrefModel.getRootPreference());
+			PreferenceGUI ppnGui = new PreferenceGUI(ppnPrefModel.getRootPreference(), ppnPrefModel.getDetails().getResource().getDataType());
 			ppnGui.setVisible(true);
 			break;
 		case ACCESS_CONTROL:
 			AccessControlPreferenceDetailsBean acDetailsBean = this.accDetailsTable.get(id);
 			AccessControlPreferenceTreeModel accPrefModel = this.personisHelper.getPrivacyPreferenceManager().getAccCtrlPreference(acDetailsBean);
 			//JOptionPane.showMessageDialog(this, accPrefModel.getRootPreference().toString());
-			PreferenceGUI acGui = new PreferenceGUI(accPrefModel.getRootPreference());
+			PreferenceGUI acGui = new PreferenceGUI(accPrefModel.getRootPreference(), accPrefModel.getDetails().getResource().getDataType());
 			acGui.setVisible(true);
 			break;
 		case IDENTITY_SELECTION:
 			IDSPreferenceDetailsBean idsDetailsBean = this.idsDetailsTable.get(id);
 			IDSPrivacyPreferenceTreeModel idsPrefModel = this.personisHelper.getPrivacyPreferenceManager().getIDSPreference(idsDetailsBean);
 			//JOptionPane.showMessageDialog(this, idsPrefModel.getRootPreference().toString());
-			PreferenceGUI idsGui = new PreferenceGUI(idsPrefModel.getRootPreference());
+			PreferenceGUI idsGui = new PreferenceGUI(idsPrefModel.getRootPreference(), idsPrefModel.getDetails().getAffectedIdentity());
 			idsGui.setVisible(true);
 			break;
 		case ATTRIBUTE_SELECTION:
 			AttributeSelectionPreferenceDetailsBean attrDetailsBean = this.attrSelDetailsTable.get(id);
 			AttributeSelectionPreferenceTreeModel attrSelPrefModel = this.personisHelper.getPrivacyPreferenceManager().getAttrSelPreference(attrDetailsBean);
-			PreferenceGUI attrGui = new PreferenceGUI(attrSelPrefModel.getRootPreference());
+			PreferenceGUI attrGui = new PreferenceGUI(attrSelPrefModel.getRootPreference(), attrSelPrefModel.getDetails().getDataType());
 			attrGui.setVisible(true);
 			break;
 		case DATA_OBFUSCATION:
 			DObfPreferenceDetailsBean dobfDetailsBean = this.dobfDetailsTable.get(id);
 			DObfPreferenceTreeModel dobfPrefModel = this.personisHelper.getPrivacyPreferenceManager().getDObfPreference(dobfDetailsBean);
 			//JOptionPane.showMessageDialog(this, dobfPrefModel.getRootPreference().toString());
-			PreferenceGUI dobfGui = new PreferenceGUI(dobfPrefModel.getRootPreference());
+			PreferenceGUI dobfGui = new PreferenceGUI(dobfPrefModel.getRootPreference(), dobfPrefModel.getDetails().getResource().getDataType());
 			dobfGui.setVisible(true);
 			break;
 

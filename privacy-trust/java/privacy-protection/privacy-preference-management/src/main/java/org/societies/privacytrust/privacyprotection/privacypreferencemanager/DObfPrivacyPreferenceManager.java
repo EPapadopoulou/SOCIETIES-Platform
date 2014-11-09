@@ -24,10 +24,12 @@
  */
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager;
 
+import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +39,16 @@ import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.context.model.CtxIDChanger;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationDobfEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent.NotificationType;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseDObfEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseEvent;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
+import org.societies.api.osgi.event.CSSEvent;
+import org.societies.api.osgi.event.EMSException;
+import org.societies.api.osgi.event.EventListener;
+import org.societies.api.osgi.event.EventTypes;
+import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
 import org.societies.api.schema.identity.RequestorBean;
@@ -53,18 +64,21 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.eva
  * @author Eliza
  *
  */
-public class DObfPrivacyPreferenceManager {
+public class DObfPrivacyPreferenceManager extends EventListener{
 
 
+	private static final String ERROR = "error";
 	private final IIdentity userIdentity;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	private PrivacyPreferenceManager privPrefMgr;
+	private Hashtable<String, UserResponseDObfEvent> userResponses; 
 
-	
 	public DObfPrivacyPreferenceManager(PrivacyPreferenceManager privPrefMgr) {
+		this.userResponses = new Hashtable<String, UserResponseDObfEvent>();
 		this.privPrefMgr = privPrefMgr;
 		this.userIdentity = privPrefMgr.getIdm().getThisNetworkNode();
-		
+		String[] eventTypes = new String[]{EventTypes.PERSONIS_NOTIFICATION__DOBF_RESPONSE};
+		this.privPrefMgr.getEventMgr().subscribeInternalEvent(this, eventTypes, null);
 	}
 	/**
 	 * new methods;
@@ -82,21 +96,92 @@ public class DObfPrivacyPreferenceManager {
 			logging.debug("Found dobf preference: {}",details);
 			IPrivacyOutcome outcome = evaluatePreference(model.getRootPreference(), details.getRequestor());
 			if (outcome instanceof DObfOutcome){
-				logging.debug("Returning obfuscation level: {}", ((DObfOutcome) outcome).getObfuscationLevel());
-				return ((DObfOutcome) outcome).getObfuscationLevel();
+				return this.getUserInput((DObfOutcome) outcome, details);				
 			}else{
 				logging.debug("ERROR, IPrivacyOutcome not instanceof DobfOutcome");
-				return -1;
+				return getUserInput(null, details);
 			}
 		}else{
 			logging.debug("Did not find dobf preference: {}", details);
-			return -1;
+			return getUserInput(null, details);
 		}
-
-
-
 	}
 
+
+
+	private Integer getUserInput(DObfOutcome outcome, DObfPreferenceDetailsBean details){
+		String uuid = UUID.randomUUID().toString();
+		if (outcome==null){
+			StringBuilder sb = new StringBuilder();
+			sb.append("How do you want to obfuscate your ");
+			sb.append(details.getResource().getDataType());
+			NotificationDobfEvent notifEvent = new NotificationDobfEvent(uuid, sb.toString(), NotificationType.SIMPLE, 0, details.getResource().getDataType());
+			UserResponseDObfEvent userInput = getUserInput(notifEvent);
+			if (userInput.getUuid().equalsIgnoreCase(ERROR)){
+				return -1;
+			}
+			privPrefMgr.getDobfPreferenceCreator().createPreference(details.getRequestor(), details.getResource(), userInput.getObfuscationLevel());
+			return userInput.getObfuscationLevel();
+		}else
+		if (outcome.getConfidenceLevel()>=60){
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append("Your preferences suggest that I apply obfuscation level ");
+			sb.append(((DObfOutcome) outcome).getObfuscationLevel());
+			sb.append(" to data type: ");
+			sb.append(details.getResource().getDataType());
+			NotificationDobfEvent notifEvent = new NotificationDobfEvent(uuid, sb.toString(), NotificationType.TIMED, outcome.getObfuscationLevel(), details.getResource().getDataType());
+			UserResponseDObfEvent userInput = this.getUserInput(notifEvent);
+			if (userInput.getUuid().equalsIgnoreCase(ERROR)){
+				return -1;
+			}
+			if (userInput.isUserClicked()){
+				privPrefMgr.getDobfPreferenceCreator().createPreference(details.getRequestor(), details.getResource(), userInput.getObfuscationLevel());
+			}
+			return userInput.getObfuscationLevel();
+		}else{
+			StringBuilder sb = new StringBuilder();
+			sb.append("Your preferences suggest that I apply obfuscation level ");
+			sb.append(((DObfOutcome) outcome).getObfuscationLevel());
+			sb.append(" to data type: ");
+			sb.append(details.getResource().getDataType());
+			NotificationDobfEvent notifEvent = new NotificationDobfEvent(uuid, sb.toString(), NotificationType.SIMPLE, outcome.getObfuscationLevel(), details.getResource().getDataType());
+			UserResponseDObfEvent userInput = this.getUserInput(notifEvent);
+			if (userInput.getUuid().equalsIgnoreCase(ERROR)){
+				return -1;
+			}
+			privPrefMgr.getDobfPreferenceCreator().createPreference(details.getRequestor(), details.getResource(), userInput.getObfuscationLevel());
+			return userInput.getObfuscationLevel();
+		}
+		
+	}
+	
+	
+	private UserResponseDObfEvent getUserInput(NotificationDobfEvent notifEvent) {
+
+
+		InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_DOBF_REQUEST, "", this.getClass().getName(), notifEvent);
+		try {
+			this.privPrefMgr.getEventMgr().publishInternalEvent(event);
+		} catch (EMSException e) {
+			// TODO Auto-generated catch block
+			logging.error("Error publishing internal event: {}", event);
+			return new UserResponseDObfEvent(ERROR, 0, false);
+		}
+		while (!this.userResponses.containsKey(notifEvent.getUuid())){
+			synchronized (this.userResponses) {
+				try {
+					this.userResponses.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		return this.userResponses.get(notifEvent.getUuid());
+
+	}
 	private IPrivacyOutcome evaluatePreference(PrivacyPreference privPref, RequestorBean requestor){
 		PreferenceEvaluator ppE = new PreferenceEvaluator(this.privPrefMgr, requestor, this.userIdentity);
 		Hashtable<IPrivacyOutcome, List<CtxIdentifier>> results = ppE.evaluatePreference(privPref);
@@ -155,12 +240,36 @@ public class DObfPrivacyPreferenceManager {
 			if (obfLevel>=0){
 				map.put(ctxModelObject, new Integer(obfLevel));
 			}else{
+				//TODO show popup
 				map.put(ctxModelObject, new Integer(0));
 			}
 		}
 
 		logging.debug("getObfuscationLevel result {}",map);
 		return map;
+	}
+
+
+	@Override
+	public void handleInternalEvent(InternalEvent event) {
+		logging.debug("Received event: {}", event.geteventType());
+		if (event.geteventInfo() instanceof UserResponseDObfEvent){
+			UserResponseDObfEvent uREvent = (UserResponseDObfEvent) event.geteventInfo();
+			this.userResponses.put(uREvent.getUuid(), uREvent);
+			synchronized (this.userResponses) {
+				this.userResponses.notifyAll();	
+			}
+
+		}else{
+			logging.error("Received unknown eventInfo object {}", event.geteventInfo());
+		}
+
+
+	}
+	@Override
+	public void handleExternalEvent(CSSEvent event) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

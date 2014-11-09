@@ -306,7 +306,7 @@ public class PrivacyPreferenceUtils {
 		return preference;
 	}
 	@Deprecated
-	public static IPrivacyOutcome toPPNOutcome(
+	public static PPNPOutcome toPPNOutcome(
 			PPNPOutcomeBean bean)  {
 		return new PPNPOutcome(bean);
 
@@ -633,46 +633,29 @@ public class PrivacyPreferenceUtils {
 
 	}
 
+	@Deprecated
 	public static PPNPOutcomeBean toPPNPOutcomeBean(PPNPOutcome outcome) {
-		PPNPOutcomeBean bean = new PPNPOutcomeBean();
-		bean.setConfidenceLevel(outcome.getConfidenceLevel());
-		bean.setCondition(outcome.getCondition());
-		bean.setCurrentStage(outcome.getCurrentStage());
-		return bean;
+		return outcome.toBean();
 	}
 
+	@Deprecated
 	public static IDSOutcomeBean toIdentitySelectionPreferenceOutcomeBean(IdentitySelectionPreferenceOutcome outcome){
-		IDSOutcomeBean bean = new IDSOutcomeBean();
-		bean.setUserIdentity(outcome.getIdentity().getJid());
-		bean.setShouldUseIdentity(outcome.isShouldUseIdentity());
-		bean.setConfidenceLevel(outcome.getConfidenceLevel());
-		bean.setCurrentStage(outcome.getCurrentStage());
-		return bean;
+		return outcome.toBean();
 	}
 
+	@Deprecated
 	public static DObfOutcomeBean toDObfOutcomeBean(DObfOutcome outcome){
-		DObfOutcomeBean bean = new DObfOutcomeBean();
-		bean.setConfidenceLevel(outcome.getConfidenceLevel());
-		bean.setObfuscationLevel(outcome.getObfuscationLevel());
-		bean.setCurrentStage(outcome.getCurrentStage());
-		return bean;
+		return outcome.toBean();
 	}
 
+	@Deprecated
 	public static AccessControlOutcomeBean toAccessControlOutcomeBean(AccessControlOutcome outcome){
-		AccessControlOutcomeBean bean = new AccessControlOutcomeBean();
-		bean.setConfidenceLevel(outcome.getConfidenceLevel());
-		bean.setCurrentStage(outcome.getCurrentStage());
-		bean.setEffect(outcome.getEffect());
-		return bean;
-
+		return outcome.toBean();
 	}
+	@Deprecated
 	public static AttributeSelectionOutcomeBean toAttrSelOutcomeBean(
 			AttributeSelectionOutcome outcome) {
-		AttributeSelectionOutcomeBean bean = new AttributeSelectionOutcomeBean();
-		bean.setConfidenceLevel(outcome.getConfidenceLevel());
-		bean.setCurrentStage(outcome.getCurrentStage());
-		bean.setCtxID((CtxAttributeIdentifierBean) CtxModelBeanTranslator.getInstance().fromCtxIdentifier(outcome.getCtxID()));
-		return bean;
+		return outcome.toBean();
 	}
 
 	public static PrivacyPreferenceTypeConstantsBean toPrivacyPreferenceTypeConstantsBean(

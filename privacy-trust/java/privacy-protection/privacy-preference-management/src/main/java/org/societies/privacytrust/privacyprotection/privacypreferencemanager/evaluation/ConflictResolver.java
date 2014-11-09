@@ -30,13 +30,19 @@ import java.util.List;
 
 import javax.swing.tree.TreeNode;
 
-import org.societies.api.privacytrust.privacy.model.PrivacyException;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyPreferenceCondition;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyOutcomeConstantsBean;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.TrustPreferenceCondition;
-import org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging.SingleRule;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.OperatorConstants;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.dobf.DObfOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
+import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPOutcome;
 
 
 
@@ -48,31 +54,125 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.mer
  *
  */
 public class ConflictResolver {
-	
+	private final static Logger logging = LoggerFactory.getLogger(ConflictResolver.class);
 	public ConflictResolver(){
 		
 	}
 	
-	public  PrivacyPreference resolveConflictsConfidenceOnly(List<PrivacyPreference> outcomes){
+	public  static PrivacyPreference resolveConflictsConfidenceOnly(List<PrivacyPreference> outcomes){
 		int confLevel = outcomes.get(0).getOutcome().getConfidenceLevel();
-		int index = -1; 
+		int index = 0; 
+		
 		for (int i = 1; i < outcomes.size(); i++){
-			if (confLevel<=outcomes.get(i).getOutcome().getConfidenceLevel()){
-				confLevel = outcomes.get(i).getOutcome().getConfidenceLevel();
+			
+			int confLevel2 = outcomes.get(i).getOutcome().getConfidenceLevel();
+			logging.debug("comparing confLevel: {} with {}", confLevel, confLevel2);
+			if (confLevel<=confLevel2){
+				logging.debug("conflevel {} <= {} true", confLevel, confLevel2);
+				confLevel = confLevel2;
 				index = i;
 			}
 		}
-		if (index == -1){
-			return null;
-		}else{
-			return outcomes.get(index);
-		}
+		
+		return outcomes.get(index);
+		
 		
 	}
 
-	
-	public PrivacyPreference resolveConflicts(List<PrivacyPreference> outcomes){
+	private static boolean equals(IPrivacyOutcome outcome1, IPrivacyOutcome outcome2){
+		if (outcome1 instanceof PPNPOutcome){
+			
+			boolean equals = ((PPNPOutcome) outcome1).equals(outcome2);
+			logging.debug("PPNPOutcomes match {}", equals);
+			return equals;
+		}
 		
+		if (outcome1 instanceof AccessControlOutcome){
+			boolean equals = ((AccessControlOutcome) outcome1).equals(outcome2);
+			logging.debug("AccessControlOutcomes match {}", equals);
+			return equals;
+		}
+		
+		if (outcome1 instanceof AttributeSelectionOutcome){
+			boolean equals = ((AttributeSelectionOutcome) outcome1).equals(outcome2);
+			logging.debug("AttributeSelectionOutcomes match {}", equals);
+			return equals;
+		}
+		
+		if (outcome1 instanceof DObfOutcome){
+			boolean equals = ((DObfOutcome) outcome1).equals(outcome2);
+			logging.debug("DObfOutcomes match {}", equals);
+			return equals;
+		}
+		
+		if (outcome1 instanceof IdentitySelectionPreferenceOutcome){
+			boolean equals = ((IdentitySelectionPreferenceOutcome) outcome1).equals(outcome2);
+			logging.debug("IdentitySelectionPreferenceOutcomes match {}", equals);
+			return equals;
+		}
+		
+		logging.debug("Outcome1 {} not instance of any known outcome", outcome1);
+		
+		return false;
+	}
+	
+
+	public static void main(String[] args){
+		PrivacyPreference prefAllow = new PrivacyPreference(new AccessControlOutcome(PrivacyOutcomeConstantsBean.ALLOW));
+		PrivacyPreference prefBLOCK = new PrivacyPreference(new AccessControlOutcome(PrivacyOutcomeConstantsBean.BLOCK));
+		PrivacyPreference prefLocation  = new PrivacyPreference(new ContextPreferenceCondition(null, OperatorConstants.EQUALS, "home"));
+		PrivacyPreference prefLocation2  = new PrivacyPreference(new ContextPreferenceCondition(null, OperatorConstants.EQUALS, "home"));
+		prefLocation.add(prefAllow);
+		prefLocation2.add(prefBLOCK);
+		
+		
+		
+		List<PrivacyPreference> prefs = new ArrayList<PrivacyPreference>();
+		prefs.add(prefAllow);
+		prefs.add(prefBLOCK);
+		logging.debug(ConflictResolver.resolveConflicts(prefs).toTreeString());
+		
+	}
+	public static PrivacyPreference resolveConflicts(List<PrivacyPreference> outcomes){
+		//check to see if all outcomes contain conditions. 
+		//if not, they should be removed from the list unless they are all conditionless 
+		List<PrivacyPreference> conditionLessOutcomes = new ArrayList<PrivacyPreference>();
+		for (PrivacyPreference privPreference: outcomes){
+			PrivacyPreference parent = (PrivacyPreference) privPreference.getParent();
+			
+			if (parent==null || parent.getUserObject()==null){
+				conditionLessOutcomes.add(privPreference);
+			}
+		}
+		
+		if (outcomes.size() == conditionLessOutcomes.size()){
+			return resolveConflictsConfidenceOnly(outcomes);
+		}
+		//check to see if the outcomes conflict with each other
+		if (outcomes.size()==1){
+			return outcomes.get(0);
+		}
+		boolean conflicting = false;
+		PrivacyPreference firstPref = outcomes.get(0);
+		for (int i=1; i<outcomes.size(); i++){
+			PrivacyPreference pref = outcomes.get(i);
+			if (!equals(pref.getOutcome(), firstPref.getOutcome())){
+				conflicting = true;
+				break;
+			}
+		}
+		//if not conflicting, return the one with the highest confidence level
+		if (!conflicting){
+			for (int i=1; i<outcomes.size(); i++){
+				PrivacyPreference pref = outcomes.get(i);
+				if (firstPref.getOutcome().getConfidenceLevel()<pref.getOutcome().getConfidenceLevel()){
+					firstPref = pref;
+				}
+			}	
+			logging.debug("Found that outcomes do not conflict, returning one with highest confidence level");
+			return firstPref;
+		}
+		logging.debug("Found that there are actual conflicts between outcomes. Resolving conflicts");
 		Hashtable<Double, List<PrivacyPreference>> table = new Hashtable<Double, List<PrivacyPreference>>(); 
 		double trustValue = 0.0;
 
@@ -110,15 +210,18 @@ public class ConflictResolver {
 		if (table.containsKey(trustValue)){
 			List<PrivacyPreference> list = table.get(trustValue);
 			if (list.size()==1){
+				logging.debug("Resolved conflict through trust, not using confidence levels");
 				return list.get(0);
 			}else if (list.size()==0){
-				System.err.println("ERRORRRRR");
-				return null;
+				logging.debug("Error in resolving conflict through trust, resolving only with confidence levels");
+				return resolveConflictsConfidenceOnly(outcomes);
 			}else{
+				logging.debug("Could not resolve conflicts through trust *only*. Using confidence levels as well.");
 				return resolveConflictsConfidenceOnly(list);
 			}
 		}
-		return null;
+		logging.debug("no trust conditions in preference, resolving only with confidence levels");
+		return resolveConflictsConfidenceOnly(outcomes);
 	}
 }
 

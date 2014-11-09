@@ -1,12 +1,14 @@
-package ac.hw.personis.notification;
+package ac.hw.personis.event;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class PanelClosedListener implements ActionListener{
+import ac.hw.personis.notification.NotificationsPanel;
+
+public class NotificationPanelClosedListener implements ActionListener{
 
 	private NotificationsPanel notifPanel;
-	public PanelClosedListener(NotificationsPanel notifPanel) {
+	public NotificationPanelClosedListener(NotificationsPanel notifPanel) {
 		this.notifPanel = notifPanel;
 		// TODO Auto-generated constructor stub
 	}

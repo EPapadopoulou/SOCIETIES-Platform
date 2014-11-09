@@ -25,6 +25,7 @@
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager.merging;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.tree.TreeNode;
 
@@ -193,14 +194,14 @@ public class SingleRule{
 			for (int i=0; i< this.conditions.size(); i++){
 				IPrivacyPreferenceCondition con = this.conditions.get(i);
 				if (con instanceof ContextPreferenceCondition){
-				if (((ContextPreferenceCondition) con).getCtxIdentifier().getType().equals(contextType) && ((ContextPreferenceCondition) con).getValue().equals(value) && ((ContextPreferenceCondition) con).getOperator().equals(op)){
-					this.conditions.remove(i);
-				}
+					if (((ContextPreferenceCondition) con).getCtxIdentifier().getType().equals(contextType) && ((ContextPreferenceCondition) con).getValue().equals(value) && ((ContextPreferenceCondition) con).getOperator().equals(op)){
+						this.conditions.remove(i);
+					}
 				}
 			}
 		}else if (pc instanceof PrivacyCondition){
 			Condition condition = ((PrivacyCondition) pc).getCondition();
-			
+
 			for (int i=0; i<this.conditions.size(); i++){
 				IPrivacyPreferenceCondition con = this.conditions.get(i);
 				if (con instanceof PrivacyCondition){
@@ -262,6 +263,68 @@ public class SingleRule{
 
 	}
 
+	public PrivacyPreference toPrivacyPreference(){
+		PrivacyPreference privPreference= new PrivacyPreference(outcome);
+		//adding context conditions at the bottom
+		List<ContextPreferenceCondition> contextConditions = getContextConditions();
+		for (ContextPreferenceCondition con : contextConditions){
+			PrivacyPreference conditionPreference = new PrivacyPreference(con);
+			conditionPreference.add(privPreference);
+			privPreference = conditionPreference;
+		}
+		
+		//next adding privacy conditions in the middle
+		List<PrivacyCondition> privacyConditions = getPrivacyConditions();
+		
+		for (PrivacyCondition con: privacyConditions){
+			PrivacyPreference conditionPreference = new PrivacyPreference(con);
+			conditionPreference.add(privPreference);
+			privPreference = conditionPreference;
+		}
+		
+		//last, adding trust conditions at the top
+		
+		List<TrustPreferenceCondition> trustConditions = getTrustConditions();
+		for (TrustPreferenceCondition con: trustConditions){
+			PrivacyPreference conditionPreference = new PrivacyPreference(con);
+			conditionPreference.add(privPreference);
+			privPreference = conditionPreference;
+		}
+		
+		return privPreference.getRoot();
+	}
 
+	private List<TrustPreferenceCondition> getTrustConditions(){
+		List<TrustPreferenceCondition> list = new ArrayList<TrustPreferenceCondition>(); 
+		for (IPrivacyPreferenceCondition condition : this.conditions){
+			if (condition instanceof TrustPreferenceCondition){
+				list.add((TrustPreferenceCondition) condition);
+			}
+		}
+		return list;
+	}
+
+	private List<PrivacyCondition> getPrivacyConditions(){
+		List<PrivacyCondition> list = new ArrayList<PrivacyCondition>(); 
+		for (IPrivacyPreferenceCondition condition : this.conditions){
+			if (condition instanceof PrivacyCondition){
+				list.add((PrivacyCondition) condition);
+			}
+		}
+		return list;
+	}
+	
+	private List<ContextPreferenceCondition> getContextConditions(){
+		List<ContextPreferenceCondition> list = new ArrayList<ContextPreferenceCondition>(); 
+		for (IPrivacyPreferenceCondition condition : this.conditions){
+			if (condition instanceof ContextPreferenceCondition){
+				list.add((ContextPreferenceCondition) condition);
+			}
+		}
+		return list;
+	}
+	
 }
+
+
 

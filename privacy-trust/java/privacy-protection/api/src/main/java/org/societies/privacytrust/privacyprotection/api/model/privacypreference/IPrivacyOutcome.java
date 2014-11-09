@@ -24,7 +24,6 @@
  */
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference;
 
-import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.Stage;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.constants.PrivacyPreferenceTypeConstants;
 
 
@@ -35,50 +34,12 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  * @author Elizabeth
  *
  */
-public abstract class IPrivacyOutcome {
-
-	private int confidenceLevel = 50;
-	
-	private boolean askUser = true;
-
-	private Stage currentStage = Stage.START;
+public interface IPrivacyOutcome {
 	
 	public abstract PrivacyPreferenceTypeConstants getOutcomeType();
-	
-	public int getConfidenceLevel(){
-		return this.confidenceLevel;
-	}
-	
-	public boolean requiresUserConfirmation(){
-		return this.askUser;
-	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (askUser ? 1231 : 1237);
-		result = prime * result + confidenceLevel;
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		IPrivacyOutcome other = (IPrivacyOutcome) obj;
-		if (askUser != other.askUser)
-			return false;
-		if (confidenceLevel != other.confidenceLevel)
-			return false;
-		return true;
-	}
+	public int getConfidenceLevel();
 	
-	public void updateConfidenceLevel(boolean positive){
-		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
-	}
+	public void updateConfidenceLevel(boolean positive);
+		
 }

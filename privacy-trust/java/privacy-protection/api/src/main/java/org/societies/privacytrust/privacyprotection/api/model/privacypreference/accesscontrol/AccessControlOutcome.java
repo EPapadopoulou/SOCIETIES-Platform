@@ -25,6 +25,7 @@
 package org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlOutcomeBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyOutcomeConstantsBean;
@@ -46,15 +47,17 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  * @author Elizabeth
  *
  */
-public class AccessControlOutcome extends IPrivacyOutcome implements Serializable {
+public class AccessControlOutcome implements IPrivacyOutcome, Serializable {
 
-
+	private static final int MIN = 0;
+	private static final int MAX = 100;
+	private final String uuid;
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private PrivacyOutcomeConstantsBean effect;
+	private final PrivacyOutcomeConstantsBean effect;
 
 	private int confidenceLevel;
 
@@ -66,12 +69,23 @@ public class AccessControlOutcome extends IPrivacyOutcome implements Serializabl
 		this.effect = effect;
 		this.confidenceLevel = 50;
 		this.currentStage = Stage.START;
+		this.uuid = UUID.randomUUID().toString();
 	}
 	
 	public AccessControlOutcome(AccessControlOutcomeBean bean){
 		this.effect = bean.getEffect();
 		this.confidenceLevel = bean.getConfidenceLevel();
 		this.currentStage = bean.getCurrentStage();
+		this.uuid = bean.getUuid();
+	}
+
+	public AccessControlOutcomeBean toBean() {
+		AccessControlOutcomeBean bean = new AccessControlOutcomeBean();
+		bean.setConfidenceLevel(confidenceLevel);
+		bean.setCurrentStage(currentStage);
+		bean.setEffect(effect);
+		bean.setUuid(uuid);
+		return bean;
 	}
 
 	public PrivacyOutcomeConstantsBean getEffect(){
@@ -84,7 +98,7 @@ public class AccessControlOutcome extends IPrivacyOutcome implements Serializabl
 	 */
 	@Override
 	public PrivacyPreferenceTypeConstants getOutcomeType() {
-		return PrivacyPreferenceTypeConstants.PRIVACY_POLICY_NEGOTIATION;
+		return PrivacyPreferenceTypeConstants.ACCESS_CONTROL;
 	}
 
 	/* (non-Javadoc)
@@ -149,8 +163,50 @@ public class AccessControlOutcome extends IPrivacyOutcome implements Serializabl
 		// TODO Auto-generated method stub
 		return this.currentStage;
 	}
-	
-	public void updateConfidenceLevel(boolean positive){
-		this.confidenceLevel = ConfidenceCalculator.updateConfidence(currentStage, confidenceLevel, positive);
+
+	public String getUuid() {
+		return uuid;
 	}
+	public void updateConfidenceLevel(boolean positive){
+		if (positive){
+			switch (currentStage){
+			case POSITIVE_1:
+				confidenceLevel+=20; 
+				currentStage = Stage.POSITIVE_2;
+				break;
+			case POSITIVE_2:
+				confidenceLevel+=30;
+				currentStage = Stage.POSITIVE_3;
+				break;
+			default: 
+				confidenceLevel+=10;
+				currentStage = Stage.POSITIVE_1;
+				break;
+			}
+			if (confidenceLevel>MAX){
+				confidenceLevel = 100;
+			}
+		}else{
+			switch (currentStage){
+			case NEGATIVE_1:
+				confidenceLevel-=20;
+				currentStage = Stage.NEGATIVE_2;
+				break;
+			case NEGATIVE_2:
+				confidenceLevel-=30;
+				currentStage = Stage.NEGATIVE_3;
+				break;
+			default:
+				confidenceLevel-=10;
+				currentStage = Stage.NEGATIVE_1;
+				break;
+			}
+			if (confidenceLevel<MIN){
+				confidenceLevel = 0;
+			}
+		}
+		
+	}
+
+	
 }
