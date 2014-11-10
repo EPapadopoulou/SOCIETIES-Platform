@@ -58,7 +58,7 @@ public class NotificationsPanel extends JPanel {
 
 
 		gbc = new GridBagConstraints();
-
+		
 
 
 		add(new JScrollPane(mainPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
@@ -72,7 +72,7 @@ public class NotificationsPanel extends JPanel {
 
 	public void addAccessControlNotification(NotificationEvent notifEvent){
 
-		logging.debug("Adding new notification panel");
+		System.out.println("Adding new notification panel");
 		if (notifEvent.getNotificationType()==NotificationType.SIMPLE){
 			AccessControlPanel panel = new AccessControlPanel(personisHelper, notifEvent.getMessage(), notifEvent.getUuid(), listener, notifEvent.getEffect());
 			panels.add(panel);
@@ -84,7 +84,7 @@ public class NotificationsPanel extends JPanel {
 		}
 	}
 	public void addDobfNotification(NotificationDobfEvent notifEvent) {
-		logging.debug("Adding new dobf notification panel");
+		System.out.println("Adding new dobf notification panel");
 		if (notifEvent.getNotificationType()==NotificationType.SIMPLE){
 			DObfPanel panel = new DObfPanel(personisHelper, notifEvent.getMessage(), notifEvent.getUuid(), listener, notifEvent.getDataType(), notifEvent.getObfuscationLevel());
 			panels.add(panel);
@@ -105,27 +105,29 @@ public class NotificationsPanel extends JPanel {
 
 	private void resetPanels() {
 		mainPanel.removeAll();
-		logging.debug("removed all panels");
+		System.out.println("removed all panels");
 
 		int i = panels.size();
 		gbc.gridx = 0;
 		for (NotificationPanel nPanel : panels){
-			logging.debug("recreating notif list: "+nPanel.getUuid());
+			System.out.println("recreating notif list: "+nPanel.getUuid());
 			gbc.gridy = i;
 			mainPanel.add(nPanel, gbc);
 			i--;
 		}
-		logging.debug("finished adding panels, revalidating mainPanel");
+		System.out.println("finished adding panels, revalidating mainPanel");
 
 		mainPanel.revalidate();
+		revalidate();
+		
 	}
 
 	public void removeNotification(String uuid){
-		logging.debug("Removing notification with uuid {}", uuid);
+		System.out.println("Removing notification with uuid "+uuid);
 		NotificationPanel panelToBeRemoved = null;
 		for (NotificationPanel panel: panels){
 			if (panel.getUuid().equalsIgnoreCase(uuid)){
-				logging.debug("Found panel for removal");
+				System.out.println("Found panel for removal");
 				panelToBeRemoved = panel;
 				break;
 
@@ -133,11 +135,11 @@ public class NotificationsPanel extends JPanel {
 		}
 		if (null!=panelToBeRemoved){
 			if (panels.remove(panelToBeRemoved)){
-				logging.debug("panel removed");
+				System.out.println("panel removed");
 				resetPanels();
-				logging.debug("reset panels");
+				System.out.println("reset panels");
 			}else{
-				logging.debug("panel not removed from panels list");
+				System.out.println("panel not removed from panels list");
 			}
 			
 		}

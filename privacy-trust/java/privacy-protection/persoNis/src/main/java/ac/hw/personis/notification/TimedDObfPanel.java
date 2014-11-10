@@ -52,10 +52,9 @@ public class TimedDObfPanel extends DObfPanel {
 
 class DobfTimer {
 	private static final int TIMER_PERIOD = 1000;
-	protected static final int MAX_COUNT = 30;
+	protected static final int MAX_COUNT = 15;
 	private TimedDObfPanel panel; // holds a reference to the Welcome class
 	private int count;
-	private NotificationsPanel parentPanel;
 	private Timer timer;
 
 	public DobfTimer(TimedDObfPanel panel) {

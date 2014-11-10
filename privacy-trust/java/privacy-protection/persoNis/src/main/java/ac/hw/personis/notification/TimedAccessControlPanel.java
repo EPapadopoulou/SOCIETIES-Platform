@@ -16,6 +16,7 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.GridBagLayout;
 
 public class TimedAccessControlPanel extends AccessControlPanel {
 
@@ -40,6 +41,7 @@ public class TimedAccessControlPanel extends AccessControlPanel {
 		gbc_lblNewLabel.gridy = 3;
 		add(lblCountdown, gbc_lblNewLabel);
 		hurdlerTimer = new HurdlerTimer(this);
+
 		hurdlerTimer.start();
 	}
 
@@ -48,9 +50,11 @@ public class TimedAccessControlPanel extends AccessControlPanel {
 	}
 	private static void createAndShowUI() {
 		JFrame frame = new JFrame("Welcome");
-		frame.getContentPane().add(new TimedAccessControlPanel(null, "MyMessage", "uuid", null, null));
+		frame.getContentPane().add(new TimedAccessControlPanel(null, "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.", "uuid", null, null));
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.pack();
+		frame.setSize(350, 300);
+		//frame.pack();
+		
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 	}
@@ -75,10 +79,9 @@ public class TimedAccessControlPanel extends AccessControlPanel {
 
 class HurdlerTimer {
 	private static final int TIMER_PERIOD = 1000;
-	protected static final int MAX_COUNT = 30;
+	protected static final int MAX_COUNT = 15;
 	private TimedAccessControlPanel panel; // holds a reference to the Welcome class
 	private int count;
-	private NotificationsPanel parentPanel;
 	private Timer timer;
 
 	public HurdlerTimer(TimedAccessControlPanel panel) {

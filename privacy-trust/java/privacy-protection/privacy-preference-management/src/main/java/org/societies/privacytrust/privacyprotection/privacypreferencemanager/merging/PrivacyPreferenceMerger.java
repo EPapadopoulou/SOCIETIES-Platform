@@ -41,7 +41,9 @@ import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.IDSPreferenceDetailsBean;
+import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
 import org.societies.api.schema.identity.RequestorBean;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
@@ -69,9 +71,9 @@ public class PrivacyPreferenceMerger {
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
 	public PrivacyPreferenceMerger(PrivacyPreferenceManager ppMgr){
-		
+
 		this.privPrefMgr = ppMgr;
-		
+
 
 	}
 
@@ -84,14 +86,14 @@ public class PrivacyPreferenceMerger {
 		if (existingModel==null){
 			IDSPrivacyPreferenceTreeModel model;
 			try {
-			
+
 				model = new IDSPrivacyPreferenceTreeModel(details, this.createIDSPreference(snapshot, details));
 				this.privPrefMgr.storeIDSPreference(details, model);
 			} catch (InvalidFormatException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 		}else{
 			PrivacyPreference mergedPreference;
 			try {
@@ -115,7 +117,7 @@ public class PrivacyPreferenceMerger {
 
 		if (node.isLeaf()){
 			this.logging.debug("existing node does not contain context condition. merging as leaf");
-			
+
 			PrivacyPreference p = new PrivacyPreference();
 			p.add(this.createIDSPreference(snapshot, d));
 			p = p.getRoot();
@@ -146,54 +148,95 @@ public class PrivacyPreferenceMerger {
 
 	public PrivacyPreference mergeAccCtrlPreference(AccessControlPreferenceDetailsBean d, PrivacyPreference existingPreference, PrivacyPreference newPreference){
 		logging.debug("MERGING ACCESS CONTROL PREFERENCES - START");
-		if (existingPreference.isLeaf()){
-			this.logging.debug("existing node does not contain context condition. merging as leaf");
-			if (newPreference.isLeaf()){
-				AccessControlOutcome newOutcome = (AccessControlOutcome) newPreference.getOutcome();
-				AccessControlOutcome existingOutcome = (AccessControlOutcome) existingPreference.getOutcome();
-				if (newOutcome.equals(existingOutcome)){
-					existingOutcome.updateConfidenceLevel(true);
-					return existingPreference;
-				}
-			}
-			newPreference = newPreference.getRoot();
-			PrivacyPreference p = new PrivacyPreference();
-			p.add(newPreference);
-			p.add(existingPreference);
-			return p;
-		}
-		
-		if (newPreference.isLeaf()){
-			this.logging.debug("newPreference node does not contain context condition. merging as leaf");
-			if (existingPreference.isLeaf()){
-				AccessControlOutcome newOutcome = (AccessControlOutcome) newPreference.getOutcome();
-				AccessControlOutcome existingOutcome = (AccessControlOutcome) existingPreference.getOutcome();
-				if (newOutcome.equals(existingOutcome)){
-					existingOutcome.updateConfidenceLevel(true);
-					return existingPreference;
-				}else{
-					PrivacyPreference newRoot = new PrivacyPreference();
-					newRoot.add(existingPreference);
-					newRoot.add(newPreference);
-					return newRoot;
-				}
-			}
-			
-			if (existingPreference.getUserObject()==null){
-				existingPreference.add(newPreference);
+		existingPreference = existingPreference.getRoot();
+		newPreference = newPreference.getRoot();
+
+
+		if (existingPreference.isLeaf() && newPreference.isLeaf()){
+			logging.debug("Merging 2 leaf nodes: {} and {}", existingPreference.toTreeString(), newPreference.toTreeString());
+			AccessControlOutcome newOutcome = (AccessControlOutcome) newPreference.getOutcome();
+			AccessControlOutcome existingOutcome = (AccessControlOutcome) existingPreference.getOutcome();
+			if (newOutcome.equals(existingOutcome)){
+				int preconfidenceLevel = existingOutcome.getConfidenceLevel(); 
+				existingOutcome.updateConfidenceLevel(true);
+				int afterConfidenceLevel = existingOutcome.getConfidenceLevel();
+				logging.debug("Updated confidence level from: {} to {}", preconfidenceLevel, afterConfidenceLevel);
 				return existingPreference;
 			}
-			
+			//both leaves - conflicting
+			int preconfidenceLevel = existingOutcome.getConfidenceLevel();
+			existingOutcome.updateConfidenceLevel(false);
+			int afterConfidenceLevel = existingOutcome.getConfidenceLevel();
+			logging.debug("Updated confidence level from: {} to {}", preconfidenceLevel, afterConfidenceLevel);
 			PrivacyPreference newRoot = new PrivacyPreference();
-			
-			newRoot.add(existingPreference);
 			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
 			return newRoot;
 		}
+
+		if (existingPreference.isLeaf() && newPreference.isBranch()){
+			logging.debug("merging existing leaf node : {} with new branch node: {} ", existingPreference.toTreeString(), newPreference.toTreeString());
+			PrivacyPreference newRoot = new PrivacyPreference();
+			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
+			return newRoot;
+		}
+
+		if (existingPreference.isBranch() && newPreference.isLeaf()){
+			logging.debug("merging existing branch node : {} with new leaf node: {}", existingPreference.toTreeString(), newPreference.toTreeString());
+			if (existingPreference.getUserObject()==null){
+				Enumeration<PrivacyPreference> children = existingPreference.children();
+				PrivacyPreference match = null;
+				PrivacyPreference conflict = null;
+				while (children.hasMoreElements()){
+					PrivacyPreference childPreference = children.nextElement();
+					if (childPreference.isLeaf()){
+						AccessControlOutcome newOutcome = (AccessControlOutcome) newPreference.getOutcome();
+						AccessControlOutcome existingOutcome = (AccessControlOutcome) childPreference.getOutcome();
+						if (newOutcome.equals(existingOutcome)){
+							match = childPreference;
+						}else{
+							conflict = childPreference;
+						}
+					}
+				}
+				if ((match == null) && (conflict==null)){
+					existingPreference.add(newPreference);
+					return existingPreference.getRoot();
+				}
+
+				if ((match!=null) && (conflict==null)){
+					match.getOutcome().updateConfidenceLevel(true);
+					return match.getRoot();
+				}
+
+				if ((match==null) && (conflict!=null)){
+					conflict.getOutcome().updateConfidenceLevel(false);
+					existingPreference.add(newPreference);
+					return existingPreference.getRoot();
+				}
+				if ((match!=null) && (conflict!=null)){
+					match.getOutcome().updateConfidenceLevel(true);
+					conflict.getOutcome().updateConfidenceLevel(false);
+					return match.getRoot();
+				}
+
+
+			}
+			//existing preference is branch with condition. 
+			PrivacyPreference newRoot = new PrivacyPreference();
+			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
+			return newRoot;
+		}
+
+
+
+		logging.debug("none of the trees are leaf only, running merging proper");
 		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
-		
+
 		PrivacyPreference mergedTree = existingPreference;
-		
+
 		for (SingleRule sr : newSingleRules){
 			PrivacyPreference temp = merge(mergedTree, sr);
 			if (temp==null){
@@ -206,56 +249,95 @@ public class PrivacyPreferenceMerger {
 	}
 
 
+
 	public PrivacyPreference mergeAttrSelPreference(AttributeSelectionPreferenceDetailsBean d, PrivacyPreference existingPreference, PrivacyPreference newPreference){
 		logging.debug("MERGING ATTRIBUTE SELECTION PREFERENCES - START");
 
-		if (existingPreference.isLeaf()){
-			this.logging.debug("existing node does not contain context condition. merging as leaf");
-			if (newPreference.isLeaf()){
-				AttributeSelectionOutcome newOutcome = (AttributeSelectionOutcome) newPreference.getOutcome();
-				AttributeSelectionOutcome existingOutcome = (AttributeSelectionOutcome) existingPreference.getOutcome();
-				if (newOutcome.equals(existingOutcome)){
-					existingOutcome.updateConfidenceLevel(true);
-					return existingPreference;
-				}
-			}
-			newPreference = newPreference.getRoot();
-			PrivacyPreference p = new PrivacyPreference();
-			p.add(newPreference);
-			p.add(existingPreference);
-			return p;
-		}
-		if (newPreference.isLeaf()){
-			this.logging.debug("newPreference node does not contain context condition. merging as leaf");
-			if (existingPreference.isLeaf()){
-				AttributeSelectionOutcome newOutcome = (AttributeSelectionOutcome) newPreference.getOutcome();
-				AttributeSelectionOutcome existingOutcome = (AttributeSelectionOutcome) existingPreference.getOutcome();
-				if (newOutcome.equals(existingOutcome)){
-					existingOutcome.updateConfidenceLevel(true);
-					return existingPreference;
-				}else{
-					PrivacyPreference newRoot = new PrivacyPreference();
-					newRoot.add(existingPreference);
-					newRoot.add(newPreference);
-					return newRoot;
-				}
-			}
-			
-			if (existingPreference.getUserObject()==null){
-				existingPreference.add(newPreference);
+		existingPreference = existingPreference.getRoot();
+		newPreference = newPreference.getRoot();
+
+
+		if (existingPreference.isLeaf() && newPreference.isLeaf()){
+			logging.debug("Merging 2 leaf nodes: {} and {}", existingPreference.toTreeString(), newPreference.toTreeString());
+			AttributeSelectionOutcome newOutcome = (AttributeSelectionOutcome) newPreference.getOutcome();
+			AttributeSelectionOutcome existingOutcome = (AttributeSelectionOutcome) existingPreference.getOutcome();
+			if (newOutcome.equals(existingOutcome)){
+				int preconfidenceLevel = existingOutcome.getConfidenceLevel(); 
+				existingOutcome.updateConfidenceLevel(true);
+				int afterConfidenceLevel = existingOutcome.getConfidenceLevel();
+				logging.debug("Updated confidence level from: {} to {}", preconfidenceLevel, afterConfidenceLevel);
 				return existingPreference;
 			}
-			
+			//both leaves - conflicting
+			int preconfidenceLevel = existingOutcome.getConfidenceLevel();
+			existingOutcome.updateConfidenceLevel(false);
+			int afterConfidenceLevel = existingOutcome.getConfidenceLevel();
+			logging.debug("Updated confidence level from: {} to {}", preconfidenceLevel, afterConfidenceLevel);
 			PrivacyPreference newRoot = new PrivacyPreference();
-			
-			newRoot.add(existingPreference);
 			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
+			return newRoot;
+		}
+
+		if (existingPreference.isLeaf() && newPreference.isBranch()){
+			logging.debug("merging existing leaf node : {} with new branch node: {} ", existingPreference.toTreeString(), newPreference.toTreeString());
+			PrivacyPreference newRoot = new PrivacyPreference();
+			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
+			return newRoot;
+		}
+
+		if (existingPreference.isBranch() && newPreference.isLeaf()){
+			logging.debug("merging existing branch node : {} with new leaf node: {}", existingPreference.toTreeString(), newPreference.toTreeString());
+			if (existingPreference.getUserObject()==null){
+				Enumeration<PrivacyPreference> children = existingPreference.children();
+				PrivacyPreference match = null;
+				PrivacyPreference conflict = null;
+				while (children.hasMoreElements()){
+					PrivacyPreference childPreference = children.nextElement();
+					if (childPreference.isLeaf()){
+						AttributeSelectionOutcome newOutcome = (AttributeSelectionOutcome) newPreference.getOutcome();
+						AttributeSelectionOutcome existingOutcome = (AttributeSelectionOutcome) childPreference.getOutcome();
+						if (newOutcome.equals(existingOutcome)){
+							match = childPreference;
+						}else{
+							conflict = childPreference;
+						}
+					}
+				}
+				if ((match == null) && (conflict==null)){
+					existingPreference.add(newPreference);
+					return existingPreference.getRoot();
+				}
+
+				if ((match!=null) && (conflict==null)){
+					match.getOutcome().updateConfidenceLevel(true);
+					return match.getRoot();
+				}
+
+				if ((match==null) && (conflict!=null)){
+					conflict.getOutcome().updateConfidenceLevel(false);
+					existingPreference.add(newPreference);
+					return existingPreference.getRoot();
+				}
+				if ((match!=null) && (conflict!=null)){
+					match.getOutcome().updateConfidenceLevel(true);
+					conflict.getOutcome().updateConfidenceLevel(false);
+					return match.getRoot();
+				}
+
+
+			}
+			//existing preference is branch with condition. 
+			PrivacyPreference newRoot = new PrivacyPreference();
+			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
 			return newRoot;
 		}
 		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
-		
+
 		PrivacyPreference mergedTree = existingPreference;
-		
+
 		for (SingleRule sr : newSingleRules){
 			PrivacyPreference temp = merge(mergedTree, sr);
 			if (temp==null){
@@ -273,15 +355,15 @@ public class PrivacyPreferenceMerger {
 			this.logging.debug("Can't recreate tree, singleRules.size()=0");
 			return null;
 		}
-		
+
 		PrivacyPreference privacyPreference = singleRules.get(0).toPrivacyPreference();
 		if (singleRules.size()==1){
 			this.logging.debug("Only one single rule found:\n{}\n returning singleRule.toPrivacyPreference()", privacyPreference.toTreeString());
 			return privacyPreference;
 		}
-		
-		
-		
+
+
+
 		for (int i = 1; i<singleRules.size(); i++){
 			SingleRule sr = singleRules.get(i);
 			this.logging.debug("Recreating tree, merging tree:\n {} \n with singlerule: \n{}", privacyPreference.toTreeString(), sr.toString());
@@ -289,7 +371,7 @@ public class PrivacyPreferenceMerger {
 			this.logging.debug("Found commonNode (recreate): "+commonNode);			
 			if (null==commonNode){
 				this.logging.debug("Did not find commonNode (recreate), adding to root of tree");
-				
+
 				PrivacyPreference root = privacyPreference.getRoot();
 				if (null==root.getUserObject()){
 					privacyPreference = addToNode(root, sr);
@@ -302,12 +384,14 @@ public class PrivacyPreferenceMerger {
 				privacyPreference = addToNode(commonNode, sr).getRoot();
 			}
 		}
-		
+
 		this.logging.debug("Merging complete. returning preference: \n{} \n", privacyPreference.getRoot().toTreeString());
 		return privacyPreference.getRoot();
-		
+
 	}
 	private PrivacyPreference merge(PrivacyPreference oldTree, SingleRule sr){
+		boolean matches = false;
+		boolean conflicts = false;
 		logging.debug("\nMerging: \n{} \n with SingleRule: \n{} \n\n", oldTree.toTreeString(), sr.toString());
 		//IPreference newTree = null;
 		ArrayList<SingleRule> oldRules = this.convertToSingleRules(oldTree);
@@ -316,28 +400,62 @@ public class PrivacyPreferenceMerger {
 		//check if we're in Situation 2 (100% match)
 		ArrayList<SingleRule> temp = this.checkMatches(oldRules, sr);
 		if (temp.size()>0){
+			matches = true;
 			//need to recreate the tree from the arraylist
-			logging.debug("Situation 2, Match 100%, recreating tree and returning");
-			return recreateFromSingleRule(oldRules);
+			logging.debug("Situation 2, Match 100%, updating confidence");
+			String uuid = temp.get(0).getOutcome().getUuid();
+			Enumeration<PrivacyPreference> postorderEnumeration = oldTree.postorderEnumeration();
+			while (postorderEnumeration.hasMoreElements()){
+				PrivacyPreference privacyPreference = postorderEnumeration.nextElement();
+
+				if (privacyPreference.isLeaf()){
+
+					IPrivacyOutcome outcome = privacyPreference.getOutcome();
+					logging.debug("checking leaf uuid {}, with given uuid {}", outcome.getUuid(), uuid);
+					if (outcome.getUuid().equalsIgnoreCase(uuid)){
+						logging.debug("Found outcome with uuid, going to update now, current confidence Level: {}", outcome.getConfidenceLevel());
+						outcome.updateConfidenceLevel(true);
+						logging.debug("Updated confidence level: {}", outcome.getConfidenceLevel());
+					}
+				}
+			}
+
 		}
-		this.logging.debug("Not in Situation 2");
 		this.logging.debug("Checking conflicts");
 		//check if we're in Situation 1 (same conditions different outcomes)
 		temp = this.checkConflicts(oldRules, sr);
 		if (temp.size()>0){
-			this.logging.debug("Situation 1, conflict can't be resolved, updated confidence levels");
+			conflicts = true;
+			this.logging.debug("Situation 1, conflict can't be resolved, updating confidence levels");
 			this.logging.debug("Recreating tree from single rules: \n {} \n", temp);
-			//TODO: update confidence levels
-			//re-create the tree from temp
-			return recreateFromSingleRule(temp);
+			String uuid = temp.get(0).getOutcome().getUuid();
+			Enumeration<PrivacyPreference> postorderEnumeration = oldTree.postorderEnumeration();
+			while (postorderEnumeration.hasMoreElements()){
+				PrivacyPreference privacyPreference = postorderEnumeration.nextElement();
+
+				if (privacyPreference.isLeaf()){
+
+					IPrivacyOutcome outcome = privacyPreference.getOutcome();
+					logging.debug("checking leaf uuid {}, with given uuid {}", outcome.getUuid(), uuid);
+					if (outcome.getUuid().equalsIgnoreCase(uuid)){
+						logging.debug("Found outcome with uuid, going to update now, current confidence Level: {}", outcome.getConfidenceLevel());
+						outcome.updateConfidenceLevel(false);
+						logging.debug("Updated confidence level: {}", outcome.getConfidenceLevel());
+					}
+				}
+			}
 		}
-		this.logging.debug("Not in situation 1");
+
+		if (matches){
+			return oldTree;
+		}
+		this.logging.debug("Not in situations 1 and 2");
 
 
 
 		//we're going to find a branch that has the most common conditions with this rule.
 		PrivacyPreference commonNode = this.findCommonNode(oldTree, sr);
-		
+
 		this.logging.debug("Found commonNode: "+commonNode);
 		if (null==commonNode){
 			this.logging.debug("Did not find commonNode, adding to root of tree");
@@ -358,41 +476,33 @@ public class PrivacyPreferenceMerger {
 
 
 	}
-	
+
 	private ArrayList<SingleRule> checkConflicts(ArrayList<SingleRule> oldRules, SingleRule newRule){
 
+		ArrayList<SingleRule> conflictingRules = new ArrayList<SingleRule>();
 		for (int i=0; i< oldRules.size(); i++){
 			SingleRule sr = oldRules.get(i);
 			if (sr.conflicts(newRule)){
 				this.logging.debug("single rule (from preference): \n{} \nconflicts with single rule (new preference): \n{}", sr.toString(), newRule.toString());
-				sr.getOutcome().updateConfidenceLevel(false);
-				//oldRules.set(i, this.resolveConflict(sr, newRule));
-				oldRules.add(newRule);
-				return oldRules;
+				conflictingRules.add(sr);
 			}
-
 		}
-
-		return new ArrayList<SingleRule>();
-	}
-	private SingleRule resolveConflict(SingleRule oldRule, SingleRule newRule){
-		//resolve
-		return oldRule;
+		return conflictingRules;
 	}
 
 
 	private ArrayList<SingleRule> checkMatches(ArrayList<SingleRule> oldRules, SingleRule newRule){
 
+		ArrayList<SingleRule> matchingRules = new ArrayList<SingleRule>();
 		for (int i=0; i< oldRules.size(); i++){
 
 			SingleRule sr = oldRules.get(i);
 			if (sr.equals(newRule)){
-				sr.getOutcome().updateConfidenceLevel(true);
-				oldRules.set(i, sr);
-				return oldRules;
+				matchingRules.add(sr);
+				return matchingRules;
 			}
 		}
-		return new ArrayList<SingleRule>();
+		return matchingRules;
 	}
 
 
@@ -419,7 +529,7 @@ public class PrivacyPreferenceMerger {
 
 	private CommonNodeCounter findCommonNode(PrivacyPreference ptn, SingleRule sr, CommonNodeCounter cnc){
 
-		
+
 		if (ptn.isLeaf()){
 			this.logging.debug("current node is leaf. returning common node counter");
 			return cnc;
@@ -560,22 +670,22 @@ public class PrivacyPreferenceMerger {
 						this.logging.debug(" REMOVED "+con.toString());
 					}
 				}else 
-				if (objs[i] instanceof TrustPreferenceCondition){
-					TrustPreferenceCondition con = (TrustPreferenceCondition) objs[i];
-					this.logging.debug(" removing conditions");
-					if (sr.hasCondition(con)){
-						sr.removeCondition(con);
-						this.logging.debug(" REMOVED "+con.toString());
+					if (objs[i] instanceof TrustPreferenceCondition){
+						TrustPreferenceCondition con = (TrustPreferenceCondition) objs[i];
+						this.logging.debug(" removing conditions");
+						if (sr.hasCondition(con)){
+							sr.removeCondition(con);
+							this.logging.debug(" REMOVED "+con.toString());
+						}
+					}else if (objs[i] instanceof PrivacyCondition){
+						PrivacyCondition con = (PrivacyCondition) objs[i];
+						this.logging.debug(" removing conditions");
+						if (sr.hasCondition(con)){
+							sr.removeCondition(con);
+							this.logging.debug(" REMOVED "+con.toString());
+						}
 					}
-				}else if (objs[i] instanceof PrivacyCondition){
-					PrivacyCondition con = (PrivacyCondition) objs[i];
-					this.logging.debug(" removing conditions");
-					if (sr.hasCondition(con)){
-						sr.removeCondition(con);
-						this.logging.debug(" REMOVED "+con.toString());
-					}
-				}
-					
+
 			}
 			if (ptn.getUserObject() instanceof ContextPreferenceCondition){
 				if (sr.hasCondition((ContextPreferenceCondition) ptn.getUserObject())){
@@ -589,7 +699,7 @@ public class PrivacyPreferenceMerger {
 				if (sr.hasCondition((PrivacyCondition) ptn.getUserObject())){
 					sr.removeCondition((PrivacyCondition) ptn.getUserObject());
 				}
-				
+
 			}
 		}else{
 			this.logging.debug(" not found common node");
@@ -606,7 +716,7 @@ public class PrivacyPreferenceMerger {
 			if (sr.getConditions().get(i) == null){
 				this.logging.debug("even weirder");
 			}
-			*/
+			 */
 			//log("pc: "+pc.toString());
 			this.logging.debug("sr con: "+sr.getConditions().get(i).toString());
 			PrivacyPreference temp = new PrivacyPreference(sr.getConditions().get(i));
@@ -620,62 +730,212 @@ public class PrivacyPreferenceMerger {
 		return (PrivacyPreference ) ptn.getRoot();
 	}
 
+	private PrivacyPreference mergePPNPreference(PPNPreferenceDetailsBean d, PrivacyPreference existingPreference, PrivacyPreference newPreference){
+
+		existingPreference = existingPreference.getRoot();
+		newPreference = newPreference.getRoot();
+
+
+
+		if (existingPreference.isLeaf() && newPreference.isLeaf()){
+			logging.debug("Merging 2 leaf nodes: {} and {}", existingPreference.toTreeString(), newPreference.toTreeString());
+			PPNPOutcome newOutcome = (PPNPOutcome) newPreference.getOutcome();
+			PPNPOutcome existingOutcome = (PPNPOutcome) existingPreference.getOutcome();
+			if (newOutcome.equals(existingOutcome)){
+				int preconfidenceLevel = existingOutcome.getConfidenceLevel(); 
+				existingOutcome.updateConfidenceLevel(true);
+				int afterConfidenceLevel = existingOutcome.getConfidenceLevel();
+				logging.debug("Updated confidence level from: {} to {}", preconfidenceLevel, afterConfidenceLevel);
+				return existingPreference;
+			}
+			//both leaves - conflicting
+			int preconfidenceLevel = existingOutcome.getConfidenceLevel();
+			existingOutcome.updateConfidenceLevel(false);
+			int afterConfidenceLevel = existingOutcome.getConfidenceLevel();
+			logging.debug("Updated confidence level from: {} to {}", preconfidenceLevel, afterConfidenceLevel);
+			PrivacyPreference newRoot = new PrivacyPreference();
+			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
+			return newRoot;
+		}
+
+		if (existingPreference.isLeaf() && newPreference.isBranch()){
+			logging.debug("merging existing leaf node : {} with new branch node: {} ", existingPreference.toTreeString(), newPreference.toTreeString());
+			PrivacyPreference newRoot = new PrivacyPreference();
+			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
+			return newRoot;
+		}
+
+		if (existingPreference.isBranch() && newPreference.isLeaf()){
+			logging.debug("merging existing branch node : {} with new leaf node: {}", existingPreference.toTreeString(), newPreference.toTreeString());
+			if (existingPreference.getUserObject()==null){
+				Enumeration<PrivacyPreference> children = existingPreference.children();
+				PrivacyPreference match = null;
+				PrivacyPreference conflict = null;
+				while (children.hasMoreElements()){
+					PrivacyPreference childPreference = children.nextElement();
+					if (childPreference.isLeaf()){
+						PPNPOutcome newOutcome = (PPNPOutcome) newPreference.getOutcome();
+						PPNPOutcome existingOutcome = (PPNPOutcome) childPreference.getOutcome();
+						if (newOutcome.equals(existingOutcome)){
+							match = childPreference;
+						}else{
+							conflict = childPreference;
+						}
+					}
+				}
+				if ((match == null) && (conflict==null)){
+					existingPreference.add(newPreference);
+					return existingPreference.getRoot();
+				}
+
+				if ((match!=null) && (conflict==null)){
+					match.getOutcome().updateConfidenceLevel(true);
+					return match.getRoot();
+				}
+
+				if ((match==null) && (conflict!=null)){
+					conflict.getOutcome().updateConfidenceLevel(false);
+					existingPreference.add(newPreference);
+					return existingPreference.getRoot();
+				}
+				if ((match!=null) && (conflict!=null)){
+					match.getOutcome().updateConfidenceLevel(true);
+					conflict.getOutcome().updateConfidenceLevel(false);
+					return match.getRoot();
+				}
+
+
+			}
+			//existing preference is branch with condition. 
+			PrivacyPreference newRoot = new PrivacyPreference();
+			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
+			return newRoot;
+		}
+
+		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
+
+		this.logging.debug(" [Merging] new tree is: "+newSingleRules.toString()+" and old tree is: "+this.convertToSingleRules(existingPreference).toString());
+
+		PrivacyPreference mergedTree = existingPreference;
+
+		for (SingleRule sr : newSingleRules){
+			PrivacyPreference temp = merge(mergedTree, sr);
+			if (temp==null){
+				return null;
+			}
+			mergedTree = temp;
+		}
+
+		return mergedTree;
+
+	}
 	public PPNPrivacyPreferenceTreeModel mergePPNPreference(
 			PPNPrivacyPreferenceTreeModel newModel,
 			PPNPrivacyPreferenceTreeModel existingModel) {
 		logging.debug("MERGING PPN PREFERENCES - START");
-		PrivacyPreference existingPreference = existingModel.getRootPreference();
-		PrivacyPreference newPreference = newModel.getRootPreference();
-		if (existingPreference.isLeaf()){
-			this.logging.debug("existing node does not contain context condition. merging as leaf");
-			if (newPreference.isLeaf()){
-				PPNPOutcome newOutcome = (PPNPOutcome) newPreference.getOutcome();
-				PPNPOutcome existingOutcome = (PPNPOutcome) existingPreference.getOutcome();
-				if (newOutcome.equals(existingOutcome)){
-					existingOutcome.updateConfidenceLevel(true);
-					return existingModel;
-				}
-			}
-			PrivacyPreference p = new PrivacyPreference();
-			p.add(newPreference);
-			p.add(existingPreference);
-			PPNPrivacyPreferenceTreeModel model = new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(), p);
-			return model;
+
+		PrivacyPreference mergePPNPreference = mergePPNPreference(existingModel.getDetails(), existingModel.getRootPreference(), newModel.getRootPreference());
+		logging.debug("MERGING PPN PREFERENCES - END");
+		if (mergePPNPreference != null){
+			PPNPrivacyPreferenceTreeModel model = new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(), mergePPNPreference);
 		}
-		if (newPreference.isLeaf()){
-			this.logging.debug("newPreference node does not contain context condition. merging as leaf");
-			if (existingPreference.isLeaf()){
-				PPNPOutcome newOutcome = (PPNPOutcome) newPreference.getOutcome();
-				PPNPOutcome existingOutcome = (PPNPOutcome) existingPreference.getOutcome();
-				if (newOutcome.equals(existingOutcome)){
-					existingOutcome.updateConfidenceLevel(true);
-					return new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(), existingPreference);
-				}else{
-					PrivacyPreference newRoot = new PrivacyPreference();
-					newRoot.add(existingPreference);
-					newRoot.add(newPreference);
-					return  new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(),newRoot);
-				}
+		return null;
+
+	}
+
+	private PrivacyPreference mergeDObfPreference(DObfPreferenceDetailsBean d, PrivacyPreference existingPreference, PrivacyPreference newPreference){
+		logging.debug("MERGING DOBF PREFERENCES - START");
+		existingPreference = existingPreference.getRoot();
+		newPreference = newPreference.getRoot();
+
+
+		if (existingPreference.isLeaf() && newPreference.isLeaf()){
+			logging.debug("Merging 2 leaf nodes: {} and {}", existingPreference.toTreeString(), newPreference.toTreeString());
+			AttributeSelectionOutcome newOutcome = (AttributeSelectionOutcome) newPreference.getOutcome();
+			AttributeSelectionOutcome existingOutcome = (AttributeSelectionOutcome) existingPreference.getOutcome();
+			if (newOutcome.equals(existingOutcome)){
+				int preconfidenceLevel = existingOutcome.getConfidenceLevel(); 
+				existingOutcome.updateConfidenceLevel(true);
+				int afterConfidenceLevel = existingOutcome.getConfidenceLevel();
+				logging.debug("Updated confidence level from: {} to {}", preconfidenceLevel, afterConfidenceLevel);
+				return existingPreference;
 			}
-			
-			if (existingPreference.getUserObject()==null){
-				existingPreference.add(newPreference);
-				return new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(),existingPreference);
-			}
-			
+			//both leaves - conflicting
+			int preconfidenceLevel = existingOutcome.getConfidenceLevel();
+			existingOutcome.updateConfidenceLevel(false);
+			int afterConfidenceLevel = existingOutcome.getConfidenceLevel();
+			logging.debug("Updated confidence level from: {} to {}", preconfidenceLevel, afterConfidenceLevel);
 			PrivacyPreference newRoot = new PrivacyPreference();
-			
-			newRoot.add(existingPreference);
 			newRoot.add(newPreference);
-			return new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(),newRoot);
+			newRoot.add(existingPreference);
+			return newRoot;
 		}
-		
+
+		if (existingPreference.isLeaf() && newPreference.isBranch()){
+			logging.debug("merging existing leaf node : {} with new branch node: {} ", existingPreference.toTreeString(), newPreference.toTreeString());
+			PrivacyPreference newRoot = new PrivacyPreference();
+			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
+			return newRoot;
+		}
+
+		if (existingPreference.isBranch() && newPreference.isLeaf()){
+			logging.debug("merging existing branch node : {} with new leaf node: {}", existingPreference.toTreeString(), newPreference.toTreeString());
+			if (existingPreference.getUserObject()==null){
+				Enumeration<PrivacyPreference> children = existingPreference.children();
+				PrivacyPreference match = null;
+				PrivacyPreference conflict = null;
+				while (children.hasMoreElements()){
+					PrivacyPreference childPreference = children.nextElement();
+					if (childPreference.isLeaf()){
+						AttributeSelectionOutcome newOutcome = (AttributeSelectionOutcome) newPreference.getOutcome();
+						AttributeSelectionOutcome existingOutcome = (AttributeSelectionOutcome) childPreference.getOutcome();
+						if (newOutcome.equals(existingOutcome)){
+							match = childPreference;
+						}else{
+							conflict = childPreference;
+						}
+					}
+				}
+				if ((match == null) && (conflict==null)){
+					existingPreference.add(newPreference);
+					return existingPreference.getRoot();
+				}
+
+				if ((match!=null) && (conflict==null)){
+					match.getOutcome().updateConfidenceLevel(true);
+					return match.getRoot();
+				}
+
+				if ((match==null) && (conflict!=null)){
+					conflict.getOutcome().updateConfidenceLevel(false);
+					existingPreference.add(newPreference);
+					return existingPreference.getRoot();
+				}
+				if ((match!=null) && (conflict!=null)){
+					match.getOutcome().updateConfidenceLevel(true);
+					conflict.getOutcome().updateConfidenceLevel(false);
+					return match.getRoot();
+				}
+
+
+			}
+			//existing preference is branch with condition. 
+			PrivacyPreference newRoot = new PrivacyPreference();
+			newRoot.add(newPreference);
+			newRoot.add(existingPreference);
+			return newRoot;
+		}
+
 		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
-		
+
 		this.logging.debug(" [Merging] new tree is: "+newSingleRules.toString()+" and old tree is: "+this.convertToSingleRules(existingPreference).toString());
-		
+
 		PrivacyPreference mergedTree = existingPreference;
-		
+
 		for (SingleRule sr : newSingleRules){
 			PrivacyPreference temp = merge(mergedTree, sr);
 			if (temp==null){
@@ -683,83 +943,20 @@ public class PrivacyPreferenceMerger {
 			}
 			mergedTree = temp;
 		}
-		
-		PPNPrivacyPreferenceTreeModel model = new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(), mergedTree);
-		logging.debug("MERGING PPN PREFERENCES - END");
-		return model;
-	}
 
+		return mergedTree;
+	}
 	public DObfPreferenceTreeModel mergeDObfPreference(DObfPreferenceTreeModel existingDObfModel,
 			DObfPreferenceTreeModel newDObfModel) {
 		logging.debug("MERGING DOBF PREFERENCES - START");
-
-		PrivacyPreference existingPreference = existingDObfModel.getRootPreference();
-		PrivacyPreference newPreference = newDObfModel.getRootPreference();
-		
-		if (existingPreference.isLeaf()){
-			this.logging.debug("existing node does not contain context condition merging as leaf");
-			if (newPreference.isLeaf()){
-				this.logging.debug("existing and new preferences are leaf prefs");
-				DObfOutcome newOutcome = (DObfOutcome) newPreference.getOutcome();
-				DObfOutcome existingOutcome = (DObfOutcome) existingPreference.getOutcome();
-				if (newOutcome.equals(existingOutcome)){
-					existingOutcome.updateConfidenceLevel(true);
-					return existingDObfModel;
-				}
-			}
-			PrivacyPreference p = new PrivacyPreference();
-			p.add(newPreference);
-			p.add(existingPreference);
-			DObfPreferenceTreeModel model = new DObfPreferenceTreeModel(existingDObfModel.getDetails(), p);
-			logging.debug("MERGING DOBF PREFERENCES - END");
+		PrivacyPreference mergeDObfPreference = mergeDObfPreference(existingDObfModel.getDetails(), existingDObfModel.getRootPreference(), newDObfModel.getRootPreference());
+		logging.debug("MERGING DOBF PREFERENCES - END");
+		if (mergeDObfPreference!=null){
+			DObfPreferenceTreeModel model = new  DObfPreferenceTreeModel(existingDObfModel.getDetails(), mergeDObfPreference);
 			return model;
 		}
-		if (newPreference.isLeaf()){
-			this.logging.debug("newPreference node does not contain context condition. merging as leaf");
-			if (existingPreference.isLeaf()){
-				DObfOutcome newOutcome = (DObfOutcome) newPreference.getOutcome();
-				DObfOutcome existingOutcome = (DObfOutcome) existingPreference.getOutcome();
-				if (newOutcome.equals(existingOutcome)){
-					existingOutcome.updateConfidenceLevel(true);
-					return new DObfPreferenceTreeModel(existingDObfModel.getDetails(), existingPreference);
-				}else{
-					PrivacyPreference newRoot = new PrivacyPreference();
-					newRoot.add(existingPreference);
-					newRoot.add(newPreference);
-					return  new DObfPreferenceTreeModel(existingDObfModel.getDetails(),newRoot);
-				}
-			}
-			
-			if (existingPreference.getUserObject()==null){
-				existingPreference.add(newPreference);
-				return new DObfPreferenceTreeModel(existingDObfModel.getDetails(),existingPreference);
-			}
-			
-			PrivacyPreference newRoot = new PrivacyPreference();
-			
-			newRoot.add(existingPreference);
-			newRoot.add(newPreference);
-			return new DObfPreferenceTreeModel(existingDObfModel.getDetails(),newRoot);
-		}
-		
-		
-		ArrayList<SingleRule> newSingleRules = this.convertToSingleRules(newPreference);
-		
-		this.logging.debug(" [Merging] new tree is: "+newSingleRules.toString()+" and old tree is: "+this.convertToSingleRules(existingPreference).toString());
-		
-		PrivacyPreference mergedTree = existingPreference;
-		
-		for (SingleRule sr : newSingleRules){
-			PrivacyPreference temp = merge(mergedTree, sr);
-			if (temp==null){
-				return null;
-			}
-			mergedTree = temp;
-		}
-		
-		DObfPreferenceTreeModel model = new  DObfPreferenceTreeModel(existingDObfModel.getDetails(), mergedTree);
-		return model;
-		
+		return null;
+
 	}
 
 

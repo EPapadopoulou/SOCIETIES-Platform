@@ -44,7 +44,7 @@ public class PPNWindow {
 		this.firstRound  = firstRound;
 		initialize();
 		dialog = new PPNDialog(this.frame, negDetails, items, firstRound, message);
-		dialog.setAlwaysOnTop(true);
+		dialog.requestFocus();
 		
 	}
 

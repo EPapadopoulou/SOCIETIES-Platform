@@ -13,6 +13,7 @@ import org.societies.privacytrust.privacyprotection.api.dataobfuscation.Obfuscat
 import ac.hw.personis.PersonisHelper;
 import ac.hw.personis.event.NotificationPanelClosedListener;
 
+import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -21,6 +22,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -53,92 +55,108 @@ public class DObfPanel extends NotificationPanel implements ChangeListener {
 	 * Create the panel.
 	 */
 	public DObfPanel(PersonisHelper helper, String text, final String uuid, NotificationPanelClosedListener listener, final String dataType, final int obfuscationLevel) {
-
+		setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		this.personisHelper = helper;
 		this.uuid = uuid;
 		this.dataType = dataType;
 		this.userClicked = true;
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{88, 200, 0, 0, 0};
-		gridBagLayout.rowHeights = new int[]{136, 23, 0, 0, 0};
-		gridBagLayout.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		//gridBagLayout.columnWidths = new int[]{340, 0};
+		//gridBagLayout.rowHeights = new int[]{75, 45, 14, 23, 0};
+		//gridBagLayout.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+		//gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(gridBagLayout);
+		
+				btnContinue = new JButton("Continue");
+				btnContinue.addActionListener(new ActionListener() {
 
-		JLabel lblMessage = new JLabel(text);
-		GridBagConstraints gbc_messageLabel = new GridBagConstraints();
-		gbc_messageLabel.gridwidth = 3;
-		gbc_messageLabel.insets = new Insets(0, 0, 5, 0);
-		gbc_messageLabel.gridx = 0;
-		gbc_messageLabel.gridy = 0;
-		add(lblMessage, gbc_messageLabel);
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						if (userClicked){
+							UserResponseDObfEvent dobfEvent = new UserResponseDObfEvent(uuid, slider.getValue(), true);
+							InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION__DOBF_RESPONSE, "", getClass().getName(), dobfEvent);
+							try {
+								personisHelper.getEventMgr().publishInternalEvent(event);
+							} catch (EMSException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 
-		slider = new JSlider();
-		slider.setMajorTickSpacing(1);
-		slider.setMinorTickSpacing(1);
-		slider.setMinimum(0);
-		slider.setMaximum(ObfuscationLevels.getApplicableObfuscationLevels(dataType)-1);
-		slider.setSnapToTicks(true);
-		slider.setPaintTicks(true);
-		slider.setPaintLabels(true);
+						}else{
+							UserResponseDObfEvent dobfEvent = new UserResponseDObfEvent(uuid, obfuscationLevel, false);
+							InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION__DOBF_RESPONSE, "", getClass().getName(), dobfEvent);
+							try {
+								personisHelper.getEventMgr().publishInternalEvent(event);
+							} catch (EMSException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+
+						}
+					}
+				});
+				btnContinue.setActionCommand(uuid);
+				btnContinue.addActionListener(listener);
+						
+						JLabel lblMessage = new JLabel("<html>"+text+"</html>");
+						GridBagConstraints gbc_lblMessage = new GridBagConstraints();
+						gbc_lblMessage.fill = GridBagConstraints.BOTH;
+						gbc_lblMessage.insets = new Insets(0, 0, 5, 0);
+						gbc_lblMessage.gridx = 0;
+						gbc_lblMessage.gridy = 0;
+						lblMessage.setPreferredSize(new Dimension(300,100));
+						add(lblMessage, gbc_lblMessage);
+				
+						slider = new JSlider();
+						slider.setMajorTickSpacing(1);
+						slider.setMinorTickSpacing(1);
+						slider.setMinimum(0);
+						slider.setMaximum(ObfuscationLevels.getApplicableObfuscationLevels(dataType)-1);
+						slider.setSnapToTicks(true);
+						slider.setPaintTicks(true);
+						slider.setPaintLabels(true);
+						GridBagConstraints gbc_slider = new GridBagConstraints();
+						gbc_slider.anchor = GridBagConstraints.NORTH;
+						gbc_slider.fill = GridBagConstraints.HORIZONTAL;
+						gbc_slider.insets = new Insets(0, 0, 5, 0);
+						gbc_slider.gridx = 0;
+						gbc_slider.gridy = 1;
+						add(slider, gbc_slider);
+						slider.setPreferredSize(new Dimension(300,50));
+						slider.addChangeListener(this);
+				
+				
+				obfValueLabel = new JLabel("New label");
+				GridBagConstraints gbc_obfValueLabel = new GridBagConstraints();
+				gbc_obfValueLabel.anchor = GridBagConstraints.NORTH;
+				gbc_obfValueLabel.fill = GridBagConstraints.HORIZONTAL;
+				gbc_obfValueLabel.insets = new Insets(0, 0, 5, 0);
+				gbc_obfValueLabel.gridx = 0;
+				gbc_obfValueLabel.gridy = 2;
+				add(obfValueLabel, gbc_obfValueLabel);
+				GridBagConstraints gbc_btnContinue = new GridBagConstraints();
+				gbc_btnContinue.anchor = GridBagConstraints.NORTHEAST;
+				gbc_btnContinue.gridx = 0;
+				gbc_btnContinue.gridy = 3;
+				add(btnContinue, gbc_btnContinue);
 		if (obfuscationLevel>=0){
 			slider.setValue(obfuscationLevel);
+		}else{
+			slider.setValue(0);
 		}
-		GridBagConstraints gbc_slider = new GridBagConstraints();
-		gbc_slider.gridwidth = 3;
-		gbc_slider.insets = new Insets(0, 0, 5, 0);
-		gbc_slider.fill = GridBagConstraints.BOTH;
-		gbc_slider.gridx = 0;
-		gbc_slider.gridy = 1;
-		add(slider, gbc_slider);
-
-		btnContinue = new JButton("Continue");
-		btnContinue.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				if (userClicked){
-					UserResponseDObfEvent dobfEvent = new UserResponseDObfEvent(uuid, slider.getValue(), true);
-					InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION__DOBF_RESPONSE, "", getClass().getName(), dobfEvent);
-					try {
-						personisHelper.getEventMgr().publishInternalEvent(event);
-					} catch (EMSException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-
-				}else{
-					UserResponseDObfEvent dobfEvent = new UserResponseDObfEvent(uuid, obfuscationLevel, false);
-					InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION__DOBF_RESPONSE, "", getClass().getName(), dobfEvent);
-					try {
-						personisHelper.getEventMgr().publishInternalEvent(event);
-					} catch (EMSException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-
-				}
-			}
-		});
-		btnContinue.setActionCommand(uuid);
-		btnContinue.addActionListener(listener);
 		
-		obfValueLabel = new JLabel("New label");
-		GridBagConstraints gbc_obfValueLabel = new GridBagConstraints();
-		gbc_obfValueLabel.fill = GridBagConstraints.BOTH;
-		gbc_obfValueLabel.anchor = GridBagConstraints.WEST;
-		gbc_obfValueLabel.gridwidth = 3;
-		gbc_obfValueLabel.insets = new Insets(0, 0, 5, 5);
-		gbc_obfValueLabel.gridx = 0;
-		gbc_obfValueLabel.gridy = 2;
-		add(obfValueLabel, gbc_obfValueLabel);
-		GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
-		gbc_btnNewButton.gridx = 2;
-		gbc_btnNewButton.gridy = 3;
-		add(btnContinue, gbc_btnNewButton);
+		if (dataType.equalsIgnoreCase(CtxAttributeTypes.LOCATION_SYMBOLIC)){
+			this.obfValueLabel.setText(locations[slider.getValue()]);
+		}else if (dataType.equalsIgnoreCase(CtxAttributeTypes.NAME)){
+			this.obfValueLabel.setText(names[slider.getValue()]);
+		}if (dataType.equalsIgnoreCase(CtxAttributeTypes.BIRTHDAY)){
+			this.obfValueLabel.setText(birthdays[slider.getValue()]);
+		}if (dataType.equalsIgnoreCase(CtxAttributeTypes.EMAIL)){
+			this.obfValueLabel.setText(emails[slider.getValue()]);
+		}
 		
-		slider.addChangeListener(this);
-		slider.setValue(0);
+
+		
 	}
 
 	public void setUserClicked(boolean userClicked) {

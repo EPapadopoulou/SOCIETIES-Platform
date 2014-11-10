@@ -1,4 +1,6 @@
-
+/**
+ * 
+ */
 package ac.hw.personis.services;
 
 import java.awt.Color;
@@ -45,13 +47,14 @@ import ac.hw.personis.internalwindows.apps.ImagePanel;
  * @author PUMA
  * 
  */
-public class HWUService extends JFrame implements ActionListener, CtxChangeEventListener, WindowListener{
+public class BBCService extends JFrame implements ActionListener, CtxChangeEventListener, WindowListener{
 
 	/**
 	 * 
 	 */
-	private final static Logger logging = LoggerFactory.getLogger(HWUService.class);
+	private final static Logger logging = LoggerFactory.getLogger(BBCService.class);
 	private static final long serialVersionUID = 1L;
+	private String authKey = "AIzaSyA9BkjBXcXYv5ES0kvf5IyUpZXEuaBlc1M";
 	private JButton btnRetrieve;
 	//private JTextArea textArea;
 	private ICtxBroker ctxBroker;
@@ -76,13 +79,13 @@ public class HWUService extends JFrame implements ActionListener, CtxChangeEvent
 	private JLabel lblLoc;
 	private boolean loggedIn = false;
 
-	public HWUService(PersonisHelper personisHelper) {
+	public BBCService(PersonisHelper personisHelper) {
 		super();
 		getContentPane().setBackground(Color.BLUE);
 		this.personisHelper = personisHelper;
 		this.ctxBroker = personisHelper.getCtxBroker();
-		this.myServiceName = PersonisHelper.HWU_CAMPUS_GUIDE_APP;
-		this.myIDBean = personisHelper.getHwuRequestor();
+		this.myServiceName = PersonisHelper.BBC_NEWS_APP;
+		this.myIDBean = personisHelper.getBbcRequestor();
 		try {
 			this.myID = (RequestorService) RequestorUtils.toRequestor(myIDBean, personisHelper.getCommsMgr().getIdManager());
 		} catch (InvalidFormatException e) {
@@ -112,7 +115,8 @@ public class HWUService extends JFrame implements ActionListener, CtxChangeEvent
 		getContentPane().setLayout(null);
 		setSize(467, 637);
 
-		ImagePanel imagePanel = new ImagePanel("/hwucgback1.png");
+		//TODO: needs to be updated to show bbc background
+		ImagePanel imagePanel = new ImagePanel("/gvfappback1.png");
 		imagePanel.setBounds(0, 0, 450, 600);
 		getContentPane().add(imagePanel);
 		imagePanel.setLayout(null);
@@ -223,16 +227,15 @@ public class HWUService extends JFrame implements ActionListener, CtxChangeEvent
 	@Override
 	public void actionPerformed(ActionEvent event) {
 		if (!loggedIn){
-			String selectedId = (String) JOptionPane.showInputDialog(HWUService.this, "Login with identity:", "Login", JOptionPane.PLAIN_MESSAGE, null, new String[]{userID.getBareJid()}, userID.getBareJid());
+			String selectedId = (String) JOptionPane.showInputDialog(BBCService.this, "Login with identity:", "Login", JOptionPane.PLAIN_MESSAGE, null, new String[]{userID.getBareJid()}, userID.getBareJid());
 			loggedIn = true;
 		}
-		
 		if (event.getSource() == btnRetrieve) {
 			System.out.println("btnRetrieve clicked, retrieving: "+this.dataIDs.size()+" dataTypes from ID: "+userID.getJid());
 			new Thread() {
 
 				public void run() {
-					for (CtxIdentifier ctxIdentifier : HWUService.this.dataIDs){
+					for (CtxIdentifier ctxIdentifier : BBCService.this.dataIDs){
 						System.out.println("btnRetrieve: "+ctxIdentifier.getUri());
 						try {
 							CtxAttribute ctxAttribute = (CtxAttribute) ctxBroker.retrieve(myID, ctxIdentifier).get();
@@ -286,7 +289,7 @@ public class HWUService extends JFrame implements ActionListener, CtxChangeEvent
 					
 					lblLoggedIn.setText("You are logged in as "+userID.getBareJid());
 					setLabelsVisible();
-					HWUService.this.logging.debug("Exiting thread");
+					BBCService.this.logging.debug("Exiting thread");
 				}
 			}.start();
 		}

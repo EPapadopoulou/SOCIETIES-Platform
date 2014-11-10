@@ -100,40 +100,32 @@ public class IdentitySelectionPreferenceOutcome implements IPrivacyOutcome, Seri
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + (isShouldUseIdentity() ? 1231 : 1237);
+		int result = 1;
 		result = prime * result
 				+ ((userIdentity == null) ? 0 : userIdentity.hashCode());
 		return result;
 	}
-
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
 		}
-		if (!super.equals(obj)) {
+		if (obj == null) {
 			return false;
 		}
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
 		IdentitySelectionPreferenceOutcome other = (IdentitySelectionPreferenceOutcome) obj;
-		if (isShouldUseIdentity() != other.isShouldUseIdentity()) {
-			return false;
-		}
 		if (userIdentity == null) {
 			if (other.userIdentity != null) {
 				return false;
 			}
-		} else if (!userIdentity.equals(other.userIdentity)) {
+		} else if (!userIdentity.getBareJid().equalsIgnoreCase(other.userIdentity.getBareJid())) {
 			return false;
 		}
 		return true;
 	}
-
-
 	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()

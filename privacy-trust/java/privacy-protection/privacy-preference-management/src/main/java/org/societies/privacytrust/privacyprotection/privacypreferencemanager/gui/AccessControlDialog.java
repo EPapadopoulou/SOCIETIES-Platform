@@ -70,7 +70,7 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 		this.requestor = requestor;
 		this.requestedItem = requestedItem;
 		setTitle("Access Request");
-		setAlwaysOnTop(true);
+		
 		setModal(true);
 		setBounds(100, 100, 573, 382);
 		getContentPane().setLayout(null);
@@ -140,7 +140,7 @@ public class AccessControlDialog extends JDialog implements ActionListener, Chan
 		dobfPanel.add(chckbxObfuscate);
 		slider.setLabelTable( labelTable );
 		slider.addChangeListener(this);
-		
+		requestFocus();
 		
 
 	}

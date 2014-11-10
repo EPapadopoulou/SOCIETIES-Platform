@@ -186,7 +186,7 @@ public class DataInitialiser extends JDialog implements ActionListener {
 		btnSave.addActionListener(this);
 		btnPanel.setLayout(null);
 		btnPanel.add(btnSave);
-		
+		requestFocus();
 
 	}
 

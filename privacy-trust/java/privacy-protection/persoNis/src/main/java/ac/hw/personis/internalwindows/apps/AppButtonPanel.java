@@ -12,7 +12,9 @@ import org.societies.api.schema.identity.RequestorServiceBean;
 
 import ac.hw.personis.PersonisHelper;
 import ac.hw.personis.internalwindows.apps.ServicePanel.ServiceAction;
+import ac.hw.personis.services.BBCService;
 import ac.hw.personis.services.GoogleMapsService;
+import ac.hw.personis.services.HWUService;
 
 public class AppButtonPanel extends ImagePanel {
 
@@ -79,7 +81,11 @@ public class AppButtonPanel extends ImagePanel {
     			else
     			{
     				if (AppButtonPanel.this.staticName.equalsIgnoreCase(PersonisHelper.GOOGLE_VENUE_FINDER)){
-    					GoogleMapsService service = new GoogleMapsService(personisHelper);
+    					personisHelper.startGoogleService();
+    				}else if (AppButtonPanel.this.staticName.equalsIgnoreCase(PersonisHelper.HWU_CAMPUS_GUIDE_APP)){
+    					personisHelper.startHWUService();
+    				}else if (AppButtonPanel.this.staticName.equalsIgnoreCase(PersonisHelper.BBC_NEWS_APP)){
+    					personisHelper.startBBCService();
     				}
     			}
     			

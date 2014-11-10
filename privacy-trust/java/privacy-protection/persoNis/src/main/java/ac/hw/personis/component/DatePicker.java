@@ -17,7 +17,7 @@ import javax.swing.JTextField;
 
 public class DatePicker extends JDialog {
 	int month = java.util.Calendar.getInstance().get(java.util.Calendar.MONTH);
-	int year = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)-30;
+	int year = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)-32;
 	JLabel l = new JLabel("", JLabel.CENTER);
 	JLabel l1 = new JLabel("", JLabel.CENTER);
 	String day = "";
@@ -92,6 +92,7 @@ public class DatePicker extends JDialog {
 		getContentPane().add(p2, BorderLayout.CENTER);
 		getContentPane().add(p, BorderLayout.SOUTH);
 
+		pack();
 		setLocationRelativeTo(parent);
 		displayDate();
 		setVisible(true);

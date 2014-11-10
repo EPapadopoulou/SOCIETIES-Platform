@@ -41,5 +41,6 @@ public interface IPrivacyOutcome {
 	public int getConfidenceLevel();
 	
 	public void updateConfidenceLevel(boolean positive);
-		
+	
+	public String getUuid();
 }

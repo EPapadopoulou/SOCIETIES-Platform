@@ -43,6 +43,10 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
  * @created 11-Nov-2011 17:06:54
  */
 public class DObfOutcome implements IPrivacyOutcome, Serializable  {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private static final int MIN = 0;
 	private static final int MAX = 100;
 	private Integer obfuscationLevel;
@@ -76,6 +80,42 @@ public class DObfOutcome implements IPrivacyOutcome, Serializable  {
 	}
 
 	
+
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime
+				* result
+				+ ((obfuscationLevel == null) ? 0 : obfuscationLevel.hashCode());
+		return result;
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		DObfOutcome other = (DObfOutcome) obj;
+		if (obfuscationLevel == null) {
+			if (other.obfuscationLevel != null) {
+				return false;
+			}
+		} else if (!obfuscationLevel.equals(other.obfuscationLevel)) {
+			return false;
+		}
+		return true;
+	}
+
+
 	public PrivacyPreferenceTypeConstants getOutcomeType(){
 		return PrivacyPreferenceTypeConstants.DATA_OBFUSCATION;
 	}

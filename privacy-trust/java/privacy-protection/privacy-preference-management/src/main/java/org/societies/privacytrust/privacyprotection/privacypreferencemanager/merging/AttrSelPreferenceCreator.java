@@ -10,6 +10,7 @@ import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.InvalidFormatException;
+import org.societies.api.internal.context.model.CtxIDChanger;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
@@ -39,9 +40,11 @@ public class AttrSelPreferenceCreator {
 
 	private PrivacyPreferenceManager privPrefMgr;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
+	private IIdentity userIdentity;
 
 	public AttrSelPreferenceCreator(PrivacyPreferenceManager privPrefMgr){
 		this.privPrefMgr = privPrefMgr;
+		userIdentity = this.privPrefMgr.getCommsMgr().getIdManager().getThisNetworkNode();
 	}
 	public void notifyIdentityCreated(InternalEvent event){
 		if (event.geteventInfo() instanceof Agreement){
@@ -86,7 +89,7 @@ public class AttrSelPreferenceCreator {
 
 
 			Resource resource = ResourceUtils.copyOf(responseItem.getRequestItem().getResource());
-			CtxAttributeIdentifier ctxID = new CtxAttributeIdentifier(resource.getDataIdUri());
+			CtxAttributeIdentifier ctxID = CtxIDChanger.changeOwner(this.userIdentity.getBareJid(),new CtxAttributeIdentifier(resource.getDataIdUri()));
 			List<Action> actions = responseItem.getRequestItem().getActions();
 
 			AttributeSelectionPreferenceDetailsBean detailsSpecific = new AttributeSelectionPreferenceDetailsBean();

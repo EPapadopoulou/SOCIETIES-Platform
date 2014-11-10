@@ -10,13 +10,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyVetoException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -24,8 +22,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.WindowConstants;
 import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.WindowConstants;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.FontUIResource;
 
@@ -37,14 +35,12 @@ import org.societies.api.internal.schema.privacytrust.privacyprotection.model.pr
 import org.societies.api.schema.identity.RequestorBean;
 
 import ac.hw.personis.dataInit.DataInitialiser;
-import ac.hw.personis.event.NotificationsListener;
-import ac.hw.personis.internalwindows.apps.Apps;
 import ac.hw.personis.internalwindows.apps.Appsv2;
+import ac.hw.personis.internalwindows.notification.Notifications;
 import ac.hw.personis.internalwindows.preferences.AllPreferencesGUI;
 import ac.hw.personis.internalwindows.profile.IdentitiesViewer;
 import ac.hw.personis.internalwindows.profile.ProfileEditor;
 import ac.hw.personis.internalwindows.profile.TrustGUI;
-import ac.hw.personis.notification.NotificationsPanel;
 
 public class Application implements WindowListener{
 
@@ -60,6 +56,7 @@ public class Application implements WindowListener{
 	private List<String> storeApps;
 	private IdentitiesViewer idViewer;
 	private String userName;
+	private Notifications notifications;
 
 	/**
 	 * Launch the application.
@@ -122,7 +119,7 @@ public class Application implements WindowListener{
 		frmPersonismEvaluationTool.setTitle("PersoNISM Evaluation Tool");
 		//centers the window on startup
 		frmPersonismEvaluationTool.setLocationRelativeTo(null);
-		frmPersonismEvaluationTool.setBounds(100, 100, 1100, 790);
+		frmPersonismEvaluationTool.setBounds(100, 100, 1200, 800);
 		frmPersonismEvaluationTool.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frmPersonismEvaluationTool.addWindowListener(this);
 		SwingUtilities.updateComponentTreeUI(this.frmPersonismEvaluationTool);
@@ -135,28 +132,12 @@ public class Application implements WindowListener{
 			initialiser.dispose();
 		}
 
-		btnGoHome = new JButton();
-		btnGoHome.setActionCommand("home");
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{0, 0};
 		gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 0};
 		gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
 		gridBagLayout.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, Double.MIN_VALUE};
 		frmPersonismEvaluationTool.getContentPane().setLayout(gridBagLayout);
-
-		
-		NotificationsPanel notificationsPanel = new NotificationsPanel(helper);
-		NotificationsListener listener = new NotificationsListener(helper, notificationsPanel);
-		GridBagConstraints gbc_notificationPanel = new GridBagConstraints();
-		gbc_notificationPanel.anchor = GridBagConstraints.EAST;
-		gbc_notificationPanel.insets = new Insets(0, 0, 5, 0);
-		gbc_notificationPanel.fill = GridBagConstraints.BOTH;
-		gbc_notificationPanel.gridx = 1;
-		gbc_notificationPanel.gridy = 1;
-		notificationsPanel.setSize(200, 200);
-		notificationsPanel.setBackground(Color.blue);
-		
-		frmPersonismEvaluationTool.getContentPane().add(notificationsPanel, gbc_notificationPanel);
 		JPanel bottomPanel = new JPanel();
 		GridBagConstraints gbc_bottomPanel = new GridBagConstraints();
 		gbc_bottomPanel.insets = new Insets(0, 0, 5, 0);
@@ -188,6 +169,12 @@ public class Application implements WindowListener{
 		appsPage.setClosable(true);
 		appsPage.setVisible(true);	
 		desktopPane.add(appsPage);
+		
+		notifications = new Notifications(helper);
+		notifications.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		notifications.setClosable(false);
+		notifications.setVisible(true);
+		desktopPane.add(notifications);
 
 		JMenuBar menuBar = new JMenuBar();
 		GridBagConstraints gbc_menuBar = new GridBagConstraints();

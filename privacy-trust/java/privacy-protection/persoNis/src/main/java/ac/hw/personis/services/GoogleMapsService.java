@@ -6,6 +6,8 @@ package ac.hw.personis.services;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -14,7 +16,6 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JTextArea;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,15 +23,12 @@ import org.societies.api.context.CtxException;
 import org.societies.api.context.broker.ICtxBroker;
 import org.societies.api.context.event.CtxChangeEvent;
 import org.societies.api.context.event.CtxChangeEventListener;
-import org.societies.api.context.model.CtxAssociationTypes;
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxAttributeTypes;
 import org.societies.api.context.model.CtxIdentifier;
-import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
-import org.societies.api.identity.INetworkNode;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.identity.RequestorService;
 import org.societies.api.identity.util.RequestorUtils;
@@ -42,8 +40,6 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Respons
 import ac.hw.personis.PersonisHelper;
 import ac.hw.personis.internalwindows.apps.ImagePanel;
 
-import javax.swing.JScrollPane;
-
 
 
 
@@ -51,7 +47,7 @@ import javax.swing.JScrollPane;
  * @author PUMA
  * 
  */
-public class GoogleMapsService extends JFrame implements ActionListener, CtxChangeEventListener{
+public class GoogleMapsService extends JFrame implements ActionListener, CtxChangeEventListener, WindowListener{
 
 	/**
 	 * 
@@ -81,6 +77,7 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 	private JLabel lblLoggedIn;
 	private JLabel lblCurrentLocation;
 	private JLabel lblLoc;
+	boolean loggedIn = false;
 
 	public GoogleMapsService(PersonisHelper personisHelper) {
 		super();
@@ -108,11 +105,13 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 					e.printStackTrace();
 				}
 			}
+			
 		}else{
 			JOptionPane.showMessageDialog(this, "No agreement found");
 		}
 
 		this.userID = personisHelper.getUserID(myServiceName);
+		this.registerForContext();
 		getContentPane().setLayout(null);
 		setSize(467, 637);
 
@@ -227,7 +226,10 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 	@Override
 	public void actionPerformed(ActionEvent event) {
 
-		String selectedId = (String) JOptionPane.showInputDialog(GoogleMapsService.this, "Login with identity:", "Login", JOptionPane.PLAIN_MESSAGE, null, new String[]{userID.getBareJid()}, userID.getBareJid());
+		if (!loggedIn){
+			String selectedId = (String) JOptionPane.showInputDialog(GoogleMapsService.this, "Login with identity:", "Login", JOptionPane.PLAIN_MESSAGE, null, new String[]{userID.getBareJid()}, userID.getBareJid());
+			loggedIn = true;
+		}
 		if (event.getSource() == btnRetrieve) {
 			System.out.println("btnRetrieve clicked, retrieving: "+this.dataIDs.size()+" dataTypes from ID: "+userID.getJid());
 			new Thread() {
@@ -284,7 +286,7 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 							//textArea.append("ExecutionException while retrieving: "+ctxIdentifier+System.getProperty( "line.separator" ));
 						}
 					}
-					registerForContext();
+					
 					lblLoggedIn.setText("You are logged in as "+userID.getBareJid());
 					setLabelsVisible();
 					GoogleMapsService.this.logging.debug("Exiting thread");
@@ -310,6 +312,12 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 	public void onModification(final CtxChangeEvent event) {
 		new Thread(){
 			public void run(){
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				CtxIdentifier id = event.getId();
 				CtxAttributeIdentifier ctxIdentifier = CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) id);
 				try {
@@ -354,6 +362,59 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 
 	@Override
 	public void onRemoval(CtxChangeEvent event) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowActivated(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosed(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosing(WindowEvent arg0) {
+		IIdentity userIdReal = personisHelper.getCommsMgr().getIdManager().getThisNetworkNode();
+		for (int i = 0; i<this.dataIDs.size(); i++){
+			try {
+				CtxIdentifier ctxId = this.dataIDs.get(i);
+				CtxAttributeIdentifier ctxAttrId = CtxIDChanger.changeOwner(userIdReal.getBareJid(), (CtxAttributeIdentifier) ctxId);
+				this.ctxBroker.unregisterFromChanges(myID, this, ctxAttrId);
+				
+			} catch (CtxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowIconified(WindowEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowOpened(WindowEvent arg0) {
 		// TODO Auto-generated method stub
 		
 	}

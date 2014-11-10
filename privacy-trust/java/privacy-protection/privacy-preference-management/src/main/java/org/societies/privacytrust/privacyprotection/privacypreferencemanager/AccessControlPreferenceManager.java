@@ -186,7 +186,43 @@ public class AccessControlPreferenceManager extends EventListener{
 		AccessControlOutcome accCtrlOutcome = this.evaluateAccessControlPreference(details, conditions);
 		if (accCtrlOutcome==null){			
 
-			return getUserInput(details);
+			//return getUserInput(details);
+			StringBuilder sb  = new StringBuilder();
+			sb.append("Service: "+requestor.getRequestorId());
+			sb.append(" requests access to "+action.getActionConstant().toString().toLowerCase());
+			sb.append(" your data: "+resource.getDataType());
+			String uuid = UUID.randomUUID().toString();
+			
+			NotificationEvent notifEvent = null;
+			notifEvent = new NotificationEvent(uuid, sb.toString(), NotificationType.SIMPLE, PrivacyOutcomeConstantsBean.ALLOW);
+			
+			InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_REQUEST, "", this.getClass().getName(), notifEvent);
+			try {
+				this.privPrefMgr.getEventMgr().publishInternalEvent(event);
+			} catch (EMSException e) {
+				// TODO Auto-generated catch block
+				logging.error("Error publishing internal event: {}", event);
+				return getUserInput(details);
+			}
+			while (!this.userResponses.containsKey(uuid)){
+				synchronized (this.userResponses) {
+					try {
+						this.userResponses.wait();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+			if (this.userResponses.containsKey(uuid)){
+				UserResponseEvent userResponseEvent = userResponses.get(uuid);
+				logging.debug("Received user response: "+userResponseEvent.getEffect());
+				storeDecision(details, userResponseEvent.getEffect());
+				return createResponseItem(requestor, dataId, action, conditions,userResponseEvent.getEffect());
+			}else{
+				logging.debug("Error receiving input through notificationPanel. using JDialog");
+				return getUserInput(details);
+			}
 		}else{
 			
 

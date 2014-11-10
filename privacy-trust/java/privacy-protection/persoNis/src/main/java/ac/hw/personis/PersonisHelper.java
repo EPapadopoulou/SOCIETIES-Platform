@@ -4,6 +4,7 @@
 package ac.hw.personis;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,6 +13,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Random;
 
+import javax.swing.ImageIcon;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
@@ -57,8 +59,11 @@ import ac.hw.personis.dataInit.policies.RangesHWU;
 import ac.hw.personis.dataInit.policies.RangesITunes;
 import ac.hw.personis.dataInit.policies.XMLPolicyReader;
 import ac.hw.personis.event.NegotiationListener;
-import ac.hw.personis.internalwindows.apps.Apps;
 import ac.hw.personis.internalwindows.apps.Appsv2;
+import ac.hw.personis.internalwindows.apps.ImagePanel;
+import ac.hw.personis.services.BBCService;
+import ac.hw.personis.services.GoogleMapsService;
+import ac.hw.personis.services.HWUService;
 
 /**
  * @author PUMA
@@ -98,6 +103,9 @@ public class PersonisHelper {
 	private Hashtable<String, IIdentity> identityPerService;
 	private List<String> storeApps;
 	private List<String> installedApps;
+	private GoogleMapsService googleService;
+	private HWUService hwuService;
+	private BBCService bbcService;
 
 	public PersonisHelper(){
 
@@ -156,7 +164,8 @@ public class PersonisHelper {
 		try {
 			RequestPolicy googlePolicy = this.privacyPolicyManager.getPrivacyPolicy(googleRequestor);
 			if (null==googlePolicy){
-				googlePolicy = createPolicy(googleRequestor, GOOGLE_VENUE_FINDER);
+				//googlePolicy = createPolicy(googleRequestor, GOOGLE_VENUE_FINDER);
+				googlePolicy = getGooglePolicy();
 				Hashtable<String, ConditionRanges> ranges = RangesGoogle.getRanges(googlePolicy);
 				this.logging.debug(printPolicyDetails(googlePolicy));
 				this.privacyPolicyManager.updatePrivacyPolicy(googlePolicy, ranges);
@@ -176,7 +185,8 @@ public class PersonisHelper {
 			RequestPolicy hwuPolicy = this.privacyPolicyManager.getPrivacyPolicy(hwuRequestor);
 			if (null==hwuPolicy){
 
-				hwuPolicy = createPolicy(hwuRequestor, HWU_CAMPUS_GUIDE_APP);
+				//hwuPolicy = createPolicy(hwuRequestor, HWU_CAMPUS_GUIDE_APP);
+				hwuPolicy = getHWUPolicy();
 				this.logging.debug(printPolicyDetails(hwuPolicy));
 				Hashtable<String,ConditionRanges> ranges = RangesHWU.getRanges(hwuPolicy);
 				this.privacyPolicyManager.updatePrivacyPolicy(hwuPolicy, ranges);
@@ -195,7 +205,8 @@ public class PersonisHelper {
 			
 			RequestPolicy bbcPolicy = this.privacyPolicyManager.getPrivacyPolicy(bbcRequestor);
 			if (null==bbcPolicy){
-				bbcPolicy = createPolicy(bbcRequestor, BBC_NEWS_APP);
+				//bbcPolicy = createPolicy(bbcRequestor, BBC_NEWS_APP);
+				bbcPolicy = getBBCPolicy();
 				this.logging.debug(printPolicyDetails(bbcPolicy));
 				Hashtable<String,ConditionRanges> ranges = RangesBBC.getRanges(bbcPolicy);
 				this.privacyPolicyManager.updatePrivacyPolicy(bbcPolicy, ranges);
@@ -214,7 +225,8 @@ public class PersonisHelper {
 			
 			RequestPolicy itunesPolicy = this.privacyPolicyManager.getPrivacyPolicy(itunesRequestor);
 			if (null==itunesPolicy){
-				itunesPolicy = createPolicy(itunesRequestor, ITUNES_MUSIC_APP);
+				//itunesPolicy = createPolicy(itunesRequestor, ITUNES_MUSIC_APP);
+				itunesPolicy = getITunesPolicy();
 				this.logging.debug(printPolicyDetails(itunesPolicy));
 				Hashtable<String,ConditionRanges> ranges = RangesITunes.getRanges(itunesPolicy);
 				this.privacyPolicyManager.updatePrivacyPolicy(itunesPolicy, ranges);
@@ -255,19 +267,61 @@ public class PersonisHelper {
 		}else if (RequestorUtils.equals(agreement.getRequestor(), this.hwuRequestor)){
 			this.requestDataTypesPerService.put(HWU_CAMPUS_GUIDE_APP, dataTypes);
 			identityPerService.put(HWU_CAMPUS_GUIDE_APP, this.commsMgr.getIdManager().fromJid(agreement.getUserIdentity()));
-			
+			agreementsTable.put(HWU_CAMPUS_GUIDE_APP, agreement);
 		}else if (RequestorUtils.equals(agreement.getRequestor(), this.bbcRequestor)){
 			this.requestDataTypesPerService.put(BBC_NEWS_APP, dataTypes);
 			identityPerService.put(BBC_NEWS_APP, this.commsMgr.getIdManager().fromJid(agreement.getUserIdentity()));
-			
+			agreementsTable.put(BBC_NEWS_APP, agreement);
 		}else if (RequestorUtils.equals(agreement.getRequestor(), this.itunesRequestor)){
 			this.requestDataTypesPerService.put(ITUNES_MUSIC_APP, dataTypes);	
 			identityPerService.put(ITUNES_MUSIC_APP, this.commsMgr.getIdManager().fromJid(agreement.getUserIdentity()));
+			agreementsTable.put(ITUNES_MUSIC_APP, agreement);
 		}
 	}
 	
 	public IIdentity getUserID(String service){
 		return this.identityPerService.get(service);
+	}
+	
+	private RequestPolicy getGooglePolicy(){
+		XMLPolicyReader reader = new XMLPolicyReader(ctxBroker, this.commsMgr.getIdManager());
+		//File file = new File("policies\\google.xml");        
+		//System.out.println(file.getAbsolutePath());
+		//RequestPolicy policy = reader.readPolicyFromFile(file);
+        InputStream resourceAsStream = this.getClass().getResourceAsStream("/policies/google.xml");
+        RequestPolicy policy = reader.readPolicyFromFile(resourceAsStream);		
+		policy.setRequestor(googleRequestor);
+		return policy;
+	}
+	private RequestPolicy getBBCPolicy(){
+		XMLPolicyReader reader = new XMLPolicyReader(ctxBroker, this.commsMgr.getIdManager());
+		//File file = new File("policies\\bbc.xml");
+		//System.out.println(file.getAbsolutePath());
+		//RequestPolicy policy = reader.readPolicyFromFile(file);
+		InputStream resourceAsStream = this.getClass().getResourceAsStream("/policies/bbc.xml");
+		RequestPolicy policy = reader.readPolicyFromFile(resourceAsStream);
+		policy.setRequestor(bbcRequestor);
+		return policy;
+	}
+	private RequestPolicy getHWUPolicy(){
+		XMLPolicyReader reader = new XMLPolicyReader(ctxBroker, this.commsMgr.getIdManager());
+//		File file = new File("policies\\hwu.xml");
+//		System.out.println(file.getAbsolutePath());
+//		RequestPolicy policy = reader.readPolicyFromFile(file);
+		InputStream resourceAsStream = this.getClass().getResourceAsStream("/policies/hwu.xml");
+		RequestPolicy policy = reader.readPolicyFromFile(resourceAsStream);		
+		policy.setRequestor(hwuRequestor);
+		return policy;
+	}
+	private RequestPolicy getITunesPolicy(){
+		XMLPolicyReader reader = new XMLPolicyReader(ctxBroker, this.commsMgr.getIdManager());
+//		File file = new File("policies\\itunes.xml");
+//		System.out.println(file.getAbsolutePath());
+//		RequestPolicy policy = reader.readPolicyFromFile(file);
+		InputStream resourceAsStream = this.getClass().getResourceAsStream("/policies/itunes.xml");
+		RequestPolicy policy = reader.readPolicyFromFile(resourceAsStream);
+		policy.setRequestor(itunesRequestor);
+		return policy;
 	}
 	private RequestPolicy createPolicy(RequestorBean requestor, String friendly){
 		XMLPolicyReader reader = new XMLPolicyReader(ctxBroker, this.commsMgr.getIdManager());
@@ -562,4 +616,31 @@ public class PersonisHelper {
 	}
 
 
+	public void startGoogleService(){
+		if (this.googleService == null){
+			googleService = new GoogleMapsService(this);
+		}else{
+			googleService.setVisible(true);
+			googleService.requestFocus();
+		}
+	}
+	
+	public void startHWUService(){
+		if (hwuService==null){
+			hwuService = new HWUService(this);
+		}else{
+			hwuService.setVisible(true);
+			hwuService.requestFocus();
+		}
+	}
+	
+	public void startBBCService(){
+		if (bbcService == null){
+			bbcService = new BBCService(this);
+		}else{
+			bbcService.setVisible(true);
+			bbcService.requestFocus();
+		}
+		
+	}
 }

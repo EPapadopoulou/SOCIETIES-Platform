@@ -25,7 +25,11 @@ public class NotificationsListener extends EventListener{
 				EventTypes.PERSONIS_NOTIFICATION_REQUEST,
 				EventTypes.PERSONIS_NOTIFICATION_DOBF_REQUEST
 				};
+		try{
 		this.personisHelper.getEventMgr().subscribeInternalEvent(this, eventTypes, null);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 
 	}
 	@Override

@@ -131,7 +131,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 		JButton btnDeleteAllPermissions = new JButton("Delete all permissions");
 		btnDeleteAllPermissions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
+
 				List<String> installedApps = AllPreferencesGUI.this.personisHelper.getInstalledApps();
 				for (String app : installedApps){
 					Agreement agreement = AllPreferencesGUI.this.personisHelper.getAgreement(app);
@@ -139,8 +139,8 @@ public class AllPreferencesGUI extends JInternalFrame {
 					for (ResponseItem item : requestedItems){
 						IPrivacyDataManagerInternal privacyDataManagerInternal = AllPreferencesGUI.this.personisHelper.getPrivacyDataManagerInternal();
 						try {
-							
-							
+
+
 							RequestItem requestItem = item.getRequestItem();
 							logging.debug("Deleting "+requestItem.getResource().getDataType()+" "+agreement.getRequestor()+" "+ResourceUtils.getDataIdentifier(requestItem.getResource()));
 							privacyDataManagerInternal.deletePermissions(agreement.getRequestor(), ResourceUtils.getDataIdentifier(requestItem.getResource()), requestItem.getActions());
@@ -183,7 +183,8 @@ public class AllPreferencesGUI extends JInternalFrame {
 				}else{
 					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occurred and not all PPN preferences could be deleted");
 				}
-				AllPreferencesGUI.this.refreshData();
+				//AllPreferencesGUI.this.refreshData();
+				loadPPN(true);
 			}
 		});
 		panelPPN.add(btnDeleteAllPpn);
@@ -215,7 +216,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 				}else{
 					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occurred and not all AccCtrl preferences could be deleted");
 				}
-				refreshData();
+				loadAccCtrl(true);
 			}
 		});
 		panel_ACC.add(btnDeleteAllAccctrl);
@@ -250,7 +251,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 				}else{
 					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occurred and not all IDS preferences could be deleted");
 				}
-				refreshData();
+				loadIDS(true);
 			}
 		});
 		panel_IDS.add(btnDeleteAllIds);
@@ -285,13 +286,10 @@ public class AllPreferencesGUI extends JInternalFrame {
 				}else{
 					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occured and not all AttrSel preferences could be deleted");
 				}
-				refreshData();
+				loadAttrSel(true);
 			}
 		});
 		panel_ATTR.add(btnDeleteAllAttrsel);
-
-
-
 
 		JPanel panel_DOBF = new JPanel();
 		getContentPane().add(panel_DOBF);
@@ -321,7 +319,7 @@ public class AllPreferencesGUI extends JInternalFrame {
 				else{
 					JOptionPane.showMessageDialog(AllPreferencesGUI.this, "An error occured and not all DObf preferences could be deleted");
 				}
-				refreshData();
+				loadDObf(true);
 			}
 		});
 		panel_DOBF.add(btnDeleteAllDobf);
@@ -332,74 +330,26 @@ public class AllPreferencesGUI extends JInternalFrame {
 	public void refreshData(){
 		this.logging.debug("Refreshing data tables");
 		this.setupData();
-		this.ppnModel.refreshData(this.ppnDetailsTable.keys());
-		this.ppnTable.setModel(ppnModel);
-		this.accModel.refreshData(this.accDetailsTable.keys());
-		this.accTable.setModel(accModel);
-		this.idsModel.refreshData(this.idsDetailsTable.keys());
-		this.idsTable.setModel(idsModel);
-		this.attrModel.refreshData(this.attrSelDetailsTable.keys());
-		this.attrTable.setModel(attrModel);
-		this.dobfModel.refreshData(this.dobfDetailsTable.keys());
-		this.dobfTable.setModel(dobfModel);
+
 		//JOptionPane.showMessageDialog(this, "Refreshed Data");
 	}
 
 	private void setupData() {
 
-		/*
-		 * PPN
-		 */
-		IPrivacyPreferenceManager privacyPreferenceManager = this.personisHelper.getPrivacyPreferenceManager();
-		List<PPNPreferenceDetailsBean> ppnPreferenceDetails = privacyPreferenceManager.getPPNPreferenceDetails();
-		logging.debug("Found "+ppnPreferenceDetails.size()+" ppn details");
-		ppnDetailsTable = new Hashtable<String, PPNPreferenceDetailsBean>();
+		loadPPN(false);
 
-		for (PPNPreferenceDetailsBean bean : ppnPreferenceDetails){
-			String title = this.getPPNTitleString(bean.getRequestor(), bean.getResource(), bean.getCondition(), false);
-			ppnDetailsTable.put(title, bean);
-		}
+		loadAccCtrl(false);
 
-		/*
-		 * Access Control 
-		 */
-		List<AccessControlPreferenceDetailsBean> accCtrlPreferenceDetails = privacyPreferenceManager.getAccCtrlPreferenceDetails();
-		logging.debug("Found "+accCtrlPreferenceDetails.size()+" accCtrl details");
-		accDetailsTable = new Hashtable<String, AccessControlPreferenceDetailsBean>();
+		loadDObf(false);
 
-		for (AccessControlPreferenceDetailsBean bean : accCtrlPreferenceDetails){
-			String title = this.getTitleString(bean.getRequestor(), bean.getResource(), true);
-			this.logging.debug("Adding: "+title);
-			accDetailsTable.put(title, bean);
-			this.logging.debug("size of keys: "+accDetailsTable.keySet().size());
-		}
+		loadIDS(false);
 
-		/*
-		 * DOBF
-		 */
-		List<DObfPreferenceDetailsBean> dObfPreferenceDetails = privacyPreferenceManager.getDObfPreferenceDetails();
-		logging.debug("Found "+dObfPreferenceDetails.size()+" dobf details");
-		dobfDetailsTable = new Hashtable<String, DObfPreferenceDetailsBean>();
+		loadAttrSel(false);
 
-		for (DObfPreferenceDetailsBean bean : dObfPreferenceDetails){
-			String title = this.getTitleString(bean.getRequestor(), bean.getResource(), true);
-			dobfDetailsTable.put(title, bean);
-		}
+	}
 
-		/*
-		 * IDS
-		 */
-		List<IDSPreferenceDetailsBean> idsPreferenceDetails = privacyPreferenceManager.getIDSPreferenceDetails();
-		logging.debug("Found "+idsPreferenceDetails.size()+" ids details");
-		idsDetailsTable = new Hashtable<String, IDSPreferenceDetailsBean>();
-
-		for (IDSPreferenceDetailsBean bean : idsPreferenceDetails){
-
-			String title = this.getIDSString(bean.getRequestor(), bean.getAffectedIdentity());
-			idsDetailsTable.put(title, bean);
-		}
-
-
+	private void loadAttrSel(boolean loadOntoJTable) {
+		IPrivacyPreferenceManager privacyPreferenceManager = this.personisHelper.getPrivacyPreferenceManager();		
 		List<AttributeSelectionPreferenceDetailsBean> attrSelPreferenceDetails = privacyPreferenceManager.getAttrSelPreferenceDetails();
 		logging.debug("Found "+attrSelPreferenceDetails.size()+" attrSel details");
 		attrSelDetailsTable = new Hashtable<String, AttributeSelectionPreferenceDetailsBean>();
@@ -412,8 +362,81 @@ public class AllPreferencesGUI extends JInternalFrame {
 			title = title + "\tActions: "+bean.getActions();
 			attrSelDetailsTable.put(title, bean);
 		}
-		//privacyPreferenceManager.getAttrSelPreferenceDetails();
+		if (loadOntoJTable){
+			this.attrModel.refreshData(this.attrSelDetailsTable.keys());
+			this.attrTable.setModel(attrModel);
+		}
+	}
 
+	private void loadIDS(boolean loadOntoJTable) {
+		IPrivacyPreferenceManager privacyPreferenceManager = this.personisHelper.getPrivacyPreferenceManager();		
+
+		List<IDSPreferenceDetailsBean> idsPreferenceDetails = privacyPreferenceManager.getIDSPreferenceDetails();
+		logging.debug("Found "+idsPreferenceDetails.size()+" ids details");
+		idsDetailsTable = new Hashtable<String, IDSPreferenceDetailsBean>();
+
+		for (IDSPreferenceDetailsBean bean : idsPreferenceDetails){
+
+			String title = this.getIDSString(bean.getRequestor(), bean.getAffectedIdentity());
+			idsDetailsTable.put(title, bean);
+		}
+		if (loadOntoJTable){
+			this.idsModel.refreshData(this.idsDetailsTable.keys());
+			this.idsTable.setModel(idsModel);
+		}
+	}
+
+	private void loadDObf(boolean loadOntoJTable) {
+		IPrivacyPreferenceManager privacyPreferenceManager = this.personisHelper.getPrivacyPreferenceManager();		
+
+		List<DObfPreferenceDetailsBean> dObfPreferenceDetails = privacyPreferenceManager.getDObfPreferenceDetails();
+		logging.debug("Found "+dObfPreferenceDetails.size()+" dobf details");
+		dobfDetailsTable = new Hashtable<String, DObfPreferenceDetailsBean>();
+
+		for (DObfPreferenceDetailsBean bean : dObfPreferenceDetails){
+			String title = this.getTitleString(bean.getRequestor(), bean.getResource(), true);
+			dobfDetailsTable.put(title, bean);
+		}
+		if (loadOntoJTable){
+			this.dobfModel.refreshData(this.dobfDetailsTable.keys());
+			this.dobfTable.setModel(dobfModel);
+		}
+	}
+
+	private void loadAccCtrl(boolean loadOntoJTable) {
+		IPrivacyPreferenceManager privacyPreferenceManager = this.personisHelper.getPrivacyPreferenceManager();		
+
+		List<AccessControlPreferenceDetailsBean> accCtrlPreferenceDetails = privacyPreferenceManager.getAccCtrlPreferenceDetails();
+		logging.debug("Found "+accCtrlPreferenceDetails.size()+" accCtrl details");
+		accDetailsTable = new Hashtable<String, AccessControlPreferenceDetailsBean>();
+
+		for (AccessControlPreferenceDetailsBean bean : accCtrlPreferenceDetails){
+			String title = this.getTitleString(bean.getRequestor(), bean.getResource(), true);
+			this.logging.debug("Adding: "+title);
+			accDetailsTable.put(title, bean);
+			this.logging.debug("size of keys: "+accDetailsTable.keySet().size());
+		}
+		if (loadOntoJTable){
+			this.accModel.refreshData(this.accDetailsTable.keys());
+			this.accTable.setModel(accModel);
+		}
+	}
+
+	private void loadPPN(boolean loadOntoJTable) {
+
+		IPrivacyPreferenceManager privacyPreferenceManager = this.personisHelper.getPrivacyPreferenceManager();		
+		List<PPNPreferenceDetailsBean> ppnPreferenceDetails = privacyPreferenceManager.getPPNPreferenceDetails();
+		logging.debug("Found "+ppnPreferenceDetails.size()+" ppn details");
+		ppnDetailsTable = new Hashtable<String, PPNPreferenceDetailsBean>();
+
+		for (PPNPreferenceDetailsBean bean : ppnPreferenceDetails){
+			String title = this.getPPNTitleString(bean.getRequestor(), bean.getResource(), bean.getCondition(), false);
+			ppnDetailsTable.put(title, bean);
+		}
+		if (loadOntoJTable){
+			this.ppnModel.refreshData(this.ppnDetailsTable.keys());
+			this.ppnTable.setModel(ppnModel);
+		}
 	}
 
 	private String getTitleString(RequestorBean requestor, Resource resource, boolean printCtxID){
