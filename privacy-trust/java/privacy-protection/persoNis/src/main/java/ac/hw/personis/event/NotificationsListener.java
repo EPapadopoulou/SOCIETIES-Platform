@@ -2,8 +2,9 @@ package ac.hw.personis.event;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationAccCtrlEvent;
 import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationDobfEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.TextNotificationEvent;
 import org.societies.api.osgi.event.CSSEvent;
 import org.societies.api.osgi.event.EventListener;
 import org.societies.api.osgi.event.EventTypes;
@@ -23,7 +24,8 @@ public class NotificationsListener extends EventListener{
 		this.notifPanel = notifPanel;
 		String[] eventTypes = new String[]{
 				EventTypes.PERSONIS_NOTIFICATION_REQUEST,
-				EventTypes.PERSONIS_NOTIFICATION_DOBF_REQUEST
+				EventTypes.PERSONIS_NOTIFICATION_DOBF_REQUEST,
+				EventTypes.PERSONIS_NOTIFICATION_TEXT
 				};
 		try{
 		this.personisHelper.getEventMgr().subscribeInternalEvent(this, eventTypes, null);
@@ -36,8 +38,8 @@ public class NotificationsListener extends EventListener{
 	public void handleInternalEvent(InternalEvent event) {
 		logging.debug("Received event: {}", event.geteventType());
 		if (event.geteventType().equalsIgnoreCase(EventTypes.PERSONIS_NOTIFICATION_REQUEST)){
-			if (event.geteventInfo() instanceof NotificationEvent){
-				NotificationEvent notifEvent = (NotificationEvent) event.geteventInfo();
+			if (event.geteventInfo() instanceof NotificationAccCtrlEvent){
+				NotificationAccCtrlEvent notifEvent = (NotificationAccCtrlEvent) event.geteventInfo();
 				notifPanel.addAccessControlNotification(notifEvent);	
 			}else{
 				logging.debug("Received event of unknown Class {}", event.geteventInfo());
@@ -47,6 +49,13 @@ public class NotificationsListener extends EventListener{
 			if (event.geteventInfo() instanceof NotificationDobfEvent){
 				NotificationDobfEvent notifEvent = (NotificationDobfEvent) event.geteventInfo();
 				notifPanel.addDobfNotification(notifEvent);
+			}else{
+				logging.debug("Received event of unknown Class {}", event.geteventInfo());
+			}
+		}else if (event.geteventType().equalsIgnoreCase(EventTypes.PERSONIS_NOTIFICATION_TEXT)){
+			if (event.geteventInfo() instanceof TextNotificationEvent){
+				TextNotificationEvent txtNotifEvent = (TextNotificationEvent) event.geteventInfo();
+				notifPanel.addTextNotification(txtNotifEvent);
 			}else{
 				logging.debug("Received event of unknown Class {}", event.geteventInfo());
 			}

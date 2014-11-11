@@ -89,7 +89,7 @@ public class AttrSelPreferenceCreator {
 
 
 			Resource resource = ResourceUtils.copyOf(responseItem.getRequestItem().getResource());
-			CtxAttributeIdentifier ctxID = CtxIDChanger.changeOwner(this.userIdentity.getBareJid(),new CtxAttributeIdentifier(resource.getDataIdUri()));
+			CtxAttributeIdentifier ctxID = CtxIDChanger.changeIDOwner(this.userIdentity.getBareJid(),new CtxAttributeIdentifier(resource.getDataIdUri()));
 			List<Action> actions = responseItem.getRequestItem().getActions();
 
 			AttributeSelectionPreferenceDetailsBean detailsSpecific = new AttributeSelectionPreferenceDetailsBean();

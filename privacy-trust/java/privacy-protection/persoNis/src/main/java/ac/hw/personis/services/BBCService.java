@@ -216,7 +216,7 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 		for (int i = 0; i<this.dataIDs.size(); i++){
 			try {
 				CtxIdentifier ctxId = this.dataIDs.get(i);
-				CtxAttributeIdentifier ctxAttrId = CtxIDChanger.changeOwner(userIdReal.getBareJid(), (CtxAttributeIdentifier) ctxId);
+				CtxAttributeIdentifier ctxAttrId = CtxIDChanger.changeIDOwner(userIdReal.getBareJid(), (CtxAttributeIdentifier) ctxId);
 				this.ctxBroker.registerForChanges(myID, this, ctxAttrId);
 			} catch (CtxException e) {
 				// TODO Auto-generated catch block
@@ -319,7 +319,7 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 					e1.printStackTrace();
 				}
 				CtxIdentifier id = event.getId();
-				CtxAttributeIdentifier ctxIdentifier = CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) id);
+				CtxAttributeIdentifier ctxIdentifier = CtxIDChanger.changeIDOwner(userID.getBareJid(), (CtxAttributeIdentifier) id);
 				try {
 					CtxAttribute ctxAttribute = (CtxAttribute) ctxBroker.retrieve(myID, ctxIdentifier).get();
 					if (ctxAttribute==null){
@@ -384,7 +384,7 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 		for (int i = 0; i<this.dataIDs.size(); i++){
 			try {
 				CtxIdentifier ctxId = this.dataIDs.get(i);
-				CtxAttributeIdentifier ctxAttrId = CtxIDChanger.changeOwner(userIdReal.getBareJid(), (CtxAttributeIdentifier) ctxId);
+				CtxAttributeIdentifier ctxAttrId = CtxIDChanger.changeIDOwner(userIdReal.getBareJid(), (CtxAttributeIdentifier) ctxId);
 				this.ctxBroker.unregisterFromChanges(myID, this, ctxAttrId);
 				
 			} catch (CtxException e) {

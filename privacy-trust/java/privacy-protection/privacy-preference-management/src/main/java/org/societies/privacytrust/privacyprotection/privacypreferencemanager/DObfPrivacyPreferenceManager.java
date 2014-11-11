@@ -24,7 +24,6 @@
  */
 package org.societies.privacytrust.privacyprotection.privacypreferencemanager;
 
-import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -39,10 +38,9 @@ import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.context.model.CtxIDChanger;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationAccCtrlEvent.NotificationType;
 import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationDobfEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent.NotificationType;
 import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseDObfEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseEvent;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
 import org.societies.api.osgi.event.CSSEvent;
 import org.societies.api.osgi.event.EMSException;
@@ -77,7 +75,7 @@ public class DObfPrivacyPreferenceManager extends EventListener{
 		this.userResponses = new Hashtable<String, UserResponseDObfEvent>();
 		this.privPrefMgr = privPrefMgr;
 		this.userIdentity = privPrefMgr.getIdm().getThisNetworkNode();
-		String[] eventTypes = new String[]{EventTypes.PERSONIS_NOTIFICATION__DOBF_RESPONSE};
+		String[] eventTypes = new String[]{EventTypes.PERSONIS_NOTIFICATION_DOBF_RESPONSE};
 		this.privPrefMgr.getEventMgr().subscribeInternalEvent(this, eventTypes, null);
 	}
 	/**
@@ -207,7 +205,7 @@ public class DObfPrivacyPreferenceManager extends EventListener{
 		if(model.getDetails().equals(details)){
 			try {
 				CtxAttributeIdentifier ctxAttributeIdentifier = new CtxAttributeIdentifier(details.getResource().getDataIdUri());
-				ctxAttributeIdentifier = CtxIDChanger.changeOwner(userIdentity.getBareJid(), ctxAttributeIdentifier);
+				ctxAttributeIdentifier = CtxIDChanger.changeIDOwner(userIdentity.getBareJid(), ctxAttributeIdentifier);
 
 				DObfPreferenceDetailsBean detailsCopy = PrivacyPreferenceUtils.copyOf(details);
 				Resource resource = ResourceUtils.create(ctxAttributeIdentifier);
@@ -234,7 +232,7 @@ public class DObfPrivacyPreferenceManager extends EventListener{
 		for (CtxModelObject ctxModelObject : ctxDataList){
 			DObfPreferenceDetailsBean details = new DObfPreferenceDetailsBean();
 			details.setRequestor(requestor);
-			CtxIdentifier ctxId = CtxIDChanger.changeOwner(this.userIdentity.getBareJid(), (CtxAttributeIdentifier) ctxModelObject.getId());
+			CtxIdentifier ctxId = CtxIDChanger.changeIDOwner(this.userIdentity.getBareJid(), (CtxAttributeIdentifier) ctxModelObject.getId());
 			details.setResource(ResourceUtils.create(ctxId));
 			Integer obfLevel = evaluateDObfPreference(details);
 			if (obfLevel>=0){

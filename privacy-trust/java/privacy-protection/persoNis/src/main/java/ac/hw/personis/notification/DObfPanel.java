@@ -74,7 +74,7 @@ public class DObfPanel extends NotificationPanel implements ChangeListener {
 					public void actionPerformed(ActionEvent arg0) {
 						if (userClicked){
 							UserResponseDObfEvent dobfEvent = new UserResponseDObfEvent(uuid, slider.getValue(), true);
-							InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION__DOBF_RESPONSE, "", getClass().getName(), dobfEvent);
+							InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_DOBF_RESPONSE, "", getClass().getName(), dobfEvent);
 							try {
 								personisHelper.getEventMgr().publishInternalEvent(event);
 							} catch (EMSException e1) {
@@ -84,7 +84,7 @@ public class DObfPanel extends NotificationPanel implements ChangeListener {
 
 						}else{
 							UserResponseDObfEvent dobfEvent = new UserResponseDObfEvent(uuid, obfuscationLevel, false);
-							InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION__DOBF_RESPONSE, "", getClass().getName(), dobfEvent);
+							InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_DOBF_RESPONSE, "", getClass().getName(), dobfEvent);
 							try {
 								personisHelper.getEventMgr().publishInternalEvent(event);
 							} catch (EMSException e1) {
@@ -156,6 +156,7 @@ public class DObfPanel extends NotificationPanel implements ChangeListener {
 		}
 		
 
+		revalidate();
 		
 	}
 

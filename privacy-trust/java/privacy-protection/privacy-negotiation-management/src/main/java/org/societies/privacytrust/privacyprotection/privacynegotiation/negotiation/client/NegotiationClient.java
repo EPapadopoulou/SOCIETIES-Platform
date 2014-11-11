@@ -297,7 +297,7 @@ public class NegotiationClient implements INegotiationClient {
 
 			
 			for (CtxIdentifier ctxID : ctxIDList){
-				CtxIdentifier newCtxID = CtxIDChanger.changeOwner(identity.getBareJid(), (CtxAttributeIdentifier) ctxID);
+				CtxIdentifier newCtxID = CtxIDChanger.changeIDOwner(identity.getBareJid(), (CtxAttributeIdentifier) ctxID);
 				System.out.println("Replaced owner in ctxID:"+newCtxID.getOwnerId()+" full ID: "+newCtxID.getUri());
 				for (ResponseItem item : agreement.getRequestedItems()){
 					if (item.getRequestItem().getResource().getDataType().equalsIgnoreCase(newCtxID.getType())){

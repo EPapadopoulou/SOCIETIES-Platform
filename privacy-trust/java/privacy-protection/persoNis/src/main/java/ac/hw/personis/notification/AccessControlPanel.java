@@ -9,15 +9,13 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseAccCtrlEvent;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyOutcomeConstantsBean;
 import org.societies.api.osgi.event.EMSException;
 import org.societies.api.osgi.event.EventTypes;
 import org.societies.api.osgi.event.InternalEvent;
-import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
 
 import ac.hw.personis.PersonisHelper;
 import ac.hw.personis.event.NotificationPanelClosedListener;
@@ -66,7 +64,7 @@ public class AccessControlPanel extends NotificationPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				UserResponseEvent urEvent = new UserResponseEvent(myUuid, PrivacyOutcomeConstantsBean.BLOCK, userClicked);
+				UserResponseAccCtrlEvent urEvent = new UserResponseAccCtrlEvent(myUuid, PrivacyOutcomeConstantsBean.BLOCK, userClicked);
 
 
 				InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_RESPONSE, "", getClass().getName(), urEvent);
@@ -93,7 +91,7 @@ public class AccessControlPanel extends NotificationPanel {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				if (!myUuid.equalsIgnoreCase(EMPTY)){
-					UserResponseEvent urEvent = new UserResponseEvent(myUuid, PrivacyOutcomeConstantsBean.ALLOW, userClicked);
+					UserResponseAccCtrlEvent urEvent = new UserResponseAccCtrlEvent(myUuid, PrivacyOutcomeConstantsBean.ALLOW, userClicked);
 
 
 					InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_RESPONSE, "", getClass().getName(), urEvent);
@@ -121,15 +119,6 @@ public class AccessControlPanel extends NotificationPanel {
 		return myUuid;
 	}
 
-	public static AccessControlPanel getEmptyNotificationPanel(String text, NotificationPanelClosedListener listener){
-		AccessControlPanel panel = new AccessControlPanel(null, text, EMPTY, listener, null);
-		panel.btnBlockAccess.setVisible(false);
-		panel.remove(panel.btnBlockAccess);
-		panel.btnAllowAccess.setVisible(false);
-		panel.remove(panel.btnAllowAccess);
-
-		return panel;
-	}
 
 	public void closeMe(){
 		if (preferenceEffect==PrivacyOutcomeConstantsBean.ALLOW){

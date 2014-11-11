@@ -58,8 +58,13 @@ import org.societies.api.internal.logging.PerformanceMessage;
 import org.societies.api.internal.privacytrust.privacy.util.dataobfuscation.DataWrapperFactory;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyDataManager;
 import org.societies.api.internal.privacytrust.privacyprotection.IPrivacyPolicyManager;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.TextNotificationEvent;
 import org.societies.api.internal.schema.privacytrust.privacy.model.dataobfuscation.DataWrapper;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.DObfPreferenceDetailsBean;
+import org.societies.api.osgi.event.EMSException;
+import org.societies.api.osgi.event.EventTypes;
+import org.societies.api.osgi.event.IEventMgr;
+import org.societies.api.osgi.event.InternalEvent;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ActionUtils;
@@ -104,6 +109,7 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 	private IPrivacyPolicyManager privacyPolicyManager;
 	private ICommManager commManager;
 	private ICisManager cisManager;
+	private IEventMgr eventMgr;
 	/* Data */
 	public static final String CSS_ACCESS_CONTROL_TYPE = "CSS";
 	public static final String CIS_ACCESS_CONTROL_TYPE = "CIS";
@@ -118,6 +124,7 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 	 * Flag to enable/disable access control and obfuscation
 	 */
 	private boolean enabled;
+	
 
 
 	/* *********************************
@@ -591,7 +598,19 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 			CtxAttribute ctxAttribute = (CtxAttribute) ctxModelObj;
 			if (obfuscatableTypes.contains(ctxAttribute.getType())){
 				LOG.debug("CtxModelObj "+ctxModelObj.getType()+" is obfuscatable");
-				return obfuscate(obfuscationLevel, ctxAttribute);
+				CtxModelObject obfuscatedModelObject = obfuscate(obfuscationLevel, ctxAttribute);
+				StringBuilder sb = new StringBuilder();
+				sb.append("Obfuscation level "+obfuscationLevel+" applied to "+ctxModelObj.getType()+": "+((CtxAttribute) obfuscatedModelObject).getStringValue());
+				try {
+					TextNotificationEvent txtNotifEvent = new TextNotificationEvent(sb.toString());
+					InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_TEXT, "", this.getClass().getName(), txtNotifEvent);
+
+					this.eventMgr.publishInternalEvent(event);
+				} catch (EMSException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return obfuscatedModelObject;
 			}else{
 				LOG.debug("CtxModelObj "+ctxModelObj.getType()+" is NOT obfuscatable");
 			}
@@ -793,6 +812,10 @@ public class PrivacyDataManager extends PrivacyDataManagerUtility implements IPr
 	}
 	public void setCisManager(ICisManager cisManager) {
 		this.cisManager = cisManager;
+	}
+
+	public void setEventMgr(IEventMgr eventMgr) {
+		this.eventMgr = eventMgr;
 	}
 
 	public boolean isEnabled() {

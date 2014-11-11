@@ -202,7 +202,7 @@ public class IdentitiesViewer extends JInternalFrame {
 					List<CtxAttribute> attributes = new ArrayList<CtxAttribute>();
 					for (CtxIdentifier ctxID :linkedAttributes){
 						try {
-							CtxAttribute ctxAttribute = (CtxAttribute) ctxBroker.retrieve(CtxIDChanger.changeOwner(userMainIdentity.getBareJid(), (CtxAttributeIdentifier) ctxID)).get();
+							CtxAttribute ctxAttribute = (CtxAttribute) ctxBroker.retrieve(CtxIDChanger.changeIDOwner(userMainIdentity.getBareJid(), (CtxAttributeIdentifier) ctxID)).get();
 							logging.debug("Retrieved ctxAttribute {}", ctxID);
 							if (ctxAttribute!=null){
 								logging.debug("Adding non-null ctxAttribute {}", ctxID);

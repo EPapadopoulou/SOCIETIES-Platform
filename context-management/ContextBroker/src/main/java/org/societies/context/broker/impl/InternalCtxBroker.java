@@ -719,7 +719,7 @@ public class InternalCtxBroker implements ICtxBroker {
 					Set<CtxIdentifier> lookup = this.userCtxDBMgr.lookup(userID.getBareJid(), modelType, types);
 					for (CtxIdentifier ctxIdentifier : lookup){
 						LOG.debug("linkedAttributes={}", attributeList);
-						CtxAttributeIdentifier maskedCtxIdentifier = CtxIDChanger.changeOwner(target.getBareJid(), (CtxAttributeIdentifier) ctxIdentifier);
+						CtxAttributeIdentifier maskedCtxIdentifier = CtxIDChanger.changeIDOwner(target.getBareJid(), (CtxAttributeIdentifier) ctxIdentifier);
 
 						if (attributeList.contains(maskedCtxIdentifier)){
 							LOG.debug("LinkeDAttributes contains "+maskedCtxIdentifier.getUri());
@@ -1722,7 +1722,7 @@ public class InternalCtxBroker implements ICtxBroker {
 				}
 
 				// Check READ permission
-				this.ctxAccessController.checkPermission(requestor, CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId), ActionConstants.READ);
+				this.ctxAccessController.checkPermission(requestor, CtxIDChanger.changeIDOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId), ActionConstants.READ);
 
 
 			}
@@ -1730,22 +1730,22 @@ public class InternalCtxBroker implements ICtxBroker {
 
 			if (IdentityType.CIS != targetId.getType()) { // U S E R
 
-				result = this.inferUserAttribute(CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
+				result = this.inferUserAttribute(CtxIDChanger.changeIDOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
 
 
 			} else { // C O M M U N I T Y
 
 				if (ctxId instanceof CtxAttributeIdentifier) { // I N F E R E N C E
-					result = this.inferCommunityAttribute(CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
+					result = this.inferCommunityAttribute(CtxIDChanger.changeIDOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
 				} else {
-					result = (CtxAttribute) this.communityCtxDBMgr.retrieve(CtxIDChanger.changeOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
+					result = (CtxAttribute) this.communityCtxDBMgr.retrieve(CtxIDChanger.changeIDOwner(userID.getBareJid(), (CtxAttributeIdentifier) ctxId));
 				}
 			}
 
 			// Obfuscate non-null result if requestor is not local
 			if (result != null && !requestor.equals(this.getLocalRequestor())) {
 				
-				result = CtxIDChanger.changeOwner(targetCtxID, (CtxAttribute) result);
+				result = CtxIDChanger.changeAttrOwner(targetCtxID, (CtxAttribute) result);
 				result = (CtxAttribute) this.ctxAccessController.obfuscate(requestor, result);
 			}
 

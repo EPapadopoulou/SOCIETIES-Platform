@@ -12,9 +12,10 @@ import javax.swing.JScrollPane;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationAccCtrlEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationAccCtrlEvent.NotificationType;
 import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationDobfEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent.NotificationType;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.TextNotificationEvent;
 
 import ac.hw.personis.PersonisHelper;
 import ac.hw.personis.event.NotificationPanelClosedListener;
@@ -70,7 +71,7 @@ public class NotificationsPanel extends JPanel {
 
 	}
 
-	public void addAccessControlNotification(NotificationEvent notifEvent){
+	public void addAccessControlNotification(NotificationAccCtrlEvent notifEvent){
 
 		System.out.println("Adding new notification panel");
 		if (notifEvent.getNotificationType()==NotificationType.SIMPLE){
@@ -98,10 +99,19 @@ public class NotificationsPanel extends JPanel {
 	}
 
 	private void addEmptyNotification(){
-		AccessControlPanel panel = AccessControlPanel.getEmptyNotificationPanel("Your notifications will appear in this area here. ", listener);
-		panels.add(panel);
+		TextNotification textNotificationPanel = new TextNotification("Your notifications will appear in this area here. ");
+		
+		panels.add(textNotificationPanel);
 		resetPanels();
 	}
+	
+	public void addTextNotification(TextNotificationEvent txtNotifEvent) {
+		TextNotification textNotificationPanel = new TextNotification(txtNotifEvent.getMessage());
+		panels.add(textNotificationPanel);
+		resetPanels();
+		
+	}
+
 
 	private void resetPanels() {
 		mainPanel.removeAll();
@@ -146,6 +156,7 @@ public class NotificationsPanel extends JPanel {
 
 	}
 
+	
 
 
 

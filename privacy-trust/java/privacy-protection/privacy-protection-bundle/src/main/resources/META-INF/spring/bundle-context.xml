@@ -53,6 +53,7 @@
 		<property name="privacyPolicyManager" ref="privacyPolicyManager" />
 		<property name="cisManager" ref="cisManager" />
 		<property name="commManager" ref="commManager" />
+		<property name="eventMgr" ref="eventManager"></property>
 	</bean>
 
 	<bean name="privacyDataManagerInternal"

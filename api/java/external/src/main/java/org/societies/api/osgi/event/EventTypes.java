@@ -156,9 +156,10 @@ public class EventTypes {
     
     public static final String IDENTITY_SELECTED = "org/societies/privacytrust/privacyprotection/api/identity/IdentitySelected";
     
+    public static final String PERSONIS_NOTIFICATION_TEXT = "org/societies/personis/textNotification";
     public static final String PERSONIS_NOTIFICATION_REQUEST = "org/societies/personis/request";
     public static final String PERSONIS_NOTIFICATION_RESPONSE = "org/societies/personis/response";
     
     public static final String PERSONIS_NOTIFICATION_DOBF_REQUEST = "org/societies/personis/dobf_request";
-    public static final String PERSONIS_NOTIFICATION__DOBF_RESPONSE = "org/societies/personis/dobf_response";
+    public static final String PERSONIS_NOTIFICATION_DOBF_RESPONSE = "org/societies/personis/dobf_response";
 }

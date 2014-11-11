@@ -328,7 +328,7 @@ public class IdentitySelection implements IIdentitySelection {
 		IIdentity impl = this.idManager.addAlias(name);
 		List<CtxIdentifier> newList = new ArrayList<CtxIdentifier>();
 		for (CtxIdentifier ctxID : idList){
-			CtxIdentifier newCtxID =CtxIDChanger.changeOwner(impl.getBareJid(), (CtxAttributeIdentifier) ctxID);
+			CtxIdentifier newCtxID =CtxIDChanger.changeIDOwner(impl.getBareJid(), (CtxAttributeIdentifier) ctxID);
 			newList.add(newCtxID);
 		}
 		logging.debug("Creating new identity"+impl.getBareJid()+" with context list: {}", newList);

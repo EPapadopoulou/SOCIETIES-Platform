@@ -6,6 +6,8 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JDesktopPane;
@@ -22,18 +24,14 @@ import javax.swing.plaf.FontUIResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.model.CtxAttributeTypes;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationAccCtrlEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationAccCtrlEvent.NotificationType;
 import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationDobfEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent.NotificationType;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyOutcomeConstantsBean;
 
 import ac.hw.personis.PersonisHelper;
 import ac.hw.personis.event.NotificationsListener;
 import ac.hw.personis.notification.NotificationsPanel;
-
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class Notifications extends JInternalFrame {
 
@@ -42,9 +40,44 @@ public class Notifications extends JInternalFrame {
 	private NotificationsPanel notificationsPanel;
 
 	/**
+	 * Create the frame.
+	 * @param personisHelper 
+	 * @param y 
+	 * @param x 
+	 */
+	public Notifications(PersonisHelper personisHelper) {
+		setBounds(100, 100, 375, 729);
+		setLocation(820, 0);
+		GridBagLayout gridBagLayout = new GridBagLayout();
+		gridBagLayout.columnWidths = new int[]{334, 0};
+		gridBagLayout.rowHeights = new int[]{700, 0};
+		gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+		gridBagLayout.rowWeights = new double[]{1.0, Double.MIN_VALUE};
+		getContentPane().setLayout(gridBagLayout);
+		notificationsPanel = new NotificationsPanel(personisHelper);
+		GridBagConstraints gbc_panel = new GridBagConstraints();
+		gbc_panel.fill = GridBagConstraints.BOTH;
+		gbc_panel.gridx = 0;
+		gbc_panel.gridy = 0;
+		getContentPane().add(notificationsPanel, gbc_panel);
+		listener = new NotificationsListener(personisHelper, notificationsPanel);
+
+	}
+
+	public NotificationsPanel getNotificationsPanel() {
+		return notificationsPanel;
+	}
+
+	public void setNotificationsPanel(NotificationsPanel notificationsPanel) {
+		this.notificationsPanel = notificationsPanel;
+	}
+
+	
+
+	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
+/*	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -117,8 +150,8 @@ public class Notifications extends JInternalFrame {
 						
 						@Override
 						public void actionPerformed(ActionEvent arg0) {
-							notifications.getNotificationsPanel().addAccessControlNotification(new NotificationEvent("uuid", "asldfjasl;dfja;sldfjkas;ldfkjasl;fjas;flkjasd;flajsd;lk;lkjl;kj lkj ;lkj l;jk  k l;jkl;jk;lkjl;jk lkjhugbyibu u iu ghuil uikg ilu  gu ukk", NotificationType.SIMPLE, PrivacyOutcomeConstantsBean.ALLOW));
-							notifications.getNotificationsPanel().addAccessControlNotification(new NotificationEvent("uuid", "asldfjasl;dfja;sldfjkas;ldfkjasl;fjas;flkjasd;flajsd;lk;lkjl;kj lkj ;lkj l;jk  k l;jkl;jk;lkjl;jk lkjhugbyibu u iu ghuil uikg ilu  gu ukk", NotificationType.TIMED, PrivacyOutcomeConstantsBean.ALLOW));
+							notifications.getNotificationsPanel().addAccessControlNotification(new NotificationAccCtrlEvent("uuid", "asldfjasl;dfja;sldfjkas;ldfkjasl;fjas;flkjasd;flajsd;lk;lkjl;kj lkj ;lkj l;jk  k l;jkl;jk;lkjl;jk lkjhugbyibu u iu ghuil uikg ilu  gu ukk", NotificationType.SIMPLE, PrivacyOutcomeConstantsBean.ALLOW));
+							notifications.getNotificationsPanel().addAccessControlNotification(new NotificationAccCtrlEvent("uuid", "asldfjasl;dfja;sldfjkas;ldfkjasl;fjas;flkjasd;flajsd;lk;lkjl;kj lkj ;lkj l;jk  k l;jkl;jk;lkjl;jk lkjhugbyibu u iu ghuil uikg ilu  gu ukk", NotificationType.TIMED, PrivacyOutcomeConstantsBean.ALLOW));
 							notifications.getNotificationsPanel().addDobfNotification(new NotificationDobfEvent("uuid", "asldfjasl;dfja;sldfjkas;ldfkjasl;fjas;flkjasd;flajsd;lk;lkjl;kj lkj ;lkj l;jk  k l;jkl;jk;lkjl;jk lkjhugbyibu u iu ghuil uikg ilu  gu ukk", NotificationType.SIMPLE, 1, CtxAttributeTypes.BIRTHDAY));
 							notifications.getNotificationsPanel().addDobfNotification(new NotificationDobfEvent("uuid", "asldfjasl;dfja;sldfjkas;ldfkjasl;fjas;flkjasd;flajsd;lk;lkjl;kj lkj ;lkj l;jk  k l;jkl;jk;lkjl;jk lkjhugbyibu u iu ghuil uikg ilu  gu ukk", NotificationType.TIMED, 1, CtxAttributeTypes.BIRTHDAY));
 							
@@ -134,38 +167,5 @@ public class Notifications extends JInternalFrame {
 			}
 		});
 	}
-
-	/**
-	 * Create the frame.
-	 * @param personisHelper 
-	 * @param y 
-	 * @param x 
-	 */
-	public Notifications(PersonisHelper personisHelper) {
-		setBounds(100, 100, 375, 729);
-		setLocation(820, 0);
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[]{334, 0};
-		gridBagLayout.rowHeights = new int[]{700, 0};
-		gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{1.0, Double.MIN_VALUE};
-		getContentPane().setLayout(gridBagLayout);
-		notificationsPanel = new NotificationsPanel(personisHelper);
-		GridBagConstraints gbc_panel = new GridBagConstraints();
-		gbc_panel.fill = GridBagConstraints.BOTH;
-		gbc_panel.gridx = 0;
-		gbc_panel.gridy = 0;
-		getContentPane().add(notificationsPanel, gbc_panel);
-		listener = new NotificationsListener(personisHelper, notificationsPanel);
-
-	}
-
-	public NotificationsPanel getNotificationsPanel() {
-		return notificationsPanel;
-	}
-
-	public void setNotificationsPanel(NotificationsPanel notificationsPanel) {
-		this.notificationsPanel = notificationsPanel;
-	}
-
+*/
 }

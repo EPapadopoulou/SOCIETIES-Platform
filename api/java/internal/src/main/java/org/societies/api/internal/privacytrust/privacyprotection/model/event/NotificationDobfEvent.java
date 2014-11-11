@@ -2,7 +2,7 @@ package org.societies.api.internal.privacytrust.privacyprotection.model.event;
 
 import java.io.Serializable;
 
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent.NotificationType;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationAccCtrlEvent.NotificationType;
 
 public class NotificationDobfEvent implements Serializable{
 

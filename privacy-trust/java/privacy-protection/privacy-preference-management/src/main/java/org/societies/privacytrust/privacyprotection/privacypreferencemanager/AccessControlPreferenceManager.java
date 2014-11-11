@@ -31,14 +31,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.GroupLayout.Alignment;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.societies.api.context.CtxException;
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxAttributeIdentifier;
-import org.societies.api.context.model.CtxEntity;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelObject;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
@@ -46,9 +43,10 @@ import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.Requestor;
 import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.internal.context.model.CtxAttributeTypes;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationEvent.NotificationType;
-import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationAccCtrlEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.TextNotificationEvent;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.NotificationAccCtrlEvent.NotificationType;
+import org.societies.api.internal.privacytrust.privacyprotection.model.event.UserResponseAccCtrlEvent;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PrivacyOutcomeConstantsBean;
 import org.societies.api.osgi.event.CSSEvent;
@@ -69,8 +67,6 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Request
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ContextPreferenceCondition;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.IPrivacyOutcome;
-import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyCondition;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlOutcome;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.accesscontrol.AccessControlPreferenceTreeModel;
@@ -91,10 +87,11 @@ public class AccessControlPreferenceManager extends EventListener{
 	private String[] sensedDataTypes;
 	private IIdentity userIdentity;
 	private PrivacyPreferenceManager privPrefMgr;
-	private Hashtable<String, UserResponseEvent> userResponses;
+	private Hashtable<String, UserResponseAccCtrlEvent> userResponses;
+	
 
 	public AccessControlPreferenceManager(PrivacyPreferenceManager privPrefMgr){
-		this.userResponses = new Hashtable<String, UserResponseEvent>();
+		this.userResponses = new Hashtable<String, UserResponseAccCtrlEvent>();
 		this.privPrefMgr = privPrefMgr;
 
 		userIdentity = privPrefMgr.getIdm().getThisNetworkNode();
@@ -109,6 +106,7 @@ public class AccessControlPreferenceManager extends EventListener{
 
 
 
+	
 
 	private boolean isAttributeSensed(String type) {
 		for (String sensedType : sensedDataTypes){
@@ -152,8 +150,38 @@ public class AccessControlPreferenceManager extends EventListener{
 		for (DataIdentifier dataID : dataIds){
 			ResponseItem checkPermission = this.checkPermission(requestor, dataID, action);
 			permissions.add(checkPermission);
+			StringBuilder sb = new StringBuilder();
+			if (checkPermission.getDecision()==Decision.PERMIT){
+				sb.append("Permission granted to "+requestor.getRequestorId());
+				
+			}else{
+				sb.append("Permission denied to "+requestor.getRequestorId());
+			}
+			sb.append(" to "+action.getActionConstant().name());
+			sb.append(" your "+dataID.getType());
+			try {
+				TextNotificationEvent txtNotifEvent = new TextNotificationEvent(sb.toString());
+				InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_TEXT, "", this.getClass().getName(), txtNotifEvent);
+
+				this.privPrefMgr.getEventMgr().publishInternalEvent(event);
+			} catch (EMSException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}		
+			
 		}
 		return permissions;
+	}
+	
+	
+	private boolean containsKeys(List<String> uuids){
+		for (String uuid : uuids){
+			if (!this.userResponses.containsKey(uuid)){
+				return false;
+			}
+		}
+		
+		return true;
 	}
 
 	/*
@@ -193,8 +221,8 @@ public class AccessControlPreferenceManager extends EventListener{
 			sb.append(" your data: "+resource.getDataType());
 			String uuid = UUID.randomUUID().toString();
 			
-			NotificationEvent notifEvent = null;
-			notifEvent = new NotificationEvent(uuid, sb.toString(), NotificationType.SIMPLE, PrivacyOutcomeConstantsBean.ALLOW);
+			NotificationAccCtrlEvent notifEvent = null;
+			notifEvent = new NotificationAccCtrlEvent(uuid, sb.toString(), NotificationType.SIMPLE, PrivacyOutcomeConstantsBean.ALLOW);
 			
 			InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_REQUEST, "", this.getClass().getName(), notifEvent);
 			try {
@@ -215,7 +243,7 @@ public class AccessControlPreferenceManager extends EventListener{
 				}
 			}
 			if (this.userResponses.containsKey(uuid)){
-				UserResponseEvent userResponseEvent = userResponses.get(uuid);
+				UserResponseAccCtrlEvent userResponseEvent = userResponses.get(uuid);
 				logging.debug("Received user response: "+userResponseEvent.getEffect());
 				storeDecision(details, userResponseEvent.getEffect());
 				return createResponseItem(requestor, dataId, action, conditions,userResponseEvent.getEffect());
@@ -240,11 +268,11 @@ public class AccessControlPreferenceManager extends EventListener{
 			sb.append(resource.getDataType());
 			String uuid = UUID.randomUUID().toString();
 
-			NotificationEvent notifEvent = null;
+			NotificationAccCtrlEvent notifEvent = null;
 			if (accCtrlOutcome.getConfidenceLevel()>=60){
-				notifEvent = new NotificationEvent(uuid, sb.toString(), NotificationType.TIMED, accCtrlOutcome.getEffect());
+				notifEvent = new NotificationAccCtrlEvent(uuid, sb.toString(), NotificationType.TIMED, accCtrlOutcome.getEffect());
 			}else {
-				notifEvent = new NotificationEvent(uuid, sb.toString(), NotificationType.SIMPLE, accCtrlOutcome.getEffect());
+				notifEvent = new NotificationAccCtrlEvent(uuid, sb.toString(), NotificationType.SIMPLE, accCtrlOutcome.getEffect());
 			}
 			InternalEvent event = new InternalEvent(EventTypes.PERSONIS_NOTIFICATION_REQUEST, "", this.getClass().getName(), notifEvent);
 			try {
@@ -267,7 +295,7 @@ public class AccessControlPreferenceManager extends EventListener{
 			//inform the user and then return it
 
 			if (this.userResponses.containsKey(uuid)){
-				UserResponseEvent userResponseEvent = userResponses.get(uuid);
+				UserResponseAccCtrlEvent userResponseEvent = userResponses.get(uuid);
 				logging.debug("Received user response: "+userResponseEvent.getEffect());
 				if (userResponseEvent.isUserClicked()){
 					if (accCtrlOutcome.getEffect()==userResponseEvent.getEffect()){
@@ -669,8 +697,8 @@ public class AccessControlPreferenceManager extends EventListener{
 	@Override
 	public void handleInternalEvent(InternalEvent event) {
 		logging.debug("Received event: {}", event.geteventType());
-		if (event.geteventInfo() instanceof UserResponseEvent){
-			UserResponseEvent uREvent = (UserResponseEvent) event.geteventInfo();
+		if (event.geteventInfo() instanceof UserResponseAccCtrlEvent){
+			UserResponseAccCtrlEvent uREvent = (UserResponseAccCtrlEvent) event.geteventInfo();
 			this.userResponses.put(uREvent.getUuid(), uREvent);
 			synchronized (this.userResponses) {
 				this.userResponses.notifyAll();	

@@ -3,6 +3,9 @@
  */
 package org.societies.api.internal.context.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxEntityIdentifier;
@@ -12,14 +15,22 @@ import org.societies.api.context.model.CtxEntityIdentifier;
  *
  */
 public class CtxIDChanger {
-	public static CtxAttributeIdentifier changeOwner(String newOwnerID, CtxAttributeIdentifier ctxID){
+	public static CtxAttributeIdentifier changeIDOwner(String newOwnerID, CtxAttributeIdentifier ctxID){
 		
 		CtxEntityIdentifier ctxEntityID = new CtxEntityIdentifier(newOwnerID, ctxID.getScope().getType(), ctxID.getScope().getObjectNumber());
 		return new CtxAttributeIdentifier(ctxEntityID, ctxID.getType(), ctxID.getObjectNumber());
 	}
+	
+	public static List<CtxAttributeIdentifier> changeIDOwner(String newOwnerID, List<CtxAttributeIdentifier> ctxIDs){
+		List<CtxAttributeIdentifier> list = new ArrayList<CtxAttributeIdentifier>();
+		for (CtxAttributeIdentifier ctxID : ctxIDs){
+			list.add(changeIDOwner(newOwnerID, ctxID));
+		}
+		return list;
+	}
 
-	public static CtxAttribute changeOwner(String newOwnerID, CtxAttribute ctxAttribute){
-		CtxAttributeIdentifier ctxID = changeOwner(newOwnerID, ctxAttribute.getId());
+	public static CtxAttribute changeAttrOwner(String newOwnerID, CtxAttribute ctxAttribute){
+		CtxAttributeIdentifier ctxID = changeIDOwner(newOwnerID, ctxAttribute.getId());
 		CtxAttribute changedCtxAttribute = new CtxAttribute(ctxID);
 		 
 		switch (ctxAttribute.getValueType()){
@@ -48,4 +59,17 @@ public class CtxIDChanger {
 		return changedCtxAttribute;
 		
 	}
+	
+	
+	public static List<CtxAttribute> changeAttrOwner(String newOwnerID, List<CtxAttribute> ctxAttributes){
+		
+		List<CtxAttribute> list = new ArrayList<CtxAttribute>();
+		for (CtxAttribute ctxAttribute : ctxAttributes){
+			list.add(changeAttrOwner(newOwnerID, ctxAttribute));
+		}
+		return list;
+	}
+	
+	
+	
 }
