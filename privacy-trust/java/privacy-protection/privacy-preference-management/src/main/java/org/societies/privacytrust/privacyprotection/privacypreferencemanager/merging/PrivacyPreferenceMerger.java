@@ -80,10 +80,10 @@ public class PrivacyPreferenceMerger {
 
 	}
 
-	public void addIDSDecision(IIdentity selectedDPI, RequestorBean requestor){
+	public void addIDSDecision(IIdentity selectedIdentity, RequestorBean requestor){
 		ContextSnapshot snapshot = this.takeSnapshot();
 		IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
-		details.setAffectedIdentity(selectedDPI.getJid());
+		details.setAffectedIdentity(selectedIdentity.getJid());
 		details.setRequestor(requestor);
 		IPrivacyPreferenceTreeModel existingModel = privPrefMgr.getIDSPreference(details);
 		if (existingModel==null){
@@ -100,7 +100,7 @@ public class PrivacyPreferenceMerger {
 		}else{
 			PrivacyPreference mergedPreference;
 			try {
-				mergedPreference = this.mergeIDSPreference(details, existingModel.getRootPreference(), snapshot);
+				mergedPreference = this.mergeIDSPreference(details, existingModel.getRootPreference(), snapshot, selectedIdentity);
 				if (mergedPreference!=null){
 					IDSPrivacyPreferenceTreeModel model = new IDSPrivacyPreferenceTreeModel(details, mergedPreference);
 					this.privPrefMgr.storeIDSPreference(details, model);
@@ -113,10 +113,10 @@ public class PrivacyPreferenceMerger {
 		}
 	}
 
-	public void addIDSDecision(IIdentity selectedDPI, Double trustValue){
+	public void addIDSDecision(IIdentity selectedIdentity, Double trustValue){
 		ContextSnapshot snapshot = this.takeSnapshot();
 		IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
-		details.setAffectedIdentity(selectedDPI.getJid());
+		details.setAffectedIdentity(selectedIdentity.getJid());
 
 		IPrivacyPreferenceTreeModel existingModel = privPrefMgr.getIDSPreference(details);
 		if (existingModel==null){
@@ -138,7 +138,7 @@ public class PrivacyPreferenceMerger {
 		}else{
 			PrivacyPreference mergedPreference;
 			try {
-				mergedPreference = this.mergeIDSPreference(details, existingModel.getRootPreference(), snapshot, trustValue);
+				mergedPreference = this.mergeIDSPreference(details, existingModel.getRootPreference(), snapshot, trustValue, selectedIdentity);
 				if (mergedPreference!=null){
 					IDSPrivacyPreferenceTreeModel model = new IDSPrivacyPreferenceTreeModel(details, mergedPreference);
 					this.privPrefMgr.storeIDSPreference(details, model);
@@ -152,7 +152,7 @@ public class PrivacyPreferenceMerger {
 	}
 
 
-	public PrivacyPreference mergeIDSPreference(IDSPreferenceDetailsBean d, PrivacyPreference node, ContextSnapshot snapshot) throws InvalidFormatException{
+	public PrivacyPreference mergeIDSPreference(IDSPreferenceDetailsBean d, PrivacyPreference node, ContextSnapshot snapshot, IIdentity selectedIdentity) throws InvalidFormatException{
 		logging.debug("MERGING IDS PREFERENCES - START");
 
 		if (node.isLeaf()){
@@ -167,14 +167,16 @@ public class PrivacyPreferenceMerger {
 
 
 		SingleRule singleRule = this.convertToSingleRules(snapshot);
-
+		IdentitySelectionPreferenceOutcome outcome = new IdentitySelectionPreferenceOutcome(selectedIdentity);
+		singleRule.setOutcome(outcome);
+		
 		PrivacyPreference merge = merge(node, singleRule);
 		logging.debug("MERGING IDS PREFERENCES - END");
 
 		return merge;
 	}
 
-	private PrivacyPreference mergeIDSPreference(IDSPreferenceDetailsBean details, PrivacyPreference node,ContextSnapshot snapshot, Double trustValue) throws InvalidFormatException{
+	private PrivacyPreference mergeIDSPreference(IDSPreferenceDetailsBean details, PrivacyPreference node,ContextSnapshot snapshot, Double trustValue, IIdentity selectedIdentity) throws InvalidFormatException{
 		logging.debug("MERGING IDS PREFERENCES - START");
 
 		TrustPreferenceCondition trustCondition = new TrustPreferenceCondition(trustValue);
@@ -196,7 +198,9 @@ public class PrivacyPreferenceMerger {
 
 		singleRule.addConditions(trustCondition);
 
-
+		IdentitySelectionPreferenceOutcome outcome = new IdentitySelectionPreferenceOutcome(selectedIdentity);
+		singleRule.setOutcome(outcome);
+		
 		PrivacyPreference merge = merge(node, singleRule);
 
 

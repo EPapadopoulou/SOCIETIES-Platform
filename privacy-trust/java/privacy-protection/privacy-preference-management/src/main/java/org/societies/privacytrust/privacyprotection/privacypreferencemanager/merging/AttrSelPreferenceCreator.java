@@ -10,6 +10,7 @@ import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.InvalidFormatException;
+import org.societies.api.identity.util.RequestorUtils;
 import org.societies.api.internal.context.model.CtxIDChanger;
 import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
@@ -75,11 +76,11 @@ public class AttrSelPreferenceCreator {
 	private void createAttributeSelectionPreferences(Agreement agreement) throws InvalidFormatException, InterruptedException, ExecutionException, TrustException, MalformedCtxIdentifierException{
 
 		RequestorBean requestor = agreement.getRequestor();
-		
+
 		ITrustBroker trustBroker = privPrefMgr.getTrustBroker();
-		
+
 		TrustedEntityId trusteeID = new TrustedEntityId(TrustedEntityType.SVC, requestor.getRequestorId());
-		
+
 		TrustedEntityId trustorID = new TrustedEntityId(TrustedEntityType.CIS, this.privPrefMgr.getCommsMgr().getIdManager().getThisNetworkNode().getBareJid());
 		TrustQuery trustQuery = new TrustQuery(trustorID);
 		trustQuery.setTrusteeId(trusteeID);
@@ -90,76 +91,86 @@ public class AttrSelPreferenceCreator {
 
 			Resource resource = ResourceUtils.copyOf(responseItem.getRequestItem().getResource());
 			CtxAttributeIdentifier ctxID = CtxIDChanger.changeIDOwner(this.userIdentity.getBareJid(),new CtxAttributeIdentifier(resource.getDataIdUri()));
-			List<Action> actions = responseItem.getRequestItem().getActions();
 
 			AttributeSelectionPreferenceDetailsBean detailsSpecific = new AttributeSelectionPreferenceDetailsBean();
-			detailsSpecific.setActions(ActionUtils.copyOf(actions));
-			detailsSpecific.setRequestor(requestor);
+			detailsSpecific.setRequestor(RequestorUtils.copyOf(requestor));
 			detailsSpecific.setDataType(resource.getDataType());
+			this.storeAndMergeAttrSelectionPreferenceRequestorSpecific(detailsSpecific, ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), ctxID);
 			
-			PrivacyPreference  preference = this.createAttrSelectionPreference(ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), trusteeID, trustValue, ctxID);
-
 			
-			AttributeSelectionPreferenceTreeModel attrSelPreference = this.privPrefMgr.getAttrSelPreference(detailsSpecific);
-			if (attrSelPreference==null){
-			this.privPrefMgr.storeAttrSelPreference(detailsSpecific, new AttributeSelectionPreferenceTreeModel(detailsSpecific, preference));
-			}else{
-				PrivacyPreferenceMerger merger = new  PrivacyPreferenceMerger(privPrefMgr);
-				PrivacyPreference mergeAttrSelPreference = merger.mergeAttrSelPreference(detailsSpecific, attrSelPreference.getRootPreference(), preference);
-				if (mergeAttrSelPreference==null){
-					this.logging.debug("Could not merge attribute selection preferences. no changes made");
-				}else{
-					this.privPrefMgr.storeAttrSelPreference(detailsSpecific, new AttributeSelectionPreferenceTreeModel(detailsSpecific, mergeAttrSelPreference));
-				}
-			}
+			AttributeSelectionPreferenceDetailsBean detailsRequestorIdOnly = new AttributeSelectionPreferenceDetailsBean();
+			RequestorBean requestorOnly = new RequestorBean();
+			requestorOnly.setRequestorId(requestor.getRequestorId());
+			detailsRequestorIdOnly.setRequestor(requestorOnly);
+			detailsRequestorIdOnly.setDataType(resource.getDataType());
+			this.storeAndMergeAttrSelectionPreferenceRequestorSpecific(detailsRequestorIdOnly, ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), ctxID);
 			
-			PrivacyPreference  preference2 = this.createAttrSelectionPreference(ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), trusteeID, trustValue, ctxID);
 			AttributeSelectionPreferenceDetailsBean detailsGeneric = new AttributeSelectionPreferenceDetailsBean();
-			detailsGeneric.setActions(ActionUtils.copyOf(actions));
 			detailsGeneric.setDataType(resource.getDataType());
 			
-			AttributeSelectionPreferenceTreeModel attrSelPreference2 = this.privPrefMgr.getAttrSelPreference(detailsGeneric);
-			if (attrSelPreference2==null){
-			this.privPrefMgr.storeAttrSelPreference(detailsGeneric, new AttributeSelectionPreferenceTreeModel(detailsGeneric , preference2));
-			}else{
-				PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(privPrefMgr);
-				PrivacyPreference mergeAttrSelPreference = merger.mergeAttrSelPreference(detailsGeneric, attrSelPreference2.getRootPreference(), preference2);
-				if (mergeAttrSelPreference==null){
-					this.logging.debug("Could not merge attribute selection preferences. no changes made");
-				}else{
-					this.privPrefMgr.storeAttrSelPreference(detailsGeneric, new AttributeSelectionPreferenceTreeModel(detailsGeneric, mergeAttrSelPreference));
-				}
-			}
+			this.storeAndMergeAttrSelectionPreference(detailsGeneric, ConditionUtils.copyOf(responseItem.getRequestItem().getConditions()), trustValue, ctxID);
 		}
-
 	}
 
-	
-	private PrivacyPreference  createAttrSelectionPreference(List<Condition> conditions, TrustedEntityId trusteedEntityId, Double trustValue, CtxIdentifier ctxID){
+
+	private void  storeAndMergeAttrSelectionPreference(AttributeSelectionPreferenceDetailsBean details, List<Condition> conditions, Double trustValue, CtxIdentifier ctxID){
+		AttributeSelectionPreferenceTreeModel existingModel = privPrefMgr.getAttrSelPreference(details);
+
 		AttributeSelectionOutcome outcome = new AttributeSelectionOutcome(ctxID);
 		PrivacyPreference preference = new PrivacyPreference(outcome);
-		
-		
+
+
 		for (Condition condition : conditions){
 			PrivacyCondition privacyCondition = new PrivacyCondition(condition);
 			PrivacyPreference conditionPreference = new PrivacyPreference(privacyCondition);
 			conditionPreference.add(preference);
 			preference = conditionPreference;
-			
+
 		}
-		
+
 		TrustPreferenceCondition condition = new TrustPreferenceCondition(trustValue);
 		PrivacyPreference trustPreference = new PrivacyPreference(condition);
 		trustPreference.add(preference);
-		
-		Object[] userObjectPath = preference.getUserObjectPath();
-		for (Object obj : userObjectPath){
-				this.logging.debug("preference has outcome: "+obj.toString());
 
+
+		if (existingModel==null){
+			privPrefMgr.storeAttrSelPreference(details, new AttributeSelectionPreferenceTreeModel(details, preference.getRoot()));
+		}else{
+			PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(privPrefMgr);
+			PrivacyPreference mergeAttrSelPreference = merger.mergeAttrSelPreference(details, existingModel.getRootPreference(), preference.getRoot());
+			if (mergeAttrSelPreference==null){
+				this.logging.debug("Could not merge attribute selection preferences. no changes made");
+			}else{
+				this.privPrefMgr.storeAttrSelPreference(details, new AttributeSelectionPreferenceTreeModel(details, mergeAttrSelPreference));
+			}
 		}
-		
-		return preference.getRoot();
-		
+
 	}
 
+	private void  storeAndMergeAttrSelectionPreferenceRequestorSpecific(AttributeSelectionPreferenceDetailsBean details, List<Condition> conditions, CtxIdentifier ctxID){
+		AttributeSelectionPreferenceTreeModel existingModel = privPrefMgr.getAttrSelPreference(details);
+		AttributeSelectionOutcome outcome = new AttributeSelectionOutcome(ctxID);
+		PrivacyPreference preference = new PrivacyPreference(outcome);
+
+
+		for (Condition condition : conditions){
+			PrivacyCondition privacyCondition = new PrivacyCondition(condition);
+			PrivacyPreference conditionPreference = new PrivacyPreference(privacyCondition);
+			conditionPreference.add(preference);
+			preference = conditionPreference;
+
+		}
+		if (existingModel==null){
+			privPrefMgr.storeAttrSelPreference(details, new AttributeSelectionPreferenceTreeModel(details, preference.getRoot()));
+		}else{
+			PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(privPrefMgr);
+			PrivacyPreference mergeAttrSelPreference = merger.mergeAttrSelPreference(details, existingModel.getRootPreference(), preference.getRoot());
+			if (mergeAttrSelPreference==null){
+				this.logging.debug("Could not merge attribute selection preferences. no changes made");
+			}else{
+				this.privPrefMgr.storeAttrSelPreference(details, new AttributeSelectionPreferenceTreeModel(details, mergeAttrSelPreference));
+			}
+		}
+
+	}
 }

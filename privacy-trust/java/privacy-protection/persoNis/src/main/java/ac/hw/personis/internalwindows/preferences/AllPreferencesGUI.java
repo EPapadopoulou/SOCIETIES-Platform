@@ -359,7 +359,6 @@ public class AllPreferencesGUI extends JInternalFrame {
 			resource.setDataType(bean.getDataType());
 			resource.setScheme(DataIdentifierScheme.CONTEXT);
 			String title = this.getTitleString(bean.getRequestor(), resource, false);
-			title = title + "\tActions: "+bean.getActions();
 			attrSelDetailsTable.put(title, bean);
 		}
 		if (loadOntoJTable){

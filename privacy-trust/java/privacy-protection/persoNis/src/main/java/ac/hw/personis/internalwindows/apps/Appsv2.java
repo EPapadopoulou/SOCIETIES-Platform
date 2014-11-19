@@ -65,36 +65,42 @@ public class Appsv2 extends JInternalFrame {
 		InstalledApps = new ArrayList<AppButtonPanel>();
 
 		pnlmain.setLayout(null);
-
+		SelectedPanelConfigurator selectedPanelConfigurator = new SelectedPanelConfigurator();
+		
 		if (storeAppNames.contains(PersonisHelper.GOOGLE_VENUE_FINDER)){
-			p1 = new AppButtonPanel(helper, helper.getGoogleRequestor(), "/gvf.png", "Google Venue<br />Finder",detailspanel, false, PersonisHelper.GOOGLE_VENUE_FINDER);    	
+			
+			p1 = new AppButtonPanel(helper, helper.getGoogleRequestor(), "/gvf.png", "Google Venue<br />Finder",detailspanel, false, PersonisHelper.GOOGLE_VENUE_FINDER, selectedPanelConfigurator);    	
 			AvailApps.add(p1);
 		}else{
-			p1 = new AppButtonPanel(helper,helper.getGoogleRequestor(), "/gvf.png", "Google Venue<br />Finder",detailspanel, true, PersonisHelper.GOOGLE_VENUE_FINDER);
+			p1 = new AppButtonPanel(helper,helper.getGoogleRequestor(), "/gvf.png", "Google Venue<br />Finder",detailspanel, true, PersonisHelper.GOOGLE_VENUE_FINDER, selectedPanelConfigurator);
 			InstalledApps.add(p1);
 		}
 		
 		if (storeAppNames.contains(PersonisHelper.HWU_CAMPUS_GUIDE_APP)){
-			p2 = new AppButtonPanel(helper,helper.getHwuRequestor(), "/hwucampus.png","HWU Campus<br />Guide",detailspanel, false, PersonisHelper.HWU_CAMPUS_GUIDE_APP);    				
+			p2 = new AppButtonPanel(helper,helper.getHwuRequestor(), "/hwucampus.png","HWU Campus<br />Guide",detailspanel, false, PersonisHelper.HWU_CAMPUS_GUIDE_APP, selectedPanelConfigurator);    				
 			AvailApps.add(p2);
 		}else{
-			p2 = new AppButtonPanel(helper,helper.getHwuRequestor(), "/hwucampus.png","HWU Campus<br />Guide",detailspanel, true, PersonisHelper.HWU_CAMPUS_GUIDE_APP);    	
+			p2 = new AppButtonPanel(helper,helper.getHwuRequestor(), "/hwucampus.png","HWU Campus<br />Guide",detailspanel, true, PersonisHelper.HWU_CAMPUS_GUIDE_APP, selectedPanelConfigurator);    	
 			InstalledApps.add(p2);
 		}
 		if (storeAppNames.contains(PersonisHelper.BBC_NEWS_APP)){
-			p3 = new AppButtonPanel(helper,helper.getBBCNewsRequestor(), "/bbcnews.png", "BBC <br />News",detailspanel, false, PersonisHelper.BBC_NEWS_APP);
+			p3 = new AppButtonPanel(helper,helper.getBBCNewsRequestor(), "/bbcnews.png", "BBC <br />News",detailspanel, false, PersonisHelper.BBC_NEWS_APP, selectedPanelConfigurator);
 			AvailApps.add(p3);
 		}else{
-			p3 = new AppButtonPanel(helper,helper.getBBCNewsRequestor(), "/bbcnews.png", "BBC <br />News",detailspanel, true, PersonisHelper.BBC_NEWS_APP);
+			p3 = new AppButtonPanel(helper,helper.getBBCNewsRequestor(), "/bbcnews.png", "BBC <br />News",detailspanel, true, PersonisHelper.BBC_NEWS_APP, selectedPanelConfigurator);
 			InstalledApps.add(p3);
 		}
 		if (storeAppNames.contains(PersonisHelper.BBC_WEATHER_APP)){
-			p4 = new AppButtonPanel(helper,helper.getBbcWeatherRequestor(), "/bbcweather.png", "BBC <br /> Weather",detailspanel, false, PersonisHelper.BBC_WEATHER_APP);
+			p4 = new AppButtonPanel(helper,helper.getBbcWeatherRequestor(), "/bbcweather.png", "BBC <br /> Weather",detailspanel, false, PersonisHelper.BBC_WEATHER_APP, selectedPanelConfigurator);
 			AvailApps.add(p4);
 		}else{
-			p4 = new AppButtonPanel(helper,helper.getBbcWeatherRequestor(), "/bbcweather.png", "BBC <br /> Weather",detailspanel, true, PersonisHelper.BBC_WEATHER_APP);
+			p4 = new AppButtonPanel(helper,helper.getBbcWeatherRequestor(), "/bbcweather.png", "BBC <br /> Weather",detailspanel, true, PersonisHelper.BBC_WEATHER_APP, selectedPanelConfigurator);
 			InstalledApps.add(p4);
 		}
+		selectedPanelConfigurator.addPanel(p1);
+		selectedPanelConfigurator.addPanel(p2);
+		selectedPanelConfigurator.addPanel(p3);
+		selectedPanelConfigurator.addPanel(p4);
 /*		if (storeAppNames.contains(PersonisHelper.ITUNES_MUSIC_APP)){
 			p4 = new AppButtonPanel(helper,helper.getItunesRequestor(), "/itunesapp.png", "iTunes",detailspanel, false, PersonisHelper.ITUNES_MUSIC_APP);
 			AvailApps.add(p4);

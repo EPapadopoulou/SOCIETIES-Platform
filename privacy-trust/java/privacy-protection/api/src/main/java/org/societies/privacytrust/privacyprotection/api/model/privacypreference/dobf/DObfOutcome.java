@@ -56,7 +56,7 @@ public class DObfOutcome implements IPrivacyOutcome, Serializable  {
 
 	public DObfOutcome(Integer obfuscationLevel){
 		this.obfuscationLevel = obfuscationLevel;
-		this.confidenceLevel = 50;
+		this.confidenceLevel = 60;
 		this.currentStage = Stage.START;
 		this.uuid = UUID.randomUUID().toString();
 	}

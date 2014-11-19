@@ -10,6 +10,7 @@ import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.model.privacypolicy.Agreement;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AttributeSelectionPreferenceDetailsBean;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.ResourceUtils;
+import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.attrSel.AttributeSelectionPreferenceTreeModel;
@@ -45,7 +46,6 @@ public class AttrSelPreferenceManager {
 		for (ResponseItem respItem : responseItems){
 			logging.debug("processing {}", ResourceUtils.toString(respItem.getRequestItem().getResource()));
 			AttributeSelectionPreferenceDetailsBean details = new AttributeSelectionPreferenceDetailsBean();
-			details.setActions(respItem.getRequestItem().getActions());
 			details.setRequestor(agreement.getRequestor());
 			details.setDataType(respItem.getRequestItem().getResource().getDataType());
 			AttributeSelectionPreferenceTreeModel attrSelPreference = getAttrSelPreference(details);
@@ -58,7 +58,9 @@ public class AttrSelPreferenceManager {
 					results.put(respItem.getRequestItem().getResource(), ctxID);
 				}
 			}else{
-				details.setRequestor(null);
+				RequestorBean req = new RequestorBean();
+				req.setRequestorId(agreement.getRequestor().getRequestorId());
+				details.setRequestor(req);
 				attrSelPreference = getAttrSelPreference(details);
 
 				if (attrSelPreference!=null){
@@ -67,6 +69,18 @@ public class AttrSelPreferenceManager {
 					logging.debug("evaluate: {} result: {}", attrSelPreference, ctxID);
 					if (ctxID!=null){
 						results.put(respItem.getRequestItem().getResource(), ctxID);
+					}
+				}else{
+					details.setRequestor(null);
+					attrSelPreference = getAttrSelPreference(details);
+
+					if (attrSelPreference!=null){
+						PreferenceEvaluator ppE = new PreferenceEvaluator(privPrefMgr, agreement.getRequestor(), userIdentity);
+						CtxIdentifier ctxID = ppE.evaluateAttrPreference(attrSelPreference, respItem.getRequestItem().getConditions());
+						logging.debug("evaluate: {} result: {}", attrSelPreference, ctxID);
+						if (ctxID!=null){
+							results.put(respItem.getRequestItem().getResource(), ctxID);
+						}
 					}
 				}
 			}

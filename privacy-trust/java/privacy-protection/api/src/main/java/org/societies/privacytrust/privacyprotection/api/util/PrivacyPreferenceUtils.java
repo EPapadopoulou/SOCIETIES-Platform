@@ -132,7 +132,6 @@ public class PrivacyPreferenceUtils {
 		
 		AttributeSelectionPreferenceDetailsBean bean = new AttributeSelectionPreferenceDetailsBean();
 		bean.setRequestor(RequestorUtils.copyOf(details.getRequestor()));
-		bean.setActions(ActionUtils.copyOf(details.getActions()));
 		bean.setDataType(details.getDataType());
 		return bean;
 	}
@@ -786,15 +785,7 @@ public class PrivacyPreferenceUtils {
 			return false;
 		}
 		AttributeSelectionPreferenceDetailsBean other = (AttributeSelectionPreferenceDetailsBean) bean2;
-		if (bean1.getActions() == null) {
-			if (other.getActions() != null) {
-				logging.debug("detail1 actions null but not detail2 actions");
-				return false;
-			}
-		} else if (!ActionUtils.equal(bean1.getActions(), other.getActions())){
-			logging.debug("detail1 actions don't match detail2 actions, false");
-			return false;
-		}
+		
 		if (bean1.getRequestor() == null) {
 			if (other.getRequestor() != null) {
 				logging.debug("detail1 requestor null but detail2 requestor not null, false");
@@ -938,8 +929,6 @@ public class PrivacyPreferenceUtils {
 		builder.append(bean.getDataType());
 		builder.append(", getRequestor()=");
 		builder.append(RequestorUtils.toString(bean.getRequestor()));
-		builder.append(", getActions()=");
-		builder.append(ActionUtils.toString(bean.getActions()));
 		builder.append("]");
 		return builder.toString();
 	}

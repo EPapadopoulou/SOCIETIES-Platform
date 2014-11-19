@@ -194,7 +194,7 @@ public class Application implements WindowListener{
 		JMenu menuIdentities = new JMenu("Identities");
 		menuBar.add(menuIdentities);
 		
-		JMenuItem trustMenuItem = new JMenuItem("Trust Management");
+		JMenuItem trustMenuItem = new JMenuItem("Trust Settings");
 		trustMenuItem.addActionListener(new ActionListener() {
 			
 			

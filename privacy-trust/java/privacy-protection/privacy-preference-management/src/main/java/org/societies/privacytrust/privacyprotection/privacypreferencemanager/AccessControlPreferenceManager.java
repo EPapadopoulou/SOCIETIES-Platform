@@ -252,7 +252,7 @@ public class AccessControlPreferenceManager extends EventListener{
 				return getUserInput(details);
 			}
 		}else{
-			
+
 
 			logging.debug("checkPermission(RequestorBean requestor, DataIdentifier dataId, Action action): "+accCtrlOutcome);
 			StringBuilder sb = new StringBuilder();

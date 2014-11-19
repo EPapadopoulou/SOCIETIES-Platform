@@ -108,7 +108,7 @@ public class PreferenceEvaluator {
 
 
 			temp.put(p.getOutcome(), ctxIds);
-			////JOptionPane.showMessageDiaSystem.out.println(null, "Evaluation: returning outcome: "+p.getOutcome().toString());
+			////JOptionPane.showMessageDialogging.debug(null, "Evaluation: returning outcome: "+p.getOutcome().toString());
 			return temp;
 		}else{
 			return new Hashtable<IPrivacyOutcome,List<CtxIdentifier>>();
@@ -116,10 +116,10 @@ public class PreferenceEvaluator {
 	}
 
 	private PrivacyPreference evaluatePreferenceInternal(PrivacyPreference ptn){
-		System.out.println("evaluatePreferenceInternal currentNode: "+ptn);
+		logging.debug("evaluatePreferenceInternal currentNode: "+ptn);
 		//a non-context aware preference
 		if (ptn.isLeaf()){
-			System.out.println("preference is not context-dependent. returning IAction object"+ptn);
+			logging.debug("preference is not context-dependent. returning IAction object"+ptn);
 			//JOptionPane.showMessageDialog(null, "preference is not context-dependent. returning IAction object"+ptn.getOutcome().toString());
 			return ptn;
 		}
@@ -130,7 +130,7 @@ public class PreferenceEvaluator {
 			IPrivacyPreferenceCondition con = ptn.getCondition();
 			try {
 				if (!evaluatesToTrue(con)){
-					System.out.println("Condition "+con+" is false. Returning null outcome");
+					logging.debug("Condition "+con+" is false. Returning null outcome");
 					return null;		
 				}
 			} catch (PrivacyException e) {
@@ -154,39 +154,39 @@ public class PreferenceEvaluator {
 		}
 		//if only one IOutcome is applicable with the current context return that
 		if (prefList.size()==1){
-			System.out.println("PrefEvaluator> Returning: "+ prefList.get(0).toString());
+			logging.debug("PrefEvaluator> Returning: "+ prefList.get(0).toString());
 			//JOptionPane.showMessageDialog(null, "split: PrefEvaluator> Returning: "+ prefList.get(0).toString());
 			return prefList.get(0);
 		}
 		//if no IOutcome is applicable, return a null object
 		else if (prefList.size()==0){
 
-			System.out.println("PrefEvaluator> No preference applicable");
+			logging.debug("PrefEvaluator> No preference applicable");
 			//JOptionPane.showMessageDialog(null, "split: PrefEvaluator> No preference applicable");
 			return null;
 		}
 		//if more than one IOutcome objs is applicable, use conflict resolution and return the most applicable
 		else{
-			System.out.println("Resolving conflicts "+prefList);
+			logging.debug("Resolving conflicts "+prefList);
 			
 			PrivacyPreference io = ConflictResolver.resolveConflicts(prefList);
 			//JOptionPane.showMessageDialog(null, "split PrefEvaluator> Returning: "+io.toString());
-			System.out.println("PrefEvaluator> Conflict Resolved Returning: "+io.toString());
+			logging.debug("PrefEvaluator> Conflict Resolved Returning: "+io.toString());
 			return io;
 		}
 
 	}
 	/*	private IPrivacyPreference evaluatePreferenceInternal(IPrivacyPreference ptn){
-		System.out.println("evaluatePreferenceInternal currentNode: "+ptn);
+		logging.debug("evaluatePreferenceInternal currentNode: "+ptn);
 		//a non-context aware preference
 		if (ptn.isLeaf()){
-			System.out.println("preference is not context-dependent. returning IAction object"+ptn);
+			logging.debug("preference is not context-dependent. returning IAction object"+ptn);
 			//JOptionPane.showMessageDialog(null, "preference is not context-dependent. returning IAction object"+ptn.getOutcome().toString());
 			return ptn;
 		}
 		//if the root object is null then the tree is split so we have to evaluate more than one tree
 		if (ptn.getUserObject()==null){
-			System.out.println("preference tree is split. we might have a conflict");
+			logging.debug("preference tree is split. we might have a conflict");
 			//JOptionPane.showMessageDialog(null, "preference tree is split. we might have a conflict");
 			Enumeration<IPrivacyPreference> e = ptn.children();
 			ArrayList<IPrivacyPreference> prefList = new ArrayList<IPrivacyPreference>(); 
@@ -200,30 +200,30 @@ public class PreferenceEvaluator {
 			}
 			//if only one IOutcome is applicable with the current context return that
 			if (prefList.size()==1){
-				System.out.println("PrefEvaluator> Returning: "+ prefList.get(0).toString());
+				logging.debug("PrefEvaluator> Returning: "+ prefList.get(0).toString());
 				//JOptionPane.showMessageDialog(null, "split: PrefEvaluator> Returning: "+ prefList.get(0).toString());
 				return prefList.get(0);
 			}
 			//if no IOutcome is applicable, return a null object
 			else if (prefList.size()==0){
 
-				System.out.println("PrefEvaluator> No preference applicable");
+				logging.debug("PrefEvaluator> No preference applicable");
 				//JOptionPane.showMessageDialog(null, "split: PrefEvaluator> No preference applicable");
 				return null;
 			}
 			//if more than one IOutcome objs is applicable, use conflict resolution and return the most applicable
 			else{
-				System.out.println("Resolving conflicts "+prefList);
+				logging.debug("Resolving conflicts "+prefList);
 				ConflictResolver cr = new ConflictResolver();
 				IPrivacyPreference io = cr.resolveConflicts(prefList);
 				//JOptionPane.showMessageDialog(null, "split PrefEvaluator> Returning: "+io.toString());
-				System.out.println("PrefEvaluator> Conflict Resolved Returning: "+io.toString());
+				logging.debug("PrefEvaluator> Conflict Resolved Returning: "+io.toString());
 				return io;
 			}
 		}
 		//if the root node is not empty
 		else{
-			System.out.println("preference tree is not split. no conflicts here");
+			logging.debug("preference tree is not split. no conflicts here");
 			//JOptionPane.showMessageDialog(null, "preference tree is not split. no conflicts here");
 			//and it's a condition
 			if (ptn.isBranch()){
@@ -231,8 +231,8 @@ public class PreferenceEvaluator {
 				IPrivacyPreferenceCondition con = ptn.getCondition();
 				try {
 					if (evaluatesToTrue(con)){
-						////JOptionPane.showMessageDiaSystem.out.println(null, con.toString()+" evaluated to true");
-						System.out.println(ptn+" is true - descending tree levels");
+						////JOptionPane.showMessageDialogging.debug(null, con.toString()+" evaluated to true");
+						logging.debug(ptn+" is true - descending tree levels");
 						//JOptionPane.showMessageDialog(null, con.toString()+" is true - descending tree levels");
 						//traverse the tree in preorder traversal to evaluate all the conditions under this branch and find an Action 
 						Enumeration<IPrivacyPreference> e = ptn.children();
@@ -244,8 +244,8 @@ public class PreferenceEvaluator {
 							}
 						}		
 					}else{
-						////JOptionPane.showMessageDiaSystem.out.println(null, con.toString()+" evaluated to false");
-						System.out.println(ptn+" is false - returning");
+						////JOptionPane.showMessageDialogging.debug(null, con.toString()+" evaluated to false");
+						logging.debug(ptn+" is false - returning");
 						//JOptionPane.showMessageDialog(null, con.toString()+" is false - returning");
 					}
 				} catch (PrivacyException e) {
@@ -255,7 +255,7 @@ public class PreferenceEvaluator {
 			}//and it's not a condition but an Outcome (i.e. not a branch but a leaf)
 			else{
 				//JOptionPane.showMessageDialog(null, "PrefEvaluator> Returning: "+ptn.getOutcome());
-				System.out.println("PrefEvaluator> Returning: "+ptn.getOutcome());
+				logging.debug("PrefEvaluator> Returning: "+ptn.getOutcome());
 				return ptn;
 			}
 		}
@@ -273,7 +273,7 @@ public class PreferenceEvaluator {
 			String currentContextValue = this.getValueFromContext(contextCond.getCtxIdentifier());
 			OperatorConstants operator = contextCond.getOperator();
 
-			System.out.println("evaluating cond: "+contextCond.toString()+" against current value: "+currentContextValue);
+			logging.debug("evaluating cond: "+contextCond.toString()+" against current value: "+currentContextValue);
 			if (operator.equals(OperatorConstants.EQUALS)){
 
 				return currentContextValue.equalsIgnoreCase(contextCond.getValue());
@@ -293,15 +293,15 @@ public class PreferenceEvaluator {
 	}
 
 	private boolean evaluatesToTrueCondition(PrivacyCondition cond){
-		System.out.println("evaluating condition: "+cond.toString());
-		System.out.println("Conditions available from negotiation: "+conditions.size());
+		logging.debug("evaluating condition: "+cond.toString());
+		logging.debug("Conditions available from negotiation: "+conditions.size());
 		for (Condition condition : conditions){
 			if (((PrivacyCondition) cond).getCondition().getConditionConstant().equals(condition.getConditionConstant())){
-				System.out.println("Found same condition. "+cond.getType());
+				logging.debug("Found same condition. "+cond.getType());
 				try {
 					if (PrivacyConditionsConstantValues.getBetterConditionValue(cond.getCondition().getConditionConstant(), cond.getCondition().getValue(), condition.getValue()).equalsIgnoreCase(condition.getValue())){
 						//logging.debug("Condition in agreement {} is better than condition in preference {}. returning true",  condition.getValue(), cond.getCondition().getValue());
-						System.out.println("Condition in agreement "+condition.getValue()+" is better than condition in preference "+cond.getCondition().getValue()+". returning true" );
+						logging.debug("Condition in agreement "+condition.getValue()+" is better than condition in preference "+cond.getCondition().getValue()+". returning true" );
 						return true;
 					}
 				} catch (PrivacyException e) {
@@ -327,8 +327,10 @@ public class PreferenceEvaluator {
 			TrustQuery trustQuery = new TrustQuery(trustorID);
 			trustQuery.setTrusteeId(trusteeID);
 			Double currentTrustValue = privPrefMgr.getTrustBroker().retrieveTrustValue(trustQuery).get();
-
-			return currentTrustValue>=trustValue;
+			
+			boolean evaluatesToTrue = currentTrustValue>=trustValue;
+			logging.debug("evaluatesToTrueTrust ("+currentTrustValue+">="+trustValue+") : "+evaluatesToTrue);
+			return evaluatesToTrue;
 
 		} catch (MalformedTrustedEntityIdException e) {
 			// TODO Auto-generated catch block
@@ -363,18 +365,18 @@ public class PreferenceEvaluator {
 		case LESS_THAN:
 			result = valueInContext < valueInPreference;
 			break;
-		default: System.out.println("Invalid Operator");
+		default: logging.debug("Invalid Operator");
 		}
-
+		logging.debug("evaluateInt ("+valueInPreference+""+operator+""+valueInContext+") : "+result);
 		return result;
 	}
 
 	public String getValueFromContext(CtxIdentifier id){
 		if (id==null){
-			System.out.println("can't get context value from null id");
+			logging.debug("can't get context value from null id");
 		}
 		if (this.privPrefMgr.getContextCache()==null){
-			System.out.println("ContextCache is null. PrefEvaluator not initialised properly");
+			logging.debug("ContextCache is null. PrefEvaluator not initialised properly");
 		}
 		return this.privPrefMgr.getContextCache().getContextValue(id);
 
@@ -384,7 +386,7 @@ public class PreferenceEvaluator {
 		try{
 			return Integer.parseInt(str);
 		}catch (NumberFormatException nbe){
-			System.out.println("Could not parse String to int");
+			logging.debug("Could not parse String to int");
 			return 0;
 		}
 
@@ -487,7 +489,7 @@ public class PreferenceEvaluator {
 
 			ICtxEntity entity = sbroker.createEntity("Person");
 			if (entity==null){
-				System.out.println("entity is null");
+				logging.debug("entity is null");
 			}
 			ICtxEntityIdentifier entityID = entity.getCtxIdentifier();
 			ICtxAttribute symlocAttr = sbroker.createAttribute(entityID, CtxTypes.SYMBOLIC_LOCATION);
@@ -519,11 +521,11 @@ public class PreferenceEvaluator {
 			PreferenceEvaluator ev = new PreferenceEvaluator(cc);
 			Hashtable<IOutcome,List<CtxIdentifier>> result = ev.evaluatePreference(preference);
 			if (result!=null && (!result.isEmpty())){
-				System.out.println("got result. size: "+result.size());
+				logging.debug("got result. size: "+result.size());
 				Enumeration<IOutcome> outcomes = result.keys();
 				while (outcomes.hasMoreElements()){
 					IOutcome o = outcomes.nextElement();
-					System.out.println(o.toString());
+					logging.debug(o.toString());
 				}
 			}
 		} catch (ContextException e) {
