@@ -104,9 +104,7 @@ public class PPNPOutcome implements IPrivacyOutcome, Serializable{
 		if (this == obj) {
 			return true;
 		}
-		if (!super.equals(obj)) {
-			return false;
-		}
+		
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
@@ -115,7 +113,7 @@ public class PPNPOutcome implements IPrivacyOutcome, Serializable{
 			if (other.condition != null) {
 				return false;
 			}
-		} else if (!ConditionUtils.equal(condition, obj)) {
+		} else if (!ConditionUtils.equal(condition, other.getCondition())) {
 			return false;
 		}
 		return true;

@@ -1,8 +1,5 @@
 package org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -12,17 +9,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.societies.api.internal.schema.useragent.feedback.NegotiationDetailsBean;
 import org.societies.api.internal.servicelifecycle.ServiceModelUtils;
 import org.societies.api.schema.identity.RequestorBean;
@@ -36,7 +31,6 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Respons
 import org.societies.api.schema.servicelifecycle.model.ServiceResourceIdentifier;
 
 public class PPNDialog extends JDialog implements ActionListener, WindowListener{
-	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
 	//private JDialog frame;
 	private NegotiationDetailsBean negDetails;
@@ -53,7 +47,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 	/**
 	 * Launch the application.
 	 */
-/*	public static void main(String[] args) {
+	/*	public static void main(String[] args) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -88,19 +82,21 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		System.out.println("Initialising");
 		this.negDetails = negDetails;
 		this.items = items;
-		this.logging.debug(printDetails());
+		System.out.println(printDetails());
 
 		if (firstRound){
-			message = "<html>You are negotiating with "+getFriendlyNameOfProvider(negDetails.getRequestor())+ ". "
+			message = "<html> <span style='text-align: justify'>You are negotiating with "+getFriendlyNameOfProvider(negDetails.getRequestor())+ ". "
 					+ "The information provided below presents the terms and conditions that will apply when you disclose data "
-					+ "to "+getFriendlyNameOfService(negDetails.getRequestor())+". Configure usage per your needs and then click Continue to proceed with the negotiation.</html>";
+					+ "to "+getFriendlyNameOfService(negDetails.getRequestor())+". Configure usage per your needs and then click Continue to proceed with the negotiation.</span></html>";
 		}
 		getContentPane().setLayout(null);
 		getContentPane().setBounds(0, 0, 820, 735);
 		lblPrivacyPolicyNegotiation = new JLabel(message);
-		lblPrivacyPolicyNegotiation.setBounds(50, 2, 704, 50);
+		lblPrivacyPolicyNegotiation.setIcon(this.createImageIcon("/images/infoicon50x50.png"));
+		lblPrivacyPolicyNegotiation.setBounds(10, 10, 780, 50);
 		this.getContentPane().add(lblPrivacyPolicyNegotiation);
-		Accordion accordion = new Accordion();
+		//Accordion accordion = new Accordion();
+
 		Iterator<RequestItem> keys = this.items.keySet().iterator();
 		System.out.println("Size of request item list: "+this.items.keySet().size());
 		while (keys.hasNext()){
@@ -108,33 +104,35 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 			ResponseItem responseItem = this.items.get(requestItem);
 
 			RequestItemPanel requestItemPanel = new RequestItemPanel(requestItem, responseItem, firstRound);
-			accordion.addBar("Terms of discosure of "+requestItem.getResource().getDataType(), requestItemPanel);
-			this.logging.debug("Adding tab for: "+requestItem.getResource().getDataType());
+			//accordion.addBar("Terms of discosure of "+requestItem.getResource().getDataType(), requestItemPanel);
+			System.out.println("Adding tab for: "+requestItem.getResource().getDataType());
 			System.out.println("Adding tab for: "+requestItem.getResource().getDataType());
 			reqItemPanels.add(requestItemPanel);
 			//accordion.setTabHeight(30);
 		}		
 
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(0, 54, 800, 600);
-		this.getContentPane().add(scrollPane);
+		CardLayoutPanel cardPanel = new CardLayoutPanel(reqItemPanels);
+		cardPanel.setBorder(null);
+
+		cardPanel.setBounds(10, 70, 780, 438);
+		this.getContentPane().add(cardPanel);
 
 
-		scrollPane.setViewportView(accordion);
+
 
 
 		JPanel panel = new JPanel();
-		panel.setBounds(0, 660, 800, 36);
+		panel.setBounds(0, 520, 800, 36);
 		panel.setLayout(null);
 		this.getContentPane().add(panel);
 
 		btnCancel = new JButton("Cancel ");
-		btnCancel.setBounds(20, 5, 85, 23);
+		btnCancel.setBounds(20, 5, 85, 26);
 		btnCancel.addActionListener(this);
 		panel.add(btnCancel);
 
 		btnContinue = new JButton("Continue");
-		btnContinue.setBounds(699, 5, 85, 23);
+		btnContinue.setBounds(699, 5, 85, 26);
 		btnContinue.addActionListener(this);
 		panel.add(btnContinue);
 		this.getRootPane().setDefaultButton(btnContinue);
@@ -142,9 +140,16 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		//this.getContentPane().validate();
 		//this.getContentPane().repaint();
 		System.out.println("Initialised");
-		
 	}
-
+	private ImageIcon createImageIcon(String filename) {
+		java.net.URL imgURL = getClass().getResource(filename);
+		if (imgURL!=null){
+			return new ImageIcon(imgURL);
+		}else{
+			System.err.println("Can't find warning image");
+			return null;
+		}
+	}
 	private String printDetails() {
 		StringBuilder sb = new StringBuilder();
 
@@ -176,7 +181,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 			sb.append("Conditions: ");
 			List<Condition> requestConditions = requestItem.getConditions();
 
-			
+
 			List<Condition> responseConditions = new ArrayList<Condition>();
 			if (responseItem!=null){
 				responseConditions = responseItem.getRequestItem().getConditions();
@@ -191,7 +196,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 				}
 				sb.append("\n");
 			}
-			
+
 			sb.append("\n");
 		}
 
@@ -207,10 +212,14 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 	private String getFriendlyNameOfService(RequestorBean requestor) {
 		if (requestor instanceof RequestorServiceBean){
 			ServiceResourceIdentifier serviceID = ((RequestorServiceBean) requestor).getRequestorServiceId();
-			if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("HWUCampusGuide")){
-				return "HWUCampusGuide";
-			}else if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("GoogleVenueFinder")){
-				return "GoogleVenueFinder";
+			if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("hwu")){
+				return "HWU Campus Guide";
+			}else if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("google")){
+				return "Google Venue Finder ";
+			}else if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("bbc")){
+				return "BBC News Service";
+			}else if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("itunes")){
+				return "iTunes Music Service";
 			}
 		}
 		return requestor.getRequestorId();
@@ -251,7 +260,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 		}*/
 		//frame = new JDialog();
 		//frame = new JDialog(null,"Privacy Policy Negotiation form");
-		this.setBounds(100, 100, 820, 735);
+		this.setBounds(100, 100, 820, 596);
 		this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 	}
 
@@ -264,23 +273,37 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+
+
 		System.out.println("Button clicked "+e.getSource().toString());
 		if (e.getSource().equals(this.btnCancel)){
 			this.policyEdited = null;
 		}else if (e.getSource().equals(this.btnContinue)){
+			String[] options = new String[]{"I have reviewed everything, Continue", "No"};
+			
+			String text = "Have you reviewed all terms and conditions for each of the "+items.size()+" data items defined in the provider's privacy policy? </p> <p style='width: 300px;'>(Using the 'Back' and 'Next' buttons you can view all the options for all the requested data types)";
+			JLabel label = new JLabel("<html><body><p style='width: 300px;'>"+text+"</p> </body> </html>");
+			
+			int showOptionDialog = JOptionPane.showOptionDialog(this, label, "Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+			if (showOptionDialog==JOptionPane.YES_OPTION){
 
-			List<ResponseItem> responseItems = new ArrayList<ResponseItem>();
-			for (RequestItemPanel panel : this.reqItemPanels){
-				ResponseItem responseItem = panel.getResponseItem();
-				responseItems.add(responseItem);
+				List<ResponseItem> responseItems = new ArrayList<ResponseItem>();
+				for (RequestItemPanel panel : this.reqItemPanels){
+					ResponseItem responseItem = panel.getResponseItem();
+					responseItems.add(responseItem);
+				}
+				policyEdited = new ResponsePolicy();
+				policyEdited.setNegotiationStatus(NegotiationStatus.ONGOING);
+				policyEdited.setRequestor(this.negDetails.getRequestor());
+				policyEdited.setResponseItems(responseItems);
+			}else{
+				return;
 			}
-			policyEdited = new ResponsePolicy();
-			policyEdited.setNegotiationStatus(NegotiationStatus.ONGOING);
-			policyEdited.setRequestor(this.negDetails.getRequestor());
-			policyEdited.setResponseItems(responseItems);
 		}
 		this.dispose();
 	}
+
+	
 
 	@Override
 	public void windowActivated(WindowEvent arg0) {

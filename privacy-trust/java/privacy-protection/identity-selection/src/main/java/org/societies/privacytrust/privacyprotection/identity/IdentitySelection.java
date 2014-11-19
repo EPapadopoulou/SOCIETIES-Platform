@@ -393,8 +393,8 @@ public class IdentitySelection implements IIdentitySelection {
 	}
 
 	@Override
-	public IIdentity showIdentitySelectionGUI(List<IIdentity> ids, IIdentity recommendedIdentity) {
-		IdentityWindow window = new IdentityWindow(ids, recommendedIdentity);
+	public IIdentity showIdentitySelectionGUI(String providerFriendlyName, List<IIdentity> ids, IIdentity recommendedIdentity) {
+		IdentityWindow window = new IdentityWindow(providerFriendlyName, ids, recommendedIdentity);
 		return window.getSelectedIdentity();
 	}
 

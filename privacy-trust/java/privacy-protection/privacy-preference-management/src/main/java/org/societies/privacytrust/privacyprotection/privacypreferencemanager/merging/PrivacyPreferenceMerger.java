@@ -29,6 +29,7 @@ package org.societies.privacytrust.privacyprotection.privacypreferencemanager.me
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
@@ -37,6 +38,7 @@ import org.societies.api.context.CtxException;
 import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.CtxModelType;
+import org.societies.api.context.model.IndividualCtxEntity;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.identity.InvalidFormatException;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.AccessControlPreferenceDetailsBean;
@@ -68,12 +70,13 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.Pri
 public class PrivacyPreferenceMerger {
 
 	private PrivacyPreferenceManager privPrefMgr;
+	private IIdentity userIdentity;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
 	public PrivacyPreferenceMerger(PrivacyPreferenceManager ppMgr){
 
 		this.privPrefMgr = ppMgr;
-
+		this.userIdentity = ppMgr.getCommsMgr().getIdManager().getThisNetworkNode();
 
 	}
 
@@ -110,6 +113,43 @@ public class PrivacyPreferenceMerger {
 		}
 	}
 
+	public void addIDSDecision(IIdentity selectedDPI, Double trustValue){
+		ContextSnapshot snapshot = this.takeSnapshot();
+		IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
+		details.setAffectedIdentity(selectedDPI.getJid());
+
+		IPrivacyPreferenceTreeModel existingModel = privPrefMgr.getIDSPreference(details);
+		if (existingModel==null){
+			IDSPrivacyPreferenceTreeModel model;
+			try {
+
+				PrivacyPreference idsPreference = this.createIDSPreference(snapshot, details);
+				TrustPreferenceCondition trustCondition = new TrustPreferenceCondition(trustValue);
+				PrivacyPreference trustPreference = new PrivacyPreference(trustCondition);
+				trustPreference.add(idsPreference.getRoot());
+				model = new IDSPrivacyPreferenceTreeModel(details, trustPreference);
+
+				this.privPrefMgr.storeIDSPreference(details, model);
+			} catch (InvalidFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}else{
+			PrivacyPreference mergedPreference;
+			try {
+				mergedPreference = this.mergeIDSPreference(details, existingModel.getRootPreference(), snapshot, trustValue);
+				if (mergedPreference!=null){
+					IDSPrivacyPreferenceTreeModel model = new IDSPrivacyPreferenceTreeModel(details, mergedPreference);
+					this.privPrefMgr.storeIDSPreference(details, model);
+				}
+			} catch (InvalidFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+	}
 
 
 	public PrivacyPreference mergeIDSPreference(IDSPreferenceDetailsBean d, PrivacyPreference node, ContextSnapshot snapshot) throws InvalidFormatException{
@@ -126,24 +166,42 @@ public class PrivacyPreferenceMerger {
 		}
 
 
-		ArrayList<SingleRule> singleRules = this.convertToSingleRules(snapshot);
+		SingleRule singleRule = this.convertToSingleRules(snapshot);
 
-
-		PrivacyPreference mergedTree = node;
-		for (int i = 0; i< singleRules.size(); i++){
-
-			SingleRule sr = singleRules.get(i);
-			//this.logging.debug("Merging new Single Rule: "+sr.toString());
-			//this.logging.debug("\twith: "+mergedTree.toTreeString());
-			PrivacyPreference temp = merge(mergedTree, sr);
-			if (temp==null){
-				return null;
-			}
-			mergedTree = temp; //in the MergingManager if this method returns null, it means we have to request a full learning cycle
-
-		}
+		PrivacyPreference merge = merge(node, singleRule);
 		logging.debug("MERGING IDS PREFERENCES - END");
-		return mergedTree;
+
+		return merge;
+	}
+
+	private PrivacyPreference mergeIDSPreference(IDSPreferenceDetailsBean details, PrivacyPreference node,ContextSnapshot snapshot, Double trustValue) throws InvalidFormatException{
+		logging.debug("MERGING IDS PREFERENCES - START");
+
+		TrustPreferenceCondition trustCondition = new TrustPreferenceCondition(trustValue);
+
+		if (node.isLeaf()){
+			this.logging.debug("existing node does not contain context condition. merging as leaf");
+
+			PrivacyPreference p = new PrivacyPreference();
+			p.add(this.createIDSPreference(snapshot, details));
+
+			PrivacyPreference trustPreference = new PrivacyPreference(trustCondition);
+			trustPreference.add(p.getRoot());
+			p = p.getRoot();
+			p.add(node);
+			return p;
+		}
+
+		SingleRule singleRule = this.convertToSingleRules(snapshot);
+
+		singleRule.addConditions(trustCondition);
+
+
+		PrivacyPreference merge = merge(node, singleRule);
+
+
+		logging.debug("MERGING IDS PREFERENCES - END");
+		return merge;
 	}
 
 	public PrivacyPreference mergeAccCtrlPreference(AccessControlPreferenceDetailsBean d, PrivacyPreference existingPreference, PrivacyPreference newPreference){
@@ -580,8 +638,8 @@ public class PrivacyPreferenceMerger {
 		return singleRules;
 	}
 
-	public ArrayList<SingleRule> convertToSingleRules(ContextSnapshot snapshot){
-		ArrayList<SingleRule> srlist = new ArrayList<SingleRule>();
+	public SingleRule convertToSingleRules(ContextSnapshot snapshot){
+
 		List<SingleContextAttributeSnapshot> slist = snapshot.getList();
 		SingleRule sr = new SingleRule();
 
@@ -589,8 +647,8 @@ public class PrivacyPreferenceMerger {
 			IPrivacyPreferenceCondition con = this.getContextConditionPreference(s);
 			sr.addConditions(con);
 		}
-		srlist.add(sr);
-		return srlist;
+
+		return sr;
 	}
 	private PrivacyPreference createIDSPreference(ContextSnapshot snapshot, IDSPreferenceDetailsBean details) throws InvalidFormatException{
 		IdentitySelectionPreferenceOutcome outcome = new IdentitySelectionPreferenceOutcome(this.privPrefMgr.getIdm().fromJid(details.getAffectedIdentity()));
@@ -629,16 +687,16 @@ public class PrivacyPreferenceMerger {
 	}
 
 	private SingleContextAttributeSnapshot takeAttributeSnapshot(String type){
-		CtxIdentifier id;
+
 		try {
-			List<CtxIdentifier> l = this.privPrefMgr.getCtxBroker().lookup(CtxModelType.ATTRIBUTE, type).get();
-			if (l.size()==0){
-				return null;
+			IndividualCtxEntity individualCtxEntity = this.privPrefMgr.getCtxBroker().retrieveIndividualEntity(this.userIdentity).get();
+			Set<CtxAttribute> attributes = individualCtxEntity.getAttributes(type);
+			if (attributes.size()>0){
+				CtxAttribute attribute = attributes.iterator().next();
+				SingleContextAttributeSnapshot attrSnapshot = new SingleContextAttributeSnapshot(attribute);
+				return attrSnapshot;	
 			}
-			id = l.get(0);
-			CtxAttribute attr = (CtxAttribute) this.privPrefMgr.getCtxBroker().retrieve(id);
-			SingleContextAttributeSnapshot attrSnapshot = new SingleContextAttributeSnapshot(attr);
-			return attrSnapshot;
+			
 		} catch (CtxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -742,12 +800,14 @@ public class PrivacyPreferenceMerger {
 			PPNPOutcome newOutcome = (PPNPOutcome) newPreference.getOutcome();
 			PPNPOutcome existingOutcome = (PPNPOutcome) existingPreference.getOutcome();
 			if (newOutcome.equals(existingOutcome)){
+				this.logging.debug("leaf match 100%: {} *** {}", existingPreference.toTreeString(), newPreference.toTreeString());
 				int preconfidenceLevel = existingOutcome.getConfidenceLevel(); 
 				existingOutcome.updateConfidenceLevel(true);
 				int afterConfidenceLevel = existingOutcome.getConfidenceLevel();
-				logging.debug("Updated confidence level from: {} to {}", preconfidenceLevel, afterConfidenceLevel);
+				logging.debug("Updated confidence level from: {} to {} ", preconfidenceLevel, afterConfidenceLevel);
 				return existingPreference;
 			}
+			this.logging.debug("leaf conflict : {} *** {}", existingPreference.toTreeString(), newPreference.toTreeString());
 			//both leaves - conflicting
 			int preconfidenceLevel = existingOutcome.getConfidenceLevel();
 			existingOutcome.updateConfidenceLevel(false);
@@ -841,6 +901,7 @@ public class PrivacyPreferenceMerger {
 		logging.debug("MERGING PPN PREFERENCES - END");
 		if (mergePPNPreference != null){
 			PPNPrivacyPreferenceTreeModel model = new PPNPrivacyPreferenceTreeModel(existingModel.getDetails(), mergePPNPreference);
+			return model;
 		}
 		return null;
 

@@ -145,7 +145,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 		contentPanel.setLayout(null);
 		{
 			lblIdentityName = new JLabel("Identity name:");
-			lblIdentityName.setBounds(10, 11, 87, 27);
+			lblIdentityName.setBounds(10, 11, 108, 27);
 			contentPanel.add(lblIdentityName);
 		}
 
@@ -344,7 +344,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 		btnRemoveSelected.setBounds(10, 141, 189, 36);
 		panel_2.add(btnRemoveSelected);
 		if (null!=agreement){
-			btnCreateNewType.setEnabled(false);
+			btnCreateNewType.setVisible(false);
 		}
 		
 	}

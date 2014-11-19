@@ -8,7 +8,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +23,7 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
@@ -36,7 +40,7 @@ import ac.hw.personis.component.DatePicker;
 
 public class DataInitialiser extends JDialog implements ActionListener {
 
-/*	private static final String FULLNAME = "name";
+	/*	private static final String FULLNAME = "name";
 	private static final String LOCATION_COORDINATES = "locationCoordinates";
 	private static final String EMAIL = "email";
 	private static final String OCCUPATION = "occupation";
@@ -47,7 +51,7 @@ public class DataInitialiser extends JDialog implements ActionListener {
 	private static final String SEX = "sex";*/
 
 	private JPanel contentPane;
-    private Logger logging = LoggerFactory.getLogger(this.getClass());
+	private Logger logging = LoggerFactory.getLogger(this.getClass());
 
 
 	public static String[] dataTypes = new String[]{
@@ -68,17 +72,17 @@ public class DataInitialiser extends JDialog implements ActionListener {
 	private JTextField txtInterests;
 	private JTextField txtLanguages;
 	private JTextField txtBirthday;
-	
+
 	private ICtxBroker ctxBroker;
 
 	private IIdentity userId;
 
-	
+
 
 	private JComboBox cmbSex;
 
 	private IndividualCtxEntity person;
-	
+
 	private boolean initialised = false;
 	private List<CtxAttribute> attributes;
 
@@ -126,14 +130,14 @@ public class DataInitialiser extends JDialog implements ActionListener {
 		lblYourAge.setBounds(10, 70, 169, 25);
 		mainPanel.add(lblYourAge);
 
-		
+
 		txtBirthday = new JTextField();
 		lblYourAge.setLabelFor(txtBirthday);
 		txtBirthday.setBounds(210, 70, 204, 25);
 		txtBirthday.addMouseListener(new MouseAdapter() {
-			 	public void mouseClicked(MouseEvent e){
-					txtBirthday.setText(new DatePicker(DataInitialiser.this).setPickedDate());
-			 	}
+			public void mouseClicked(MouseEvent e){
+				txtBirthday.setText(new DatePicker(DataInitialiser.this).setPickedDate());
+			}
 		});
 		mainPanel.add(txtBirthday);
 
@@ -190,7 +194,7 @@ public class DataInitialiser extends JDialog implements ActionListener {
 
 	}
 
-	
+
 	public boolean dataExists(){
 		this.attributes = new ArrayList<CtxAttribute>();
 		boolean allDataTypesExist = true;
@@ -220,16 +224,16 @@ public class DataInitialiser extends JDialog implements ActionListener {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
+
+
 		return allDataTypesExist;
 	}
-	
+
 	private void initialiseData(){
 		for (CtxAttribute attribute : attributes) {
 			String dataType = attribute.getType();
 			String value = "null";
-			
+
 			if ((attribute.getStringValue() != null)
 					&& (attribute.getStringValue() != "")) {
 				value = attribute.getStringValue();
@@ -237,8 +241,35 @@ public class DataInitialiser extends JDialog implements ActionListener {
 			this.setValueToTextField(dataType, value);
 		}
 	}
+
+	private boolean storeData(){
+		
+	//check name
+	if (this.txtName.getText().split(" ").length<2){
+		JOptionPane.showMessageDialog(this, "Please enter your full name.", "Error in name.", JOptionPane.ERROR_MESSAGE, null);
+		this.txtName.requestFocus();
+		return false;
+	}
+	//check email
+	if (this.txtEmail.getText().isEmpty() || (!this.txtEmail.getText().contains("@"))){
+		JOptionPane.showMessageDialog(this, "Please enter your full email address.", "Error in email.", JOptionPane.ERROR_MESSAGE, null);
+		return false;
+	}
+	//check birthday
+	try {
+		
+		SimpleDateFormat sdf=new SimpleDateFormat("dd-MM-yyyy");
+		Date parsedDate = sdf.parse(this.txtBirthday.getText());
+	} catch (ParseException e1) {
+		JOptionPane.showMessageDialog(this, "Please enter the date in format: 'dd-MM-yyy'.", "Error in date", JOptionPane.ERROR_MESSAGE, null);
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+		return false;
+	}
 	
-	private void storeData(){
+
+	
+		
 		try {
 			if (this.person==null){
 
@@ -253,7 +284,7 @@ public class DataInitialiser extends JDialog implements ActionListener {
 			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.OCCUPATION, this.txtJob.getText());
 			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.LOCATION_COORDINATES, this.getHWUCoordinates());
 			this.createOrUpdateAttribute(org.societies.api.context.model.CtxAttributeTypes.LOCATION_SYMBOLIC, "EM1.69, MACS, Riccarton, EH14 4AS, Edinburgh, Scotland, UK");
-			
+
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -264,6 +295,7 @@ public class DataInitialiser extends JDialog implements ActionListener {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return true;
 	}
 
 
@@ -274,7 +306,7 @@ public class DataInitialiser extends JDialog implements ActionListener {
 				CtxAttribute ctxAttribute = this.ctxBroker.createAttribute(this.person.getId(), datatype).get();
 				ctxAttribute.setStringValue(value);
 				return (CtxAttribute) this.ctxBroker.update(ctxAttribute).get();
-				
+
 			}else if (attributes.size()==1){
 				CtxAttribute ctxAttribute = attributes.iterator().next();
 				ctxAttribute.setStringValue(value);
@@ -335,9 +367,10 @@ public class DataInitialiser extends JDialog implements ActionListener {
 	}
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		this.storeData();
-		this.initialised = true;
-		this.dispose();
+		if (this.storeData()){
+			this.initialised = true;
+			this.dispose();
+		}
 	}
 
 

@@ -36,11 +36,13 @@ import org.societies.api.internal.privacytrust.trust.ITrustBroker;
 import org.societies.api.internal.schema.privacytrust.privacyprotection.preferences.PPNPreferenceDetailsBean;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.util.privacypolicy.RequestItemUtils;
+import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestPolicy;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ppn.PPNPrivacyPreferenceTreeModel;
+import org.societies.privacytrust.privacyprotection.api.util.PrivacyPreferenceUtils;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PreferenceEvaluator;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PrivateContextCache;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.management.cache.PreferenceCache;
@@ -68,9 +70,73 @@ public class PPNegotiationPreferenceManager {
 
 	}
 
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesRequestorExact(RequestPolicy requestPolicy) throws PrivacyException{
 
-	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferences(RequestPolicy requestPolicy) throws PrivacyException{
+		return this.evaluatePPNPreferences(requestPolicy.getRequestor(), requestPolicy.getRequestItems());
+	}
 
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesRequestorIdOnly(RequestPolicy requestPolicy) throws PrivacyException{
+		RequestorBean requestor = new RequestorBean();
+		requestor.setRequestorId(requestPolicy.getRequestor().getRequestorId());
+		return this.evaluatePPNPreferences(requestor, requestPolicy.getRequestItems());
+	}
+
+
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesNoRequestor(RequestPolicy requestPolicy) throws PrivacyException{
+
+		return this.evaluatePPNPreferences(null, requestPolicy.getRequestItems());
+	}
+
+
+
+	private HashMap<RequestItem,ResponseItem> evaluatePPNPreferences(RequestorBean requestor, List<RequestItem> requestItems){
+		HashMap<RequestItem, ResponseItem> result = new HashMap<RequestItem, ResponseItem>();
+		for (RequestItem item : requestItems){
+			ResponseItem evaluatedResponseItem = null;
+			List<Condition> conditions = new ArrayList<Condition>();
+			//for every Condition in the RequestItem;
+			for (Condition condition : item.getConditions()){
+				this.logging.debug("Finding preference for resource: "+item.getResource().getDataType());
+				PPNPreferenceDetailsBean details = new PPNPreferenceDetailsBean();
+				details.setRequestor(requestor);
+				details.setResource(item.getResource());
+				details.setCondition(condition.getConditionConstant());
+
+				PPNPrivacyPreferenceTreeModel model = privPrefMgr.getPrefCache().getPPNPreference(details);
+
+				if (model!=null){
+					this.logging.debug("Found PPN model for resource: "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant());
+					PreferenceEvaluator ppE = new PreferenceEvaluator(privPrefMgr, requestor, this.userIdentity );
+					Condition evaluatedCondition = ppE.evaluatePPNPreferences(model);
+					if (evaluatedCondition==null){
+						this.logging.debug("PPN evaluation returned null for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and specific requestor "+RequestorUtils.toString(requestor));
+					}
+					else{
+						conditions.add(evaluatedCondition);
+					}
+				}else{
+					this.logging.debug("Not found for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and specific requestor, attempting to find generic preference");
+				}
+			}
+			//if found at least one condition, create a responseItem object and add it
+			if (!conditions.isEmpty()){
+				evaluatedResponseItem = new ResponseItem();
+				RequestItem newItem = RequestItemUtils.copyOf(item);
+				newItem.setConditions(conditions);
+				evaluatedResponseItem.setRequestItem(newItem);
+			}
+			//we add the evaluatedResponseItem in the table even though it might be null. if it's null that means there is no preference information available
+			result.put(item, evaluatedResponseItem);
+
+		}
+
+		this.logging.debug("Returning evaluatedPreferences size: "+result.size());
+		return result;
+
+	}
+	
+	public HashMap<RequestItem, ResponseItem> evaluatePPNPreferencesRequestorIdAndSpecific(
+			RequestPolicy requestPolicy) {
 		HashMap<RequestItem, ResponseItem> result = new HashMap<RequestItem, ResponseItem>();
 		List<RequestItem> requestItems = requestPolicy.getRequestItems();
 		for (RequestItem item : requestItems){
@@ -83,7 +149,7 @@ public class PPNegotiationPreferenceManager {
 				details.setRequestor(requestPolicy.getRequestor());
 				details.setResource(item.getResource());
 				details.setCondition(condition.getConditionConstant());
-				
+
 				PPNPrivacyPreferenceTreeModel model = privPrefMgr.getPrefCache().getPPNPreference(details);
 
 				if (model!=null){
@@ -98,13 +164,92 @@ public class PPNegotiationPreferenceManager {
 					}
 				}else{
 					this.logging.debug("Not found for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and specific requestor, attempting to find generic preference");
-					details.setRequestor(null);
+					RequestorBean requestorIdOnly = new RequestorBean();
+					requestorIdOnly.setRequestorId(requestPolicy.getRequestor().getRequestorId());
+					details.setRequestor(requestorIdOnly);
 					model  = privPrefMgr.getPrefCache().getPPNPreference(details);
 					if (model==null){
-						this.logging.debug("Not found any generic ppn preference for resource: "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant());
-
+						this.logging.debug("Not found any requestorId only ppn preference for resource: "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant());
 					}else{
-						this.logging.debug("Found generic ppn preference for resource: "+item.getResource().getDataType());
+						this.logging.debug("Found requestorId only ppn preference for resource: "+item.getResource().getDataType());
+						PreferenceEvaluator ppE = new PreferenceEvaluator(privPrefMgr, requestPolicy.getRequestor(), this.userIdentity);
+						Condition evaluatedCondition = ppE.evaluatePPNPreferences(model);
+						if (evaluatedCondition==null){
+							this.logging.debug("PPN evaluation returned null for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and generic requestor");
+						}else{
+							conditions.add(evaluatedCondition);
+						}
+					}
+				}
+			}
+			//if found at least one condition, create a responseItem object and add it
+			if (!conditions.isEmpty()){
+				evaluatedResponseItem = new ResponseItem();
+				RequestItem newItem = RequestItemUtils.copyOf(item);
+				newItem.setConditions(conditions);
+				evaluatedResponseItem.setRequestItem(newItem);
+			}
+			//we add the evaluatedResponseItem in the table even though it might be null. if it's null that means there is no preference information available
+			result.put(item, evaluatedResponseItem);
+
+		}
+
+		this.logging.debug("Returning evaluatedPreferences size: "+result.size());
+		return result;
+
+	}
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferences(RequestPolicy requestPolicy) throws PrivacyException{
+
+		HashMap<RequestItem, ResponseItem> result = new HashMap<RequestItem, ResponseItem>();
+		List<RequestItem> requestItems = requestPolicy.getRequestItems();
+		for (RequestItem item : requestItems){
+			ResponseItem evaluatedResponseItem = null;
+			List<Condition> conditions = new ArrayList<Condition>();
+			//for every Condition in the RequestItem;
+			for (Condition condition : item.getConditions()){
+				this.logging.debug("Finding preference for resource: "+item.getResource().getDataType());
+				PPNPreferenceDetailsBean details = new PPNPreferenceDetailsBean();
+				details.setRequestor(requestPolicy.getRequestor());
+				details.setResource(item.getResource());
+				details.setCondition(condition.getConditionConstant());
+
+				PPNPrivacyPreferenceTreeModel model = privPrefMgr.getPrefCache().getPPNPreference(details);
+
+				if (model!=null){
+					this.logging.debug("Found PPN model for resource: "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant());
+					PreferenceEvaluator ppE = new PreferenceEvaluator(privPrefMgr, requestPolicy.getRequestor(), this.userIdentity );
+					Condition evaluatedCondition = ppE.evaluatePPNPreferences(model);
+					if (evaluatedCondition==null){
+						this.logging.debug("PPN evaluation returned null for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and specific requestor "+RequestorUtils.toString(requestPolicy.getRequestor()));
+					}
+					else{
+						conditions.add(evaluatedCondition);
+					}
+				}else{
+					this.logging.debug("Not found for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and specific requestor, attempting to find generic preference");
+					RequestorBean requestorIdOnly = new RequestorBean();
+					requestorIdOnly.setRequestorId(requestPolicy.getRequestor().getRequestorId());
+					details.setRequestor(requestorIdOnly);
+					model  = privPrefMgr.getPrefCache().getPPNPreference(details);
+					if (model==null){
+						this.logging.debug("Not found any requestorId only ppn preference for resource: "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant());
+
+						details.setRequestor(null);
+						model = privPrefMgr.getPrefCache().getPPNPreference(details);
+						if (model==null){
+							this.logging.debug("Not found any generic ppn preference for resource: "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant());
+						}else{
+							this.logging.debug("Found generic ppn preference for resource: "+item.getResource().getDataType());
+							PreferenceEvaluator ppE = new PreferenceEvaluator(privPrefMgr, requestPolicy.getRequestor(), this.userIdentity);
+							Condition evaluatedCondition = ppE.evaluatePPNPreferences(model);
+							if (evaluatedCondition==null){
+								this.logging.debug("PPN evaluation returned null for resource : "+item.getResource().getDataType()+" and condition: "+condition.getConditionConstant()+" and generic requestor");
+							}else{
+								conditions.add(evaluatedCondition);
+							}
+						}
+					}else{
+						this.logging.debug("Found requestorId only ppn preference for resource: "+item.getResource().getDataType());
 						PreferenceEvaluator ppE = new PreferenceEvaluator(privPrefMgr, requestPolicy.getRequestor(), this.userIdentity);
 						Condition evaluatedCondition = ppE.evaluatePPNPreferences(model);
 						if (evaluatedCondition==null){
@@ -156,7 +301,7 @@ public class PPNegotiationPreferenceManager {
 	public boolean storePPNPreference(PPNPreferenceDetailsBean details,
 			PPNPrivacyPreferenceTreeModel model) throws PrivacyException {
 
-		if (model.getDetails().equals(details)){
+		if (PrivacyPreferenceUtils.equals(model.getDetails(), details)){
 			this.logging.debug("Request to add preference :\n"+details.toString());
 
 			if (privPrefMgr.getPrefCache().addPPNPreference(details, model)){
@@ -177,4 +322,6 @@ public class PPNegotiationPreferenceManager {
 		return privPrefMgr.getPrefCache().removePPNPreferences();
 
 	}
+
+	
 }

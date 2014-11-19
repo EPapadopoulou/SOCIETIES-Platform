@@ -1,28 +1,14 @@
 package org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-
 import javax.swing.ImageIcon;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
-import org.societies.api.privacytrust.privacy.util.privacypolicy.ConditionUtils;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
-
-import javax.swing.border.LineBorder;
-
-import java.awt.Color;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 import com.alee.laf.separator.WebSeparator;
 
@@ -31,7 +17,6 @@ public class ConditionPanel extends JPanel {
 	private Condition requestedCondition;
 	private Condition suggestedCondition;
 	private boolean firstRound;
-	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	private JLabel lblIcon;
 
 	/**
@@ -47,17 +32,19 @@ public class ConditionPanel extends JPanel {
 		setBounds(0, 0, 650, 25);
 
 		JLabel lblNewLabel = new JLabel(ConditionConstantsFriendly.getFriendlyName(requestedCondition.getConditionConstant()));
-		lblNewLabel.setBounds(2, 0, 380, 20);
+		lblNewLabel.setToolTipText(getToolTipText());
+		lblNewLabel.setBounds(2, 0, 429, 20);
 		add(lblNewLabel);
 
 		comboBox = new JComboBox(PrivacyConditionsConstantValues.getValues(requestedCondition.getConditionConstant()));
-		comboBox.setBounds(390, 0, 220, 20);
+		comboBox.setBounds(441, 0, 180, 20);
 		add(comboBox);
 
 
 		
 		comboBox.setSelectedItem(requestedCondition.getValue());
-		logging.debug("I set the selectedItem to: "+requestedCondition.getValue()+" and the combobox is displaying: "+comboBox.getSelectedItem().toString());
+		comboBox.setToolTipText(getToolTipText());
+		System.out.println("I set the selectedItem to: "+requestedCondition.getValue()+" and the combobox is displaying: "+comboBox.getSelectedItem().toString());
 		comboBox.setEnabled(firstRound);
 		
 		WebSeparator webSeparator = new WebSeparator(0);
@@ -73,7 +60,7 @@ public class ConditionPanel extends JPanel {
 				lblIcon.setIcon(createWarningImageIcon());
 			}
 		}
-		lblIcon.setBounds(625, 1, 23, 23);
+		lblIcon.setBounds(625, 0, 23, 23);
 		add(lblIcon);
 
 	}
@@ -83,7 +70,7 @@ public class ConditionPanel extends JPanel {
 		if (imgURL!=null){
 			return new ImageIcon(imgURL);
 		}else{
-			this.logging.error("Can't find warning image");
+			System.err.println("Can't find warning image");
 			return null;
 		}
 	}
@@ -93,7 +80,7 @@ public class ConditionPanel extends JPanel {
 		if (imgURL!=null){
 			return new ImageIcon(imgURL);
 		}else{
-			this.logging.error("Can't find warning image");
+			System.err.println("Can't find check image");
 			return null;
 		}
 	}
@@ -103,7 +90,7 @@ public class ConditionPanel extends JPanel {
 		if (imgURL!=null){
 			return new ImageIcon(imgURL);
 		}else{
-			this.logging.error("Can't find warning image");
+			System.err.println("Can't find arrow image");
 			return null;
 		}
 	}
@@ -155,6 +142,27 @@ public class ConditionPanel extends JPanel {
 		return con;
 	}
 
+	
+	@Override
+	public String getToolTipText(){
+		switch (requestedCondition.getConditionConstant()){
+		case DATA_RETENTION:
+			return "Edit this field to demand your preferred length of time you want the service provider to keep your data on their servers.";
+		case MAY_BE_INFERRED:
+			return "Edit this field to indicate if you want this data to be combined with other data to infer further information about you.";
+		case RIGHT_TO_ACCESS_HELD_DATA:
+			return "Edit this field to request having access to all the data that the provider retrieves from you.";
+		case RIGHT_TO_CORRECT_INCORRECT_DATA:
+			return "Edit this field to request the ability to change held by the service provider about you.";
+		case RIGHT_TO_OPTOUT:
+			return "Edit this field to request the option to stop disclosing this data at any time.";
+		case SHARE_WITH_3RD_PARTIES:
+			return "Edit this field to request the level of sharing you allow for this data.";  
+		case STORE_IN_SECURE_STORAGE:
+			return "Edit this field to request that your data be stored securely by the service provider.";
+		}
+		return "";
+	}
 	public boolean match() {
 
 		return requestedCondition.getValue().equalsIgnoreCase(this.getCondition().getValue());

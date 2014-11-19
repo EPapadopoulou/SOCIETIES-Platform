@@ -4,24 +4,20 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractListModel;
 import javax.swing.ComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ListDataListener;
 
 import org.societies.api.identity.IIdentity;
-import java.awt.GridBagLayout;
-
-import javax.swing.JLabel;
-import javax.swing.JComboBox;
 
 public class IdentitySelectionGUIDialog extends JDialog implements ActionListener{
 
@@ -39,20 +35,24 @@ public class IdentitySelectionGUIDialog extends JDialog implements ActionListene
 	 * Create the dialog.
 	 * @param recommendedIdentity 
 	 */
-	public IdentitySelectionGUIDialog(JFrame frame, List<IIdentity> identities, IIdentity recommendedIdentity) {
+	public IdentitySelectionGUIDialog(String providerFriendlyName, JFrame frame, List<IIdentity> identities, IIdentity recommendedIdentity) {
 		super(frame,"Identity Selection", true);
 		this.frame = frame;
 
 		this.identities = identities;
 		this.recommendedIdentity = recommendedIdentity;
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 506, 303);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
 		contentPanel.setLayout(null);
-
-		JLabel lblTheFollowingIdentities = new JLabel("<html>The following identities can be used to interact with service... Please select which one you wish to use to represent yourself to ... </html>");
-		lblTheFollowingIdentities.setBounds(5, 11, 424, 75);
+		StringBuilder sb = new StringBuilder();
+		sb.append("<html><body><p style='width: 350px;'>");
+		String text = "The following identities can be used to satisfy the "+providerFriendlyName+" data requests. Please select which one you wish to use to represent yourself to "+providerFriendlyName+".";
+		sb.append(text);
+		sb.append("</p> </body> </html>");
+		JLabel lblTheFollowingIdentities = new JLabel(sb.toString());
+		lblTheFollowingIdentities.setBounds(5, 11, 480, 75);
 		contentPanel.add(lblTheFollowingIdentities);
 
 
@@ -61,11 +61,11 @@ public class IdentitySelectionGUIDialog extends JDialog implements ActionListene
 		cmbIdentities = new JComboBox(model);
 		cmbIdentities.setSelectedIndex(0);
 		cmbIdentities.setEditable(false);
-		cmbIdentities.setBounds(15, 80, 385, 43);
+		cmbIdentities.setBounds(15, 90, 458, 43);
 		contentPanel.add(cmbIdentities);
 
 		JButton btnCreateNew = new JButton("Create New Identity");
-		btnCreateNew.setBounds(264, 145, 136, 48);
+		btnCreateNew.setBounds(301, 156, 172, 28);
 		btnCreateNew.addActionListener(this);
 		contentPanel.add(btnCreateNew);
 		
@@ -82,21 +82,23 @@ public class IdentitySelectionGUIDialog extends JDialog implements ActionListene
 				}
 			}
 		});
-		btnSuggest.setBounds(15, 145, 188, 48);
+		btnSuggest.setBounds(15, 156, 230, 28);
 		contentPanel.add(btnSuggest);
 		{
 			JPanel buttonPane = new JPanel();
-			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+			FlowLayout fl_buttonPane = new FlowLayout(FlowLayout.RIGHT);
+			fl_buttonPane.setVgap(10);
+			fl_buttonPane.setHgap(10);
+			buttonPane.setLayout(fl_buttonPane);
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
 			{
-				okButton = new JButton("OK");
+				okButton = new JButton("Continue");
 				okButton.setActionCommand("OK");
 				okButton.addActionListener(this);
 				buttonPane.add(okButton);
 				getRootPane().setDefaultButton(okButton);
 			}
 		}
-		
 	}
 
 	public IIdentity getSelectedIdentity(){

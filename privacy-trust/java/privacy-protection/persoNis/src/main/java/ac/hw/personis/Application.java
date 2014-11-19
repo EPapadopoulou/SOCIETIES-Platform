@@ -112,8 +112,13 @@ public class Application implements WindowListener{
 		UIManager.put("ComboBox.font", new Font("Tahoma", Font.PLAIN,11));
 		//UIManager.put("Button.font", new FontUIResource("Tahoma",Font.PLAIN,2));
 		UIManager.getLookAndFeelDefaults().put("Button.font", new FontUIResource("Tahoma",Font.BOLD,12));
+		//UIManager.getLookAndFeelDefaults().put("TitledBorder.font", new FontUIResource("Tahoma",Font.BOLD,12));
+		//UIManager.put("TitledBorder.font", new FontUIResource("Tahoma",Font.BOLD,12));
+		//UIManager.put("TitledBorder.titleColor", new ColorUIResource(new Color(10,29,139)));
+		//UIManager.put("TitledBorder.font", new FontUIResource("Tahoma", Font.BOLD, 14));
 		UIManager.getLookAndFeelDefaults().put("Label.font", new FontUIResource("Tahoma",Font.BOLD,12));
 		UIManager.getLookAndFeelDefaults().put("Button.background", new ColorUIResource(Color.GREEN));
+		
 		frmPersonismEvaluationTool = new JFrame();
 		
 		frmPersonismEvaluationTool.setTitle("PersoNISM Evaluation Tool");
@@ -338,6 +343,7 @@ public class Application implements WindowListener{
 		});
 		menuData.add(profileMenuItem);
 
+		frmPersonismEvaluationTool.requestFocus();
 
 	}
 
@@ -443,17 +449,22 @@ public class Application implements WindowListener{
 			this.storeApps.remove(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
 			this.appsPage.setAppInstalled(requestor);
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.HWU_CAMPUS_GUIDE_APP+" successfully installed");
-		}else if (RequestorUtils.equals(requestor, this.helper.getBbcRequestor())){
+		}else if (RequestorUtils.equals(requestor, this.helper.getBBCNewsRequestor())){
 			this.installedApps.add(PersonisHelper.BBC_NEWS_APP);
 			this.storeApps.remove(PersonisHelper.BBC_NEWS_APP);
 			this.appsPage.setAppInstalled(requestor);
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.BBC_NEWS_APP+" successfully installed");
-		}else if (RequestorUtils.equals(requestor, this.helper.getItunesRequestor())){
+		}else if (RequestorUtils.equals(requestor, this.helper.getBbcWeatherRequestor())){
+			this.installedApps.add(PersonisHelper.BBC_WEATHER_APP);
+			this.storeApps.remove(PersonisHelper.BBC_WEATHER_APP);
+			this.appsPage.setAppInstalled(requestor);
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.BBC_WEATHER_APP+" successfully installed");
+		}/*else if (RequestorUtils.equals(requestor, this.helper.getItunesRequestor())){
 			this.installedApps.add(PersonisHelper.ITUNES_MUSIC_APP);
 			this.storeApps.remove(PersonisHelper.ITUNES_MUSIC_APP);
 			this.appsPage.setAppInstalled(requestor);
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, PersonisHelper.ITUNES_MUSIC_APP+" successfully installed");
-		}
+		}*/
 		this.appsPage.setVisible(true);
 		try {
 			this.appsPage.setSelected(true);
@@ -470,11 +481,13 @@ public class Application implements WindowListener{
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, "Negotiation with "+PersonisHelper.GOOGLE_VENUE_FINDER+" failed.");
 		}else if (requestor.getRequestorId().equals(this.helper.getHwuRequestor().getRequestorId())){
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, "Negotiation with "+PersonisHelper.HWU_CAMPUS_GUIDE_APP+" failed.");
-		}else if (RequestorUtils.equals(requestor, this.helper.getBbcRequestor())){
+		}else if (RequestorUtils.equals(requestor, this.helper.getBBCNewsRequestor())){
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, "Negotiation with "+PersonisHelper.BBC_NEWS_APP+" failed.");
-		}else if (RequestorUtils.equals(requestor, this.helper.getItunesRequestor())){
+		}else if (RequestorUtils.equals(requestor, this.helper.getBbcWeatherRequestor())){
+			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, "Negotiation with "+PersonisHelper.BBC_WEATHER_APP+" failed.");
+		}/*else if (RequestorUtils.equals(requestor, this.helper.getItunesRequestor())){
 			JOptionPane.showMessageDialog(this.frmPersonismEvaluationTool, "Negotiation with "+PersonisHelper.ITUNES_MUSIC_APP+" failed.");
-		}
+		}*/
 
 	}
 

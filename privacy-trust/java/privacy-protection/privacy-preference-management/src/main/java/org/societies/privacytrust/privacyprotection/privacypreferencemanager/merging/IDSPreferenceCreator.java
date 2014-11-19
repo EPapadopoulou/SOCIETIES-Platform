@@ -41,70 +41,94 @@ public class IDSPreferenceCreator {
 
 
 
-	public void notifyIdentitySelected(InternalEvent event){ 
-		
-		if (event.geteventInfo() instanceof PPNegotiationEvent){
-			this.logging.debug("event.geteventInfo is of type Agreement");
-			PPNegotiationEvent negEvent = (PPNegotiationEvent) event.geteventInfo();
+	public void notifyIdentitySelected(final InternalEvent event){ 
+		new Thread() {
 
-			
-
-			try {
-				this.logging.debug("creating identity selection preference");
-				this.createIdentitySelectionPreferences(negEvent.getAgreement());
-				this.logging.debug("created identity selection preference");
-			} catch (InvalidFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}else{
-			this.logging.debug("event.geteventInfo NOT of type Agreement but of: "+event.geteventInfo().getClass().getName());
-		}
-
-	}
-	private void createIdentitySelectionPreferences(Agreement agreement) throws InvalidFormatException {
-
-		IIdentity selectedIdentity = this.privPrefMgr.getIdm().fromJid(agreement.getUserIdentity());
-		IdentitySelectionPreferenceOutcome outcome = new IdentitySelectionPreferenceOutcome(selectedIdentity);
-		PrivacyPreference preference = new PrivacyPreference(outcome);
-		//TODO: create generic and specific IDS pref
-		PrivacyPreference  idsPreference = this.createIdentitySelectionPreference(agreement.getRequestor(), preference);
-		this.logging.debug("Constructed IDS creation preference");
-		//specific:
-		storeSpecific(selectedIdentity, agreement.getRequestor(), preference);
-		//generic:
-		storeGeneric(selectedIdentity, idsPreference);
+			public void run() {
+				try{
+					if (event.geteventInfo() instanceof PPNegotiationEvent){
+						logging.debug("event.geteventInfo is of type Agreement");
+						PPNegotiationEvent negEvent = (PPNegotiationEvent) event.geteventInfo();
+						try {
+							logging.debug("creating identity selection preference");
+							createIdentitySelectionPreferences(negEvent.getAgreement());
+							logging.debug("created identity selection preference");
+						} catch (InvalidFormatException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}else{
+						logging.debug("event.geteventInfo NOT of type Agreement but of: "+event.geteventInfo().getClass().getName());
+					}
+				}catch(Exception exc){
+					exc.printStackTrace();
+				}
+			}}.start();
 	}
 	
+	
+	private void createIdentitySelectionPreferences(Agreement agreement) throws InvalidFormatException, InterruptedException, ExecutionException, TrustException {
+
+		IIdentity selectedIdentity = this.privPrefMgr.getIdm().fromJid(agreement.getUserIdentity());
+
+		//TODO: create generic and specific IDS pref
+		
+		PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger(privPrefMgr);
+		merger.addIDSDecision(selectedIdentity, agreement.getRequestor());
+		
+		RequestorBean requestor = new RequestorBean();
+		requestor.setRequestorId(agreement.getRequestor().getRequestorId());
+		
+		//requestor id only:
+		merger.addIDSDecision(selectedIdentity, requestor);
+		
+		
+		//generic:
+		TrustedEntityId trusteeID = new TrustedEntityId(TrustedEntityType.SVC, requestor.getRequestorId());
+
+		TrustedEntityId trustorID = new TrustedEntityId(TrustedEntityType.CSS, privPrefMgr.getCommsMgr().getIdManager().getThisNetworkNode().getBareJid());
+		TrustQuery trustQuery = new TrustQuery(trustorID);
+		trustQuery.setTrusteeId(trusteeID);
+		Double trustValue = privPrefMgr.getTrustBroker().retrieveTrustValue(trustQuery).get();
+		merger.addIDSDecision(selectedIdentity, trustValue);
+		
+		//PrivacyPreference  idsPreference = this.createIdentitySelectionPreference(agreement.getRequestor(), preference);
+		
+		
+		//generic:
+		//storeGeneric(selectedIdentity, idsPreference);
+	}
+
 	private void storeGeneric(IIdentity selectedIdentity, PrivacyPreference  idsPreference){
 		IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
 		details.setAffectedIdentity(selectedIdentity.getBareJid());
 		IDSPrivacyPreferenceTreeModel model = new IDSPrivacyPreferenceTreeModel(details, idsPreference);
 		this.privPrefMgr.storeIDSPreference(details, model);
 		this.logging.debug("Stored IDS preference (generic)");
-		
+
 	}
 
 	private void storeSpecific(IIdentity selectedIdentity, RequestorBean requestor, PrivacyPreference  idsPreference){
+		
 		IDSPreferenceDetailsBean details = new IDSPreferenceDetailsBean();
 		details.setAffectedIdentity(selectedIdentity.getBareJid());
 		details.setRequestor(requestor);
 		IDSPrivacyPreferenceTreeModel model = new IDSPrivacyPreferenceTreeModel(details, idsPreference);
 		this.privPrefMgr.storeIDSPreference(details, model);
 		this.logging.debug("Stored IDS preference (specific)");
-		
+
 	}
 	private PrivacyPreference  createIdentitySelectionPreference(RequestorBean requestor, PrivacyPreference outcomePreference){
 
 		TrustPreferenceCondition trustCondition = getTrustCondition(requestor);
 		PrivacyPreference privacyPreference = new PrivacyPreference(trustCondition);
-		
+
 		privacyPreference.add(outcomePreference);
-		
+
 		return privacyPreference;
-		
-		
-		
+
+
+
 	}
 
 	private TrustPreferenceCondition getTrustCondition(RequestorBean requestor){

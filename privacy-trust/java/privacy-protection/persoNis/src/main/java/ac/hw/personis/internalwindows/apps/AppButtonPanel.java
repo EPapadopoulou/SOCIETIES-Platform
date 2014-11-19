@@ -12,7 +12,7 @@ import org.societies.api.schema.identity.RequestorServiceBean;
 
 import ac.hw.personis.PersonisHelper;
 import ac.hw.personis.internalwindows.apps.ServicePanel.ServiceAction;
-import ac.hw.personis.services.BBCService;
+import ac.hw.personis.services.BBCNewsService;
 import ac.hw.personis.services.GoogleMapsService;
 import ac.hw.personis.services.HWUService;
 
@@ -51,7 +51,7 @@ public class AppButtonPanel extends ImagePanel {
 	}
 	public AppButtonPanel(PersonisHelper helper, RequestorServiceBean requestor, String filename, String title, AppDetailsPanel detpanel, boolean isInstalled, String staticName) {
 		this(helper, requestor, filename, title, staticName);
-		
+		this.setDetails();
 		this.detpanel = detpanel;
 		this.isInstalled = isInstalled;
 		        
@@ -85,8 +85,11 @@ public class AppButtonPanel extends ImagePanel {
     				}else if (AppButtonPanel.this.staticName.equalsIgnoreCase(PersonisHelper.HWU_CAMPUS_GUIDE_APP)){
     					personisHelper.startHWUService();
     				}else if (AppButtonPanel.this.staticName.equalsIgnoreCase(PersonisHelper.BBC_NEWS_APP)){
-    					personisHelper.startBBCService();
+    					personisHelper.startBBCNewsService();
+    				}else if (AppButtonPanel.this.staticName.equalsIgnoreCase(PersonisHelper.BBC_WEATHER_APP)){
+    					personisHelper.startBBCWeatherService();
     				}
+    					
     			}
     			
     			
@@ -94,6 +97,26 @@ public class AppButtonPanel extends ImagePanel {
     	});
         
 
+	}
+	private void setDetails() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<html>");
+		if (staticName.equals(PersonisHelper.GOOGLE_VENUE_FINDER)){
+			sb.append("The Google Venue finder app for Android phones and tablets makes navigating your world faster and easier. Find the best spots in town and the information you need to get there.");
+			
+		}else if (staticName.equals(PersonisHelper.HWU_CAMPUS_GUIDE_APP)){
+			sb.append("The HWU Campus Guide helps you find your way around the campus and explore local amenities.");
+		}else if (staticName.equals(PersonisHelper.BBC_NEWS_APP)){
+			sb.append("The official BBC News app for UK audiences.");
+			sb.append("<br>");
+			sb.append("Get the latest, breaking news from our trusted global network of journalists.");
+			
+		}else if (staticName.equals(PersonisHelper.BBC_WEATHER_APP)){
+			sb.append("Wherever you are, and whatever your plans, you’re always prepared with the latest weather forecast from BBC Weather.");
+		}
+		sb.append("</html>");
+		details = sb.toString();
+		
 	}
 	public boolean isInstalled() {
 		return isInstalled;

@@ -39,6 +39,7 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Respons
 
 import ac.hw.personis.PersonisHelper;
 import ac.hw.personis.internalwindows.apps.ImagePanel;
+import javax.swing.SwingConstants;
 
 
 
@@ -47,12 +48,12 @@ import ac.hw.personis.internalwindows.apps.ImagePanel;
  * @author PUMA
  * 
  */
-public class BBCService extends JFrame implements ActionListener, CtxChangeEventListener, WindowListener{
+public class BBCWeatherService extends JFrame implements ActionListener, CtxChangeEventListener, WindowListener{
 
 	/**
 	 * 
 	 */
-	private final static Logger logging = LoggerFactory.getLogger(BBCService.class);
+	private final static Logger logging = LoggerFactory.getLogger(BBCWeatherService.class);
 	private static final long serialVersionUID = 1L;
 	private String authKey = "AIzaSyA9BkjBXcXYv5ES0kvf5IyUpZXEuaBlc1M";
 	private JButton btnRetrieve;
@@ -79,13 +80,13 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 	private JLabel lblLoc;
 	private boolean loggedIn = false;
 
-	public BBCService(PersonisHelper personisHelper) {
+	public BBCWeatherService(PersonisHelper personisHelper) {
 		super();
 		getContentPane().setBackground(Color.BLUE);
 		this.personisHelper = personisHelper;
 		this.ctxBroker = personisHelper.getCtxBroker();
-		this.myServiceName = PersonisHelper.BBC_NEWS_APP;
-		this.myIDBean = personisHelper.getBbcRequestor();
+		this.myServiceName = PersonisHelper.BBC_WEATHER_APP;
+		this.myIDBean = personisHelper.getBbcWeatherRequestor();
 		try {
 			this.myID = (RequestorService) RequestorUtils.toRequestor(myIDBean, personisHelper.getCommsMgr().getIdManager());
 		} catch (InvalidFormatException e) {
@@ -116,7 +117,7 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 		setSize(467, 637);
 
 		//TODO: needs to be updated to show bbc background
-		ImagePanel imagePanel = new ImagePanel("/gvfappback1.png");
+		ImagePanel imagePanel = new ImagePanel("/bbcwappback.png");
 		imagePanel.setBounds(0, 0, 450, 600);
 		getContentPane().add(imagePanel);
 		imagePanel.setLayout(null);
@@ -138,27 +139,27 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 		imagePanel.add(lblYourProfile);
 		
 		lblName = new JLabel("name");
-		lblName.setBounds(160, 193, 254, 30);
+		lblName.setBounds(172, 193, 242, 30);
 		imagePanel.add(lblName);
 		
 		lblName1 = new JLabel("Name:");
-		lblName1.setBounds(46, 193, 103, 30);
+		lblName1.setBounds(46, 193, 116, 30);
 		imagePanel.add(lblName1);
 		
 		lblDob1 = new JLabel("Date of Birth:");
-		lblDob1.setBounds(46, 229, 103, 30);
+		lblDob1.setBounds(46, 229, 116, 30);
 		imagePanel.add(lblDob1);
 		
 		lblDoB = new JLabel("DoB");
-		lblDoB.setBounds(160, 229, 254, 30);
+		lblDoB.setBounds(172, 229, 242, 30);
 		imagePanel.add(lblDoB);
 		
 		lblEmailAddress = new JLabel("Email address:");
-		lblEmailAddress.setBounds(46, 270, 103, 30);
+		lblEmailAddress.setBounds(46, 270, 116, 30);
 		imagePanel.add(lblEmailAddress);
 		
 		lblEmail = new JLabel("Email");
-		lblEmail.setBounds(160, 270, 254, 30);
+		lblEmail.setBounds(172, 270, 242, 30);
 		imagePanel.add(lblEmail);
 		
 		lblLoggedIn = new JLabel("New label");
@@ -166,11 +167,11 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 		imagePanel.add(lblLoggedIn);
 		
 		lblCurrentLocation = new JLabel("Current location:");
-		lblCurrentLocation.setBounds(46, 311, 103, 30);
+		lblCurrentLocation.setBounds(46, 311, 116, 30);
 		imagePanel.add(lblCurrentLocation);
 		
 		lblLoc = new JLabel("loc");
-		lblLoc.setBounds(160, 311, 254, 30);
+		lblLoc.setBounds(172, 311, 242, 48);
 		imagePanel.add(lblLoc);
 		btnRetrieve.addActionListener(this);
 
@@ -227,7 +228,7 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 	@Override
 	public void actionPerformed(ActionEvent event) {
 		if (!loggedIn){
-			String selectedId = (String) JOptionPane.showInputDialog(BBCService.this, "Login with identity:", "Login", JOptionPane.PLAIN_MESSAGE, null, new String[]{userID.getBareJid()}, userID.getBareJid());
+			String selectedId = (String) JOptionPane.showInputDialog(BBCWeatherService.this, "Login with identity:", "Login", JOptionPane.PLAIN_MESSAGE, null, new String[]{userID.getBareJid()}, userID.getBareJid());
 			loggedIn = true;
 		}
 		if (event.getSource() == btnRetrieve) {
@@ -235,7 +236,7 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 			new Thread() {
 
 				public void run() {
-					for (CtxIdentifier ctxIdentifier : BBCService.this.dataIDs){
+					for (CtxIdentifier ctxIdentifier : BBCWeatherService.this.dataIDs){
 						System.out.println("btnRetrieve: "+ctxIdentifier.getUri());
 						try {
 							CtxAttribute ctxAttribute = (CtxAttribute) ctxBroker.retrieve(myID, ctxIdentifier).get();
@@ -289,7 +290,7 @@ public class BBCService extends JFrame implements ActionListener, CtxChangeEvent
 					
 					lblLoggedIn.setText("You are logged in as "+userID.getBareJid());
 					setLabelsVisible();
-					BBCService.this.logging.debug("Exiting thread");
+					BBCWeatherService.this.logging.debug("Exiting thread");
 				}
 			}.start();
 		}

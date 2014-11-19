@@ -51,11 +51,12 @@ public class IdentityWindow {
 	 * Create the application.
 	 * @param identities 
 	 * @param recommendedIdentity 
+	 * @param providerFriendlyName 
 	 */
-	public IdentityWindow(List<IIdentity> identities, IIdentity recommendedIdentity) {
+	public IdentityWindow(String providerFriendlyName, List<IIdentity> identities, IIdentity recommendedIdentity ) {
 		initialize();
-		idsDialog = new IdentitySelectionGUIDialog(frame, identities, recommendedIdentity);
-		idsDialog.setAlwaysOnTop(true);
+		idsDialog = new IdentitySelectionGUIDialog(providerFriendlyName, frame, identities, recommendedIdentity);
+		
 	}
 
 	public IIdentity getSelectedIdentity(){

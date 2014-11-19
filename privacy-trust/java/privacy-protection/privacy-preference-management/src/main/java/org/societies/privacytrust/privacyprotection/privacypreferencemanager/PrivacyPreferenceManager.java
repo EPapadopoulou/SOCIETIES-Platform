@@ -490,7 +490,47 @@ public class PrivacyPreferenceManager implements IPrivacyPreferenceManager{
 		return new HashMap<RequestItem, ResponseItem>();
 	}
 
+	@Override
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesRequestorExact(RequestPolicy requestPolicy) throws PrivacyException{
+		try {
+			return this.getPPNegotiationPreferenceManager().evaluatePPNPreferencesRequestorExact(requestPolicy);
+		} catch (PrivacyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new HashMap<RequestItem, ResponseItem>();
+		
+	}
 
+	@Override
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesRequestorIdOnly(RequestPolicy requestPolicy) throws PrivacyException{
+		try {
+			return this.getPPNegotiationPreferenceManager().evaluatePPNPreferencesRequestorIdOnly(requestPolicy);
+		} catch (PrivacyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new HashMap<RequestItem, ResponseItem>();
+	}
+	
+	@Override
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesNoRequestor(RequestPolicy requestPolicy) throws PrivacyException{
+
+		try {
+			return this.getPPNegotiationPreferenceManager().evaluatePPNPreferencesNoRequestor(requestPolicy);
+		} catch (PrivacyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return new HashMap<RequestItem, ResponseItem>();
+	}
+
+	@Override
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesRequestorIdAndSpecific(RequestPolicy requestPolicy) throws PrivacyException{
+		
+			return this.getPPNegotiationPreferenceManager().evaluatePPNPreferencesRequestorIdAndSpecific(requestPolicy);
+		
+	}
 	/**
 	 * @return the ctxBroker
 	 */

@@ -57,10 +57,12 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Conditi
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Resource;
+import javax.swing.JTextArea;
+import javax.swing.border.TitledBorder;
 
 public class RequestItemEditor extends JFrame implements ItemListener
 {
-	private JPanel pnPanel0;
+	private JPanel contentPanel;
 	private JPanel resourcePanel;
 	private JLabel resourceLabel;
 	private JComboBox resourceTypeList;
@@ -83,263 +85,222 @@ public class RequestItemEditor extends JFrame implements ItemListener
 	private List<String> activityTypes = new ArrayList<String>();
 	private List<String> cssTypes = new ArrayList<String>();
 	private List<String> deviceTypes = new ArrayList<String>();
-
-	public static void main(String[] args)
-	{
-		try
-		{
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		}
-		catch (ClassNotFoundException localClassNotFoundException)
-		{
-		}
-		catch (InstantiationException localInstantiationException)
-		{
-		}
-		catch (IllegalAccessException localIllegalAccessException)
-		{
-		}
-		catch (UnsupportedLookAndFeelException localUnsupportedLookAndFeelException)
-		{
-		}
-		RequestItemEditor theRequestItemEditor = new RequestItemEditor(null);
-		Object[] list = theRequestItemEditor.getCtxAttributeTypesList();
-		for (Object obj : list){
-			System.out.println(obj.toString());
-		}
-	}
+	private JPanel purposePanel;
+	private JTextArea purposeTxtArea;
 
 	public RequestItemEditor(ActionListener listener)
 	{
 		super("Requested Items Editor");
 		this.setupDataTypes();
-		this.pnPanel0 = new JPanel();
-		this.pnPanel0.setBorder(BorderFactory.createTitledBorder("Resource Editor"));
-		GridBagLayout gbPanel0 = new GridBagLayout();
-		GridBagConstraints gbcPanel0 = new GridBagConstraints();
-		this.pnPanel0.setLayout(gbPanel0);
+		this.contentPanel = new JPanel();
+		this.contentPanel.setBorder(BorderFactory.createTitledBorder("Resource Editor"));
+		GridBagLayout gbl_contentPanel = new GridBagLayout();
+		//gbl_contentPanel.rowWeights = new double[]{1.0, 1.0, 0.0, 1.0, 1.0, 0.0};
+		//gbl_contentPanel.columnWeights = new double[]{1.0, 1.0};
+		this.contentPanel.setLayout(gbl_contentPanel);
 
 		this.resourcePanel = new JPanel();
+		resourcePanel.setBorder(new TitledBorder(null, "Resource Details", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagLayout gbPanel2 = new GridBagLayout();
-		GridBagConstraints gbcPanel2 = new GridBagConstraints();
+		gbPanel2.columnWeights = new double[]{0.0, 1.0};
 		this.resourcePanel.setLayout(gbPanel2);
 
 		this.schemeLabel = new JLabel("Scheme");
-		gbcPanel2.gridx = 0;
-		gbcPanel2.gridy = 0;
-		gbcPanel2.gridwidth = 1;
-		gbcPanel2.gridheight = 1;
-		gbcPanel2.fill = 1;
-		gbcPanel2.weightx = 1.0D;
-		gbcPanel2.weighty = 1.0D;
-		gbcPanel2.anchor = 11;
-		gbPanel2.setConstraints(this.schemeLabel, gbcPanel2);
-		this.resourcePanel.add(this.schemeLabel);
+		GridBagConstraints gbc_schemeLabel = new GridBagConstraints();
+		gbc_schemeLabel.insets = new Insets(0, 5, 0, 5);
+		gbc_schemeLabel.fill = GridBagConstraints.HORIZONTAL;
+		gbc_schemeLabel.anchor = GridBagConstraints.WEST;
+		gbc_schemeLabel.gridy = 0;
+		gbc_schemeLabel.gridx = 0;
+		this.resourcePanel.add(this.schemeLabel, gbc_schemeLabel);
 
-		this.schemeList = new JComboBox(this.getSchemeList());
+		this.schemeList = new JComboBox(getSchemeList());
+		schemeLabel.setLabelFor(schemeList);
 		this.schemeList.setSelectedIndex(0);
 		this.schemeList.addItemListener(this);
-		gbcPanel2.gridx = 1;
-		gbcPanel2.gridy = 0;
-		gbcPanel2.gridwidth = 1;
-		gbcPanel2.gridheight = 1;
-		gbcPanel2.fill = 1;
-		gbcPanel2.weightx = 1.0D;
-		gbcPanel2.weighty = 0.0D;
-		gbcPanel2.anchor = 11;
-		gbPanel2.setConstraints(this.schemeList, gbcPanel2);
-		this.resourcePanel.add(this.schemeList);
+
+		GridBagConstraints gbc_schemeList = new GridBagConstraints();
+		gbc_schemeList.insets = new Insets(0, 5, 0, 0);
+		gbc_schemeList.fill = GridBagConstraints.HORIZONTAL;
+		gbc_schemeList.gridy = 0;
+		gbc_schemeList.gridx = 1;
+		this.resourcePanel.add(this.schemeList, gbc_schemeList);
 
 		this.resourceLabel = new JLabel("ResourceType");
-		gbcPanel2.gridx = 0;
-		gbcPanel2.gridy = 1;
-		gbcPanel2.gridwidth = 1;
-		gbcPanel2.gridheight = 1;
-		gbcPanel2.fill = 1;
-		gbcPanel2.weightx = 1.0D;
-		gbcPanel2.weighty = 1.0D;
-		gbcPanel2.anchor = 11;
-		gbPanel2.setConstraints(this.resourceLabel, gbcPanel2);
-		this.resourcePanel.add(this.resourceLabel);
+		GridBagConstraints gbc_resourceLabel = new GridBagConstraints();
+		gbc_resourceLabel.insets = new Insets(0, 5, 0, 5);
+		gbc_resourceLabel.fill = GridBagConstraints.HORIZONTAL;
+		gbc_resourceLabel.gridy = 1;
+		gbc_resourceLabel.gridx = 0;
+		this.resourcePanel.add(this.resourceLabel, gbc_resourceLabel);
 
 		this.resourceTypeList = new JComboBox(getCtxAttributeTypesList());
+		resourceLabel.setLabelFor(resourceTypeList);
 		this.resourceTypeList.setEditable(true);
-		gbcPanel2.gridx = 1;
-		gbcPanel2.gridy = 1;
-		gbcPanel2.gridwidth = 1;
-		gbcPanel2.gridheight = 1;
-		gbcPanel2.fill = 1;
-		gbcPanel2.weightx = 1.0D;
-		gbcPanel2.weighty = 0.0D;
-		gbcPanel2.anchor = 11;
-		gbPanel2.setConstraints(this.resourceTypeList, gbcPanel2);
-		this.resourcePanel.add(this.resourceTypeList);
 
-		gbcPanel0.gridx = 0;
-		gbcPanel0.gridy = 0;
-		gbcPanel0.gridwidth = 2;
-		gbcPanel0.gridheight = 1;
-		gbcPanel0.fill = 2;
-		gbcPanel0.weightx = 1.0D;
-		gbcPanel0.weighty = 1.0D;
-		gbcPanel0.anchor = 11;
-		gbcPanel0.insets = new Insets(3, 3, 3, 3);
-		gbPanel0.setConstraints(this.resourcePanel, gbcPanel0);
-		this.pnPanel0.add(this.resourcePanel);
+		GridBagConstraints gbc_resourceTypeList = new GridBagConstraints();
+		gbc_resourceTypeList.insets = new Insets(0, 5, 0, 0);
+		gbc_resourceTypeList.fill = GridBagConstraints.HORIZONTAL;
+		gbc_resourceTypeList.anchor = GridBagConstraints.WEST;
+		gbc_resourceTypeList.gridy = 1;
+		gbc_resourceTypeList.gridx = 1;
+		this.resourcePanel.add(this.resourceTypeList, gbc_resourceTypeList);
+
+
+		GridBagConstraints gbc_resourcePanel = new GridBagConstraints();
+		gbc_resourcePanel.fill = GridBagConstraints.HORIZONTAL;
+		gbc_resourcePanel.insets = new Insets(0, 0, 5, 0);
+		gbc_resourcePanel.gridwidth = 2;
+		gbc_resourcePanel.gridy = 0;
+		gbc_resourcePanel.gridx = 0;
+		this.contentPanel.add(this.resourcePanel, gbc_resourcePanel);
 
 
 
 		this.actionsPanel = new JPanel();
 		this.actionsPanel.setBorder(BorderFactory.createTitledBorder("Actions"));
 		GridBagLayout gbActionsPanel = new GridBagLayout();
-		GridBagConstraints gbcActionsPanel = new GridBagConstraints();
+		//gbActionsPanel.rowWeights = new double[]{1.0, 0.0};
+		//gbActionsPanel.columnWeights = new double[]{1.0, 0.0};
 		this.actionsPanel.setLayout(gbActionsPanel);
 
-		List actions = new ArrayList();
 
 		this.actionsModel = new ActionsTableModel();
 		this.actionsTable = new JTable(this.actionsModel);
 		JScrollPane scpList0 = new JScrollPane(this.actionsTable);
-		gbcActionsPanel.gridx = 0;
-		gbcActionsPanel.gridy = 0;
-		gbcActionsPanel.gridwidth = 2;
-		gbcActionsPanel.gridheight = 1;
-		gbcActionsPanel.fill = 1;
-		gbcActionsPanel.weightx = 1.0D;
-		gbcActionsPanel.weighty = 1.0D;
-		gbcActionsPanel.anchor = 11;
-		gbActionsPanel.setConstraints(scpList0, gbcActionsPanel);
-		this.actionsPanel.add(scpList0);
+		GridBagConstraints gbc_scpList0 = new GridBagConstraints();
+		gbc_scpList0.fill = GridBagConstraints.BOTH;
+		gbc_scpList0.gridwidth = 2;
+		gbc_scpList0.gridy = 0;
+		gbc_scpList0.gridx = 0;
+		this.actionsPanel.add(scpList0, gbc_scpList0);
 
 		this.addActionBtn = new JButton("Add Action");
 		this.addActionBtn.setActionCommand("addAction");
 		this.addActionBtn.addActionListener(listener);
-		gbcActionsPanel.gridx = 0;
-		gbcActionsPanel.gridy = 1;
-		gbcActionsPanel.gridwidth = 1;
-		gbcActionsPanel.gridheight = 1;
-		gbcActionsPanel.fill = 1;
-		gbcActionsPanel.weightx = 1.0D;
-		gbcActionsPanel.weighty = 0.0D;
-		gbcActionsPanel.anchor = 11;
-		gbActionsPanel.setConstraints(this.addActionBtn, gbcActionsPanel);
-		this.actionsPanel.add(this.addActionBtn);
+
+		GridBagConstraints gbc_addActionBtn = new GridBagConstraints();
+		gbc_addActionBtn.anchor = GridBagConstraints.WEST;
+		gbc_addActionBtn.gridy = 1;
+		gbc_addActionBtn.gridx = 0;
+		this.actionsPanel.add(this.addActionBtn, gbc_addActionBtn);
 
 		this.removeActionBtn = new JButton("Remove Action");
 		this.removeActionBtn.addActionListener(listener);
 		this.removeActionBtn.setActionCommand("removeAction");
-		gbcActionsPanel.gridx = 1;
-		gbcActionsPanel.gridy = 1;
-		gbcActionsPanel.gridwidth = 1;
-		gbcActionsPanel.gridheight = 1;
-		gbcActionsPanel.fill = 1;
-		gbcActionsPanel.weightx = 1.0D;
-		gbcActionsPanel.weighty = 0.0D;
-		gbcActionsPanel.anchor = 11;
-		gbActionsPanel.setConstraints(this.removeActionBtn, gbcActionsPanel);
-		this.actionsPanel.add(this.removeActionBtn);
-		gbcPanel0.gridx = 0;
-		gbcPanel0.gridy = 1;
-		gbcPanel0.gridwidth = 1;
-		gbcPanel0.gridheight = 1;
-		gbcPanel0.fill = 1;
-		gbcPanel0.weightx = 1.0D;
-		gbcPanel0.weighty = 0.0D;
-		gbcPanel0.anchor = 11;
-		gbPanel0.setConstraints(this.actionsPanel, gbcPanel0);
-		this.pnPanel0.add(this.actionsPanel);
+
+		GridBagConstraints gbc_removeActionBtn = new GridBagConstraints();
+		gbc_removeActionBtn.anchor = GridBagConstraints.EAST;
+		gbc_removeActionBtn.gridy = 1;
+		gbc_removeActionBtn.gridx = 1;
+		this.actionsPanel.add(this.removeActionBtn, gbc_removeActionBtn);
+
+		purposePanel = new JPanel();
+		purposePanel.setBorder(new TitledBorder(null, "Purpose", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		GridBagConstraints gbc_purposePanel = new GridBagConstraints();
+		gbc_purposePanel.gridheight = 2;
+		gbc_purposePanel.gridwidth = 2;
+		gbc_purposePanel.insets = new Insets(0, 0, 5, 0);
+		gbc_purposePanel.fill = GridBagConstraints.HORIZONTAL;
+		gbc_purposePanel.gridx = 0;
+		gbc_purposePanel.gridy = 1;
+		contentPanel.add(purposePanel, gbc_purposePanel);
+		
+
+		GridBagLayout gbl_purposePanel = new GridBagLayout();
+		gbl_purposePanel.columnWeights = new double[]{0.0, 1.0};
+		gbl_purposePanel.rowWeights = new double[]{0.0};
+		purposePanel.setLayout(gbl_purposePanel);
+		
+		purposeTxtArea = new JTextArea();
+		purposeTxtArea.setRows(3);
+		GridBagConstraints gbc_purposeTxtArea = new GridBagConstraints();
+		gbc_purposeTxtArea.gridheight = 2;
+		gbc_purposeTxtArea.gridwidth = 2;
+		gbc_purposeTxtArea.insets = new Insets(0, 5, 0, 0);
+		gbc_purposeTxtArea.fill = GridBagConstraints.HORIZONTAL;
+		gbc_purposeTxtArea.gridx = 0;
+		gbc_purposeTxtArea.gridy = 0;
+		purposePanel.add(purposeTxtArea, gbc_purposeTxtArea);
+		
+
+		
+		GridBagConstraints gbc_actionsPanel = new GridBagConstraints();
+		gbc_actionsPanel.fill = GridBagConstraints.HORIZONTAL;
+		gbc_actionsPanel.gridwidth = 2;
+		gbc_actionsPanel.insets = new Insets(0, 0, 0, 5);
+		gbc_actionsPanel.gridy = 3;
+		gbc_actionsPanel.gridx = 0;
+		this.contentPanel.add(this.actionsPanel, gbc_actionsPanel);
 
 		this.conditionsPanel = new JPanel();
 		this.conditionsPanel.setBorder(BorderFactory.createTitledBorder("Conditions"));
 		GridBagLayout gbConditionsPanel = new GridBagLayout();
-		GridBagConstraints gbcConditionsPanel = new GridBagConstraints();
+		//gbConditionsPanel.rowWeights = new double[]{1.0, 0.0};
+		//gbConditionsPanel.columnWeights = new double[]{1.0, 0.0};
 		this.conditionsPanel.setLayout(gbConditionsPanel);
 
 		this.conditionsModel = new ConditionsTableModel();
 
 		this.conditionsTable = new JTable(this.conditionsModel);
 		JScrollPane jsp = new JScrollPane(this.conditionsTable);
-		gbcConditionsPanel.gridx = 0;
-		gbcConditionsPanel.gridy = 0;
-		gbcConditionsPanel.gridwidth = 2;
-		gbcConditionsPanel.gridheight = 1;
-		gbcConditionsPanel.fill = 1;
-		gbcConditionsPanel.weightx = 1.0D;
-		gbcConditionsPanel.weighty = 1.0D;
-		gbcConditionsPanel.anchor = 11;
-		gbConditionsPanel.setConstraints(jsp, gbcConditionsPanel);
 
-		this.conditionsPanel.add(jsp);
+		GridBagConstraints gbc_jsp = new GridBagConstraints();
+		gbc_jsp.fill = GridBagConstraints.BOTH;
+		gbc_jsp.gridwidth = 2;
+		gbc_jsp.gridy = 0;
+		gbc_jsp.gridx = 0;
+		this.conditionsPanel.add(jsp, gbc_jsp);
 
 		this.addConditionBtn = new JButton("Add Condition");
 		this.addConditionBtn.addActionListener(listener);
 		this.addConditionBtn.setActionCommand("addCondition");
-		gbcConditionsPanel.gridx = 0;
-		gbcConditionsPanel.gridy = 1;
-		gbcConditionsPanel.gridwidth = 1;
-		gbcConditionsPanel.gridheight = 1;
-		gbcConditionsPanel.fill = 1;
-		gbcConditionsPanel.weightx = 1.0D;
-		gbcConditionsPanel.weighty = 0.0D;
-		gbcConditionsPanel.anchor = 11;
-		gbConditionsPanel.setConstraints(this.addConditionBtn, gbcConditionsPanel);
-		this.conditionsPanel.add(this.addConditionBtn);
+
+		GridBagConstraints gbc_addConditionBtn = new GridBagConstraints();
+		gbc_addConditionBtn.anchor = GridBagConstraints.WEST;
+		gbc_addConditionBtn.gridy = 1;
+		gbc_addConditionBtn.gridx = 0;
+		this.conditionsPanel.add(this.addConditionBtn, gbc_addConditionBtn);
 
 		this.removeConditionBtn = new JButton("Remove Condition");
 		this.removeConditionBtn.addActionListener(listener);
 		this.removeConditionBtn.setActionCommand("removeCondition");
-		gbcConditionsPanel.gridx = 1;
-		gbcConditionsPanel.gridy = 1;
-		gbcConditionsPanel.gridwidth = 1;
-		gbcConditionsPanel.gridheight = 1;
-		gbcConditionsPanel.fill = 1;
-		gbcConditionsPanel.weightx = 1.0D;
-		gbcConditionsPanel.weighty = 0.0D;
-		gbcConditionsPanel.anchor = 11;
-		gbConditionsPanel.setConstraints(this.removeConditionBtn, gbcConditionsPanel);
-		this.conditionsPanel.add(this.removeConditionBtn);
-		gbcPanel0.gridx = 1;
-		gbcPanel0.gridy = 1;
-		gbcPanel0.gridwidth = 1;
-		gbcPanel0.gridheight = 1;
-		gbcPanel0.fill = 1;
-		gbcPanel0.weightx = 1.0D;
-		gbcPanel0.weighty = 0.0D;
-		gbcPanel0.anchor = 11;
-		gbPanel0.setConstraints(this.conditionsPanel, gbcPanel0);
-		this.pnPanel0.add(this.conditionsPanel);
+
+		GridBagConstraints gbc_removeConditionBtn = new GridBagConstraints();
+		gbc_removeConditionBtn.gridy = 1;
+		gbc_removeConditionBtn.gridx = 1;
+		gbc_removeConditionBtn.anchor = GridBagConstraints.EAST;
+		this.conditionsPanel.add(this.removeConditionBtn, gbc_removeConditionBtn);
+
+		GridBagConstraints gbc_conditionsPanel = new GridBagConstraints();
+		gbc_conditionsPanel.fill = GridBagConstraints.HORIZONTAL;
+		gbc_conditionsPanel.gridwidth = 2;
+		gbc_conditionsPanel.gridy = 4;
+		gbc_conditionsPanel.gridx = 0;
+		this.contentPanel.add(this.conditionsPanel, gbc_conditionsPanel);
 
 		this.btnSave = new JButton("Save");
 		this.btnSave.addActionListener(listener);
 		this.btnSave.setActionCommand("saveResource");
-		gbcPanel0.gridx = 1;
-		gbcPanel0.gridy = 2;
-		gbcPanel0.gridwidth = 1;
-		gbcPanel0.gridheight = 1;
-		gbcPanel0.fill = 1;
-		gbcPanel0.weightx = 1.0D;
-		gbcPanel0.weighty = 0.0D;
-		gbcPanel0.anchor = 11;
-		gbPanel0.setConstraints(this.btnSave, gbcPanel0);
-		this.pnPanel0.add(this.btnSave);
+
+		GridBagConstraints gbc_btnSave = new GridBagConstraints();
+		gbc_btnSave.insets = new Insets(0, 0, 0, 5);
+		gbc_btnSave.gridy = 5;
+		gbc_btnSave.gridx = 0;
+		this.contentPanel.add(this.btnSave, gbc_btnSave);
 
 		this.btnDiscard = new JButton("Discard");
 		this.btnDiscard.setActionCommand("discard");
 		this.btnDiscard.addActionListener(listener);
-		gbcPanel0.gridx = 0;
-		gbcPanel0.gridy = 2;
-		gbcPanel0.gridwidth = 1;
-		gbcPanel0.gridheight = 1;
-		gbcPanel0.fill = 1;
-		gbcPanel0.weightx = 1.0D;
-		gbcPanel0.weighty = 0.0D;
-		gbcPanel0.anchor = 11;
-		gbPanel0.setConstraints(this.btnDiscard, gbcPanel0);
-		this.pnPanel0.add(this.btnDiscard);
+
+		GridBagConstraints gbc_btnDiscard = new GridBagConstraints();
+		gbc_btnDiscard.gridy = 5;
+		gbc_btnDiscard.gridx = 1;
+		this.contentPanel.add(this.btnDiscard, gbc_btnDiscard);
 
 		setDefaultCloseOperation(0);
 
-		setContentPane(this.pnPanel0);
+		setContentPane(this.contentPanel);
 		pack();
 		setVisible(true);
 	}
@@ -450,12 +411,17 @@ public class RequestItemEditor extends JFrame implements ItemListener
 			JOptionPane.showMessageDialog(this, "Please enter a resource type");
 			return null;
 		}
-		if (resourceType.equals("")) {
+		if (resourceType.isEmpty()) {
 			JOptionPane.showMessageDialog(this, "Please enter a resource type");
 			return null;
 		}
-
-		ArrayList actions = new ArrayList();
+		
+		if (purposeTxtArea.getText() == null || purposeTxtArea.getText().isEmpty()){
+			JOptionPane.showMessageDialog(this, "Please type the purpose for which you are requesting access to the user's "+resourceType);
+			return null;
+		}
+		
+		ArrayList<Action> actions = new ArrayList<Action>();
 		for (int i = 0; i < this.actionsModel.getRowCount(); i++) {
 			ActionConstants ac = (ActionConstants)this.actionsModel.getValueAt(i, 0);
 			Boolean optional = (Boolean)this.actionsModel.getValueAt(i, 1);
@@ -466,7 +432,7 @@ public class RequestItemEditor extends JFrame implements ItemListener
 		}
 
 		Resource resource = ResourceUtils.create(DataIdentifierScheme.valueOf(this.schemeList.getSelectedItem().toString()), resourceType);
-		ArrayList conditions = new ArrayList();
+		ArrayList<Condition> conditions = new ArrayList<Condition>();
 		for (int i = 0; i < this.conditionsModel.getRowCount(); i++) {
 			ConditionConstants cc = (ConditionConstants)this.conditionsModel.getValueAt(i, 0);
 			String value = (String)this.conditionsModel.getValueAt(i, 1);
@@ -478,6 +444,7 @@ public class RequestItemEditor extends JFrame implements ItemListener
 			conditions.add(condition);
 		}
 		RequestItem item = new RequestItem();
+		item.setPurpose(purposeTxtArea.getText());
 		item.setActions(actions);
 		item.setConditions(conditions);
 		item.setResource(resource);

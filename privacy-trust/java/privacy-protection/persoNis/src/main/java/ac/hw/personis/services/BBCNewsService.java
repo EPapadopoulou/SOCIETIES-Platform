@@ -39,6 +39,7 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Respons
 
 import ac.hw.personis.PersonisHelper;
 import ac.hw.personis.internalwindows.apps.ImagePanel;
+import javax.swing.SwingConstants;
 
 
 
@@ -47,12 +48,12 @@ import ac.hw.personis.internalwindows.apps.ImagePanel;
  * @author PUMA
  * 
  */
-public class GoogleMapsService extends JFrame implements ActionListener, CtxChangeEventListener, WindowListener{
+public class BBCNewsService extends JFrame implements ActionListener, CtxChangeEventListener, WindowListener{
 
 	/**
 	 * 
 	 */
-	private final static Logger logging = LoggerFactory.getLogger(GoogleMapsService.class);
+	private final static Logger logging = LoggerFactory.getLogger(BBCNewsService.class);
 	private static final long serialVersionUID = 1L;
 	private String authKey = "AIzaSyA9BkjBXcXYv5ES0kvf5IyUpZXEuaBlc1M";
 	private JButton btnRetrieve;
@@ -77,15 +78,15 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 	private JLabel lblLoggedIn;
 	private JLabel lblCurrentLocation;
 	private JLabel lblLoc;
-	boolean loggedIn = false;
+	private boolean loggedIn = false;
 
-	public GoogleMapsService(PersonisHelper personisHelper) {
+	public BBCNewsService(PersonisHelper personisHelper) {
 		super();
 		getContentPane().setBackground(Color.BLUE);
 		this.personisHelper = personisHelper;
 		this.ctxBroker = personisHelper.getCtxBroker();
-		this.myServiceName = PersonisHelper.GOOGLE_VENUE_FINDER;
-		this.myIDBean = personisHelper.getGoogleRequestor();
+		this.myServiceName = PersonisHelper.BBC_NEWS_APP;
+		this.myIDBean = personisHelper.getBBCNewsRequestor();
 		try {
 			this.myID = (RequestorService) RequestorUtils.toRequestor(myIDBean, personisHelper.getCommsMgr().getIdManager());
 		} catch (InvalidFormatException e) {
@@ -115,7 +116,8 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 		getContentPane().setLayout(null);
 		setSize(467, 637);
 
-		ImagePanel imagePanel = new ImagePanel("/gvfappback1.png");
+		//TODO: needs to be updated to show bbc background
+		ImagePanel imagePanel = new ImagePanel("/bbcnappback.png");
 		imagePanel.setBounds(0, 0, 450, 600);
 		getContentPane().add(imagePanel);
 		imagePanel.setLayout(null);
@@ -225,9 +227,8 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 	}
 	@Override
 	public void actionPerformed(ActionEvent event) {
-
 		if (!loggedIn){
-			String selectedId = (String) JOptionPane.showInputDialog(GoogleMapsService.this, "Login with identity:", "Login", JOptionPane.PLAIN_MESSAGE, null, new String[]{userID.getBareJid()}, userID.getBareJid());
+			String selectedId = (String) JOptionPane.showInputDialog(BBCNewsService.this, "Login with identity:", "Login", JOptionPane.PLAIN_MESSAGE, null, new String[]{userID.getBareJid()}, userID.getBareJid());
 			loggedIn = true;
 		}
 		if (event.getSource() == btnRetrieve) {
@@ -235,7 +236,7 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 			new Thread() {
 
 				public void run() {
-					for (CtxIdentifier ctxIdentifier : GoogleMapsService.this.dataIDs){
+					for (CtxIdentifier ctxIdentifier : BBCNewsService.this.dataIDs){
 						System.out.println("btnRetrieve: "+ctxIdentifier.getUri());
 						try {
 							CtxAttribute ctxAttribute = (CtxAttribute) ctxBroker.retrieve(myID, ctxIdentifier).get();
@@ -287,9 +288,9 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 						}
 					}
 					
-					lblLoggedIn.setText("<html><p>You are logged in as "+userID.getBareJid()+"</p></html>");
+					lblLoggedIn.setText("You are logged in as "+userID.getBareJid());
 					setLabelsVisible();
-					GoogleMapsService.this.logging.debug("Exiting thread");
+					BBCNewsService.this.logging.debug("Exiting thread");
 				}
 			}.start();
 		}
@@ -392,6 +393,7 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 				e.printStackTrace();
 			}
 		}
+		
 		
 	}
 

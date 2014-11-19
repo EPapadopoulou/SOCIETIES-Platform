@@ -202,7 +202,7 @@ public class DObfPrivacyPreferenceManager extends EventListener{
 
 	public boolean storeDObfPreference(DObfPreferenceDetailsBean details,
 			DObfPreferenceTreeModel model) throws PrivacyException {
-		if(model.getDetails().equals(details)){
+		if(PrivacyPreferenceUtils.equals(model.getDetails(), details)){
 			try {
 				CtxAttributeIdentifier ctxAttributeIdentifier = new CtxAttributeIdentifier(details.getResource().getDataIdUri());
 				ctxAttributeIdentifier = CtxIDChanger.changeIDOwner(userIdentity.getBareJid(), ctxAttributeIdentifier);

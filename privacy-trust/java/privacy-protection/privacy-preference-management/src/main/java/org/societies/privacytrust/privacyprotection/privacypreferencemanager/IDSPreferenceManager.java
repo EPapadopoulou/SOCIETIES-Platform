@@ -45,6 +45,7 @@ import org.societies.privacytrust.privacyprotection.api.model.privacypreference.
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.PrivacyPreference;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IDSPrivacyPreferenceTreeModel;
 import org.societies.privacytrust.privacyprotection.api.model.privacypreference.ids.IdentitySelectionPreferenceOutcome;
+import org.societies.privacytrust.privacyprotection.api.util.PrivacyPreferenceUtils;
 import org.societies.privacytrust.privacyprotection.privacypreferencemanager.evaluation.PreferenceEvaluator;
 
 /**
@@ -400,7 +401,7 @@ public class IDSPreferenceManager {
 
 	public boolean storeIDSPreference(IDSPreferenceDetailsBean details,
 			IDSPrivacyPreferenceTreeModel model) throws PrivacyException {
-		if (model.getDetails().equals(details)){
+		if (PrivacyPreferenceUtils.equals(model.getDetails(), details)){
 			return this.privPrefMgr.getPrefCache().addIDSPreference(details, model);
 		}
 		

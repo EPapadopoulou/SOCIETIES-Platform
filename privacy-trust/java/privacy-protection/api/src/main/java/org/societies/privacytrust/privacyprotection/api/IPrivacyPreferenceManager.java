@@ -105,6 +105,12 @@ public interface IPrivacyPreferenceManager {
 	 */
 	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferences(RequestPolicy requestPolicy);
 
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesRequestorExact(RequestPolicy requestPolicy) throws PrivacyException;
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesRequestorIdOnly(RequestPolicy requestPolicy) throws PrivacyException;
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesNoRequestor(RequestPolicy requestPolicy) throws PrivacyException;
+	public HashMap<RequestItem,ResponseItem> evaluatePPNPreferencesRequestorIdAndSpecific(RequestPolicy requestPolicy) throws PrivacyException;
+	
+	
 	/**
 	 * Method to retrieve the evaluated outcome of identity selection preferences based on 
 	 * an agreement. 

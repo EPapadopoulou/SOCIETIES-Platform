@@ -42,5 +42,5 @@ public interface IIdentitySelection extends IIdentityMapper{
 	
 	public Hashtable<String, List<CtxIdentifier>> showIdentityCreationGUI(Agreement agreement);
 	
-	public IIdentity showIdentitySelectionGUI(List<IIdentity> identities, IIdentity recommendedIdentity);
+	public IIdentity showIdentitySelectionGUI(String providerFriendlyName, List<IIdentity> identities, IIdentity recommendedIdentity);
 }

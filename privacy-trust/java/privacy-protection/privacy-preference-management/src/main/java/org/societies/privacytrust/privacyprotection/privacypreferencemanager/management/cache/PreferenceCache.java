@@ -52,35 +52,34 @@ import org.societies.privacytrust.privacyprotection.privacypreferencemanager.man
  */
 public class PreferenceCache {
 
-	List<PPNCacheEntry> ppnList = new ArrayList<PPNCacheEntry>();
+	private List<PPNCacheEntry> ppnList = new ArrayList<PPNCacheEntry>();
 	List<AccCtrlCacheEntry> accCtrlList = new ArrayList<AccCtrlCacheEntry>();
 	List<IDSCacheEntry> idsList = new ArrayList<IDSCacheEntry>();
 	List<AttrSelCacheEntry> attrSelList = new ArrayList<AttrSelCacheEntry>();
 	List<DObfCacheEntry> dobfList = new ArrayList<DObfCacheEntry>();
-	private PreferenceRetriever retriever;
 	private PreferenceStorer storer;
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	private PrivacyPreferenceManager privPrefMgr;
 	private final IIdentity userIdentity;
+
 	public PreferenceCache(PrivacyPreferenceManager privPrefMgr) {
 		this.privPrefMgr = privPrefMgr;
 		this.userIdentity = privPrefMgr.getIdm().getThisNetworkNode();
-	
-		retriever = new PreferenceRetriever(this.privPrefMgr);
+
 		storer = new PreferenceStorer(this.privPrefMgr);
 		try {
 			List<CtxIdentifier> list = privPrefMgr.getCtxBroker().lookup(this.userIdentity, CtxModelType.ENTITY, CtxTypes.PRIVACY_PREFERENCE).get();
 			for (CtxIdentifier ctxEntityID : list){
 				CtxEntity ctxEntity = (CtxEntity) privPrefMgr.getCtxBroker().retrieve(ctxEntityID).get();
-				
+
 				this.loadPPNPreferences(ctxEntity.getAttributes(CtxTypes.PPN_PREFERENCE));
-				
+
 				this.loadAccCtrlPreferences(ctxEntity.getAttributes(CtxTypes.ACC_CTRL_PREFERENCE));
-				
+
 				this.loadAttrSelPreferences(ctxEntity.getAttributes(CtxTypes.ATTR_SEL_PREFERENCE));
-				
+
 				this.loadIDSPreferences(ctxEntity.getAttributes(CtxTypes.IDS_PREFERENCE));
-				
+
 				this.loadDObfPreferences(ctxEntity.getAttributes(CtxTypes.DOBF_PREFERENCE));
 			}
 		} catch (InterruptedException e) {
@@ -121,7 +120,7 @@ public class PreferenceCache {
 			}
 		}
 	}	
-	
+
 	private void loadAccCtrlPreferences(Set<CtxAttribute> attributes) {
 		for (CtxAttribute ctxAttribute : attributes){
 			CtxAttributeIdentifier locationCtxID = ctxAttribute.getId();
@@ -144,6 +143,7 @@ public class PreferenceCache {
 	}
 
 	private void loadAttrSelPreferences(Set<CtxAttribute> attributes) {
+
 		for (CtxAttribute ctxAttribute : attributes){
 			CtxAttributeIdentifier locationCtxID = ctxAttribute.getId();
 			try {
@@ -218,28 +218,29 @@ public class PreferenceCache {
 		}
 		PPNPrivacyPreferenceTreeModelBean bean = PrivacyPreferenceUtils.toPPNPrivacyPreferenceTreeModelBean(model);
 
-		for (PPNCacheEntry entry : ppnList){
-			if (entry.equalsDetails(details)){
-				entry.setModel(model);
-				return storer.storeExisting(entry.getLocationCtxID(), bean);
+		synchronized (ppnList) {
+			for (PPNCacheEntry entry : ppnList){
+				if (entry.equalsDetails(details)){
+					entry.setModel(model);
+					return storer.storeExisting(entry.getLocationCtxID(), bean);
+				}
 			}
-		}
+			//entry not found, adding new entry and storing new attribute in DB.
 
-		//entry not found, adding new entry and storing new attribute in DB.
+			try {
+				CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.PPN_PREFERENCE);
+				if (locationCtxID == null){
+					throw new PrivacyException("Error storing new ppn preference in DB");
+				}
+				PPNCacheEntry entry = new PPNCacheEntry(details, model, locationCtxID);
+				this.ppnList.add(entry);
+				return true;
 
-		try {
-			CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.PPN_PREFERENCE);
-			if (locationCtxID == null){
-				throw new PrivacyException("Error storing new ppn preference in DB");
+			} catch (PrivacyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
 			}
-			PPNCacheEntry entry = new PPNCacheEntry(details, model, locationCtxID);
-			this.ppnList.add(entry);
-			return true;
-
-		} catch (PrivacyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
 		}
 	}
 
@@ -253,28 +254,31 @@ public class PreferenceCache {
 
 		IDSPrivacyPreferenceTreeModelBean bean = PrivacyPreferenceUtils.toIDSPreferenceTreeModelBean(model);
 
-		for (IDSCacheEntry entry : this.idsList){
-			if (entry.equalsDetails(details)){
-				entry.setModel(model);
-				return storer.storeExisting(entry.getLocationCtxID(), bean);
+		synchronized (idsList) {
+
+
+			for (IDSCacheEntry entry : this.idsList){
+				if (entry.equalsDetails(details)){
+					entry.setModel(model);
+					return storer.storeExisting(entry.getLocationCtxID(), bean);
+				}
+			}
+			//entry not found, adding new entry and storing new attribute in DB.
+
+			try {
+				CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.IDS_PREFERENCE);
+				if (locationCtxID == null){
+					throw new PrivacyException("Error storing new ids preference in DB");
+				}
+				IDSCacheEntry entry = new IDSCacheEntry(details, model, locationCtxID);
+				this.idsList.add(entry);
+				return true;
+			} catch (PrivacyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
 			}
 		}
-		//entry not found, adding new entry and storing new attribute in DB.
-
-		try {
-			CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.IDS_PREFERENCE);
-			if (locationCtxID == null){
-				throw new PrivacyException("Error storing new ids preference in DB");
-			}
-			IDSCacheEntry entry = new IDSCacheEntry(details, model, locationCtxID);
-			this.idsList.add(entry);
-			return true;
-		} catch (PrivacyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-
 	}
 
 	public boolean addDObfPreference(DObfPreferenceDetailsBean details, DObfPreferenceTreeModel model){
@@ -287,27 +291,29 @@ public class PreferenceCache {
 
 		DObfPrivacyPreferenceTreeModelBean bean = PrivacyPreferenceUtils.toDObfPrivacyPreferenceTreeModelBean(model);
 
-		for (DObfCacheEntry entry : this.dobfList){
-			if (entry.equalsDetails(details)){
-				entry.setModel(model);
-				return storer.storeExisting(entry.getLocationCtxID(), bean);
+		synchronized(dobfList){
+			for (DObfCacheEntry entry : this.dobfList){
+				if (entry.equalsDetails(details)){
+					entry.setModel(model);
+					return storer.storeExisting(entry.getLocationCtxID(), bean);
+				}
 			}
-		}
-		//entry not found, adding new entry and storing new attribute in DB.
+			//entry not found, adding new entry and storing new attribute in DB.
 
-		try {
-			CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.DOBF_PREFERENCE);
-			if (locationCtxID == null){
-				throw new PrivacyException("Error storing new dobf preference in DB");
+			try {
+				CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.DOBF_PREFERENCE);
+				if (locationCtxID == null){
+					throw new PrivacyException("Error storing new dobf preference in DB");
+				}
+
+				DObfCacheEntry entry = new DObfCacheEntry(details, model, locationCtxID);
+				this.dobfList.add(entry);
+				return true;
+			} catch (PrivacyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
 			}
-
-			DObfCacheEntry entry = new DObfCacheEntry(details, model, locationCtxID);
-			this.dobfList.add(entry);
-			return true;
-		} catch (PrivacyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
 		}
 	}
 
@@ -321,27 +327,29 @@ public class PreferenceCache {
 
 		AccessControlPreferenceTreeModelBean bean = PrivacyPreferenceUtils.toAccessControlPreferenceTreeModelBean(model);
 
-		for (AccCtrlCacheEntry entry : this.accCtrlList){
-			if (entry.equalsDetails(details)){
-				entry.setModel(model);
-				return storer.storeExisting(entry.getLocationCtxID(), bean);
+		synchronized (accCtrlList) {
+			for (AccCtrlCacheEntry entry : this.accCtrlList){
+				if (entry.equalsDetails(details)){
+					entry.setModel(model);
+					return storer.storeExisting(entry.getLocationCtxID(), bean);
+				}
 			}
-		}
-		//entry not found, adding new entry and storing new attribute in DB.
+			//entry not found, adding new entry and storing new attribute in DB.
 
-		try {
-			CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.ACC_CTRL_PREFERENCE);
-			if (locationCtxID==null){
-				throw new PrivacyException("Error storing new accCtrl preference in DB");
-			}
+			try {
+				CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.ACC_CTRL_PREFERENCE);
+				if (locationCtxID==null){
+					throw new PrivacyException("Error storing new accCtrl preference in DB");
+				}
 
-			AccCtrlCacheEntry entry = new AccCtrlCacheEntry(details, model, locationCtxID);
-			this.accCtrlList.add(entry);
-			return true;
-		} catch (PrivacyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
+				AccCtrlCacheEntry entry = new AccCtrlCacheEntry(details, model, locationCtxID);
+				this.accCtrlList.add(entry);
+				return true;
+			} catch (PrivacyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}	
 		}
 	}
 
@@ -354,439 +362,481 @@ public class PreferenceCache {
 		}	
 		AttributeSelectionPreferenceTreeModelBean bean = PrivacyPreferenceUtils.toAttributeSelectionPreferenceTreeModelBean(model);
 
-		for (AttrSelCacheEntry entry : this.attrSelList){
-			if (entry.equalsDetails(details)){
-				entry.setModel(model);
-				return storer.storeExisting(entry.getLocationCtxID(), bean);
+		synchronized (attrSelList) {
+			for (AttrSelCacheEntry entry : this.attrSelList){
+				if (entry.equalsDetails(details)){
+					entry.setModel(model);
+					return storer.storeExisting(entry.getLocationCtxID(), bean);
+				}
 			}
-		}
-		//entry not found, adding new entry and storing new attribute in DB.
+			//entry not found, adding new entry and storing new attribute in DB.
 
-		try {
-			CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.ATTR_SEL_PREFERENCE);
-			if (locationCtxID == null){
-				throw new PrivacyException("Error storing new attrSel preference in DB.");
-			}
-			AttrSelCacheEntry entry = new AttrSelCacheEntry(details, model, locationCtxID);
-			this.attrSelList.add(entry);
-			return true;
-		} catch (PrivacyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
+			try {
+				CtxAttributeIdentifier locationCtxID = storer.storeNewPreference(bean, CtxTypes.ATTR_SEL_PREFERENCE);
+				if (locationCtxID == null){
+					throw new PrivacyException("Error storing new attrSel preference in DB.");
+				}
+				AttrSelCacheEntry entry = new AttrSelCacheEntry(details, model, locationCtxID);
+				this.attrSelList.add(entry);
+				return true;
+			} catch (PrivacyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}	
 		}
 	}
 
 	public PPNPrivacyPreferenceTreeModel getPPNPreference(PPNPreferenceDetailsBean details){
-		for (PPNCacheEntry entry : this.ppnList){
-			this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));
-			if (entry.equalsDetails(details)){
-				return entry.getModel();
+		synchronized (ppnList) {
+			for (PPNCacheEntry entry : this.ppnList){
+				this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));
+				if (entry.equalsDetails(details)){
+					return entry.getModel();
+				}
 			}
+			this.logging.debug("Could not find PPN preference with details: "+PrivacyPreferenceUtils.toString(details));
+			return null;
 		}
-		this.logging.debug("Could not find PPN preference with details: "+PrivacyPreferenceUtils.toString(details));
-		return null;
 	}
 
 	public IDSPrivacyPreferenceTreeModel getIDSPreference(IDSPreferenceDetailsBean details){
-		for (IDSCacheEntry entry : this.idsList){
-			this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));
-			if (entry.equalsDetails(details)){
-				return entry.getModel();
+		synchronized (idsList) {
+			for (IDSCacheEntry entry : this.idsList){
+				this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));
+				if (entry.equalsDetails(details)){
+					return entry.getModel();
+				}
 			}
+			this.logging.debug("Could not find IDS preference with details: "+PrivacyPreferenceUtils.toString(details));
+			return null;
 		}
-		this.logging.debug("Could not find IDS preference with details: "+PrivacyPreferenceUtils.toString(details));
-		return null;
 	}
 
 	public DObfPreferenceTreeModel getDObfPreference(DObfPreferenceDetailsBean details){
-		for (DObfCacheEntry entry : this.dobfList){
-			this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));
-			if (entry.equalsDetails(details)){
-				return entry.getModel();
+		synchronized (dobfList) {
+			for (DObfCacheEntry entry : this.dobfList){
+				this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));
+				if (entry.equalsDetails(details)){
+					return entry.getModel();
+				}
 			}
+			this.logging.debug("Could not find DOBF preference with details: "+PrivacyPreferenceUtils.toString(details));
+			return null;	
 		}
-		this.logging.debug("Could not find DOBF preference with details: "+PrivacyPreferenceUtils.toString(details));
-		return null;
 	}
 
 	public AccessControlPreferenceTreeModel getAccCtrlPreference(AccessControlPreferenceDetailsBean details){
-		for (AccCtrlCacheEntry entry : this.accCtrlList){
-			this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));			
-			if (entry.equalsDetails(details)){
-				return entry.getModel();
+		synchronized (accCtrlList) {
+			for (AccCtrlCacheEntry entry : this.accCtrlList){
+				this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));			
+				if (entry.equalsDetails(details)){
+					return entry.getModel();
+				}
 			}
+			this.logging.debug("Could not find ACCCTRL preference with details: "+PrivacyPreferenceUtils.toString(details));
+			return null;	
 		}
-		this.logging.debug("Could not find ACCCTRL preference with details: "+PrivacyPreferenceUtils.toString(details));
-		return null;
 	}
 
 	public AttributeSelectionPreferenceTreeModel getAttrSelPreference(AttributeSelectionPreferenceDetailsBean details){
-		for (AttrSelCacheEntry entry : this.attrSelList){
-			this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));
-			if (entry.equalsDetails(details)){
-				return entry.getModel();
+		synchronized (attrSelList) {
+			for (AttrSelCacheEntry entry : this.attrSelList){
+				this.logging.debug("Comparing "+PrivacyPreferenceUtils.toString(details)+" with "+PrivacyPreferenceUtils.toString(entry.getDetails()));
+				if (entry.equalsDetails(details)){
+					return entry.getModel();
+				}
 			}
+			this.logging.debug("Could not find ATTRSEL preference with details: "+PrivacyPreferenceUtils.toString(details));
+			return null;	
 		}
-		this.logging.debug("Could not find ATTRSEL preference with details: "+PrivacyPreferenceUtils.toString(details));
-		return null;
 	}
 
 	public boolean removePPNPreference(PPNPreferenceDetailsBean details){
 		if (details==null){
 			throw new NullPointerException("Trying to remove ppn preference with null details");	
 		}
-		for (PPNCacheEntry entry : this.ppnList){
-			if (entry.equalsDetails(details)){
-				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-				try {
-					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-					if (ctxModelObject == null){
-						return false;
+		synchronized (ppnList) {
+			for (PPNCacheEntry entry : this.ppnList){
+				if (entry.equalsDetails(details)){
+					CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+					try {
+						CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+						if (ctxModelObject == null){
+							return false;
+						}
+						return ppnList.remove(entry);
+
+
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CtxException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					return ppnList.remove(entry);
-
-
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (CtxException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
 			}
+			return false;	
 		}
-		return false;
 	}
 
 	public boolean removeIDSPreference(IDSPreferenceDetailsBean details){
 		if (details==null){
 			throw new NullPointerException("Trying to remove ids preference with null details");	
 		}
-		for (IDSCacheEntry entry : this.idsList){
-			if (entry.equalsDetails(details)){
-				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-				try {
-					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-					if (ctxModelObject == null){
-						return false;
-					}
+		synchronized (idsList) {
+			for (IDSCacheEntry entry : this.idsList){
+				if (entry.equalsDetails(details)){
+					CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+					try {
+						CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+						if (ctxModelObject == null){
+							return false;
+						}
 
-					return idsList.remove(entry);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (CtxException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+						return idsList.remove(entry);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CtxException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
+			return false;	
 		}
-		return false;
 	}
 
 	public boolean removeDObfPreference(DObfPreferenceDetailsBean details){
 		if (details==null){
 			throw new NullPointerException("Trying to remove dobf preference with null details");	
 		}
-		for (DObfCacheEntry entry : this.dobfList){
-			if (entry.equalsDetails(details)){
-				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-				try {
-					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-					if (ctxModelObject==null){
-						return false;
-					}
-					return dobfList.remove(entry);
+		synchronized (dobfList) {
+			for (DObfCacheEntry entry : this.dobfList){
+				if (entry.equalsDetails(details)){
+					CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+					try {
+						CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+						if (ctxModelObject==null){
+							return false;
+						}
+						return dobfList.remove(entry);
 
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (CtxException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CtxException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
+			return false;	
 		}
-		return false;
 	}
 
 	public boolean removeAccCtrlPreference(AccessControlPreferenceDetailsBean details){
 		if (details==null){
 			throw new NullPointerException("Trying to remove accCtrl preference with null details");	
 		}
-		for (AccCtrlCacheEntry entry : this.accCtrlList){
-			if (entry.equalsDetails(details)){
-				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-				try {
-					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-					if (ctxModelObject==null){
-						return false;
-					}
-					return accCtrlList.remove(entry);
+		synchronized (accCtrlList) {
+			for (AccCtrlCacheEntry entry : this.accCtrlList){
+				if (entry.equalsDetails(details)){
+					CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+					try {
+						CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+						if (ctxModelObject==null){
+							return false;
+						}
+						return accCtrlList.remove(entry);
 
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (CtxException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CtxException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
+			return false;	
 		}
-		return false;
 	}
 
 	public boolean removeAttSelPreference(AttributeSelectionPreferenceDetailsBean details){
 		if (details==null){
 			throw new NullPointerException("Trying to remove attrSel preference with null details");	
 		}
-		for (AttrSelCacheEntry entry : this.attrSelList){
-			if (entry.equalsDetails(details)){
-				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-				try {
-					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-					if (ctxModelObject==null){
-						return false;
-					}
-					return this.attrSelList.remove(entry);
+		synchronized (attrSelList) {
+			for (AttrSelCacheEntry entry : this.attrSelList){
+				if (entry.equalsDetails(details)){
+					CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+					try {
+						CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+						if (ctxModelObject==null){
+							return false;
+						}
+						return this.attrSelList.remove(entry);
 
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (CtxException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CtxException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
+			return false;	
 		}
-		return false;
 	}
 
 	public List<PPNPreferenceDetailsBean> getPPNPreferenceDetails(){
 		List<PPNPreferenceDetailsBean> list = new ArrayList<PPNPreferenceDetailsBean>();
-		for (PPNCacheEntry entry : ppnList){
-			list.add(entry.getDetails());
+		synchronized (ppnList) {
+			for (PPNCacheEntry entry : ppnList){
+				list.add(entry.getDetails());
+			}
+			return list;	
 		}
-		return list;
 	}
 
 	public List<IDSPreferenceDetailsBean> getIDSPreferenceDetails(){
 
 		List<IDSPreferenceDetailsBean> list = new ArrayList<IDSPreferenceDetailsBean>();
-		for (IDSCacheEntry entry : idsList){
-			list.add(entry.getDetails());
+		synchronized (idsList) {
+			for (IDSCacheEntry entry : idsList){
+				list.add(entry.getDetails());
+			}
+			return list;	
 		}
-		return list;
 	}
 
 	public List<DObfPreferenceDetailsBean> getDObfPreferenceDetails(){
 
 		List<DObfPreferenceDetailsBean> list = new ArrayList<DObfPreferenceDetailsBean>();
 
-		for (DObfCacheEntry entry : dobfList){
-			list.add(entry.getDetails());
+		synchronized (dobfList) {
+			for (DObfCacheEntry entry : dobfList){
+				list.add(entry.getDetails());
+			}
+			return list;	
 		}
-		return list;
 	}
 
 	public List<AccessControlPreferenceDetailsBean> getAccCtrlPreferenceDetails(){
 
 		List<AccessControlPreferenceDetailsBean> list = new ArrayList<AccessControlPreferenceDetailsBean>();
-		for (AccCtrlCacheEntry entry : this.accCtrlList){
-			list.add(entry.getDetails());
+		synchronized (accCtrlList) {
+			for (AccCtrlCacheEntry entry : this.accCtrlList){
+				list.add(entry.getDetails());
+			}
+			return list;	
 		}
-		return list;
 	}
 
 	public List<AttributeSelectionPreferenceDetailsBean> getAttrSelPreferenceDetails(){
 
 		List<AttributeSelectionPreferenceDetailsBean> list = new ArrayList<AttributeSelectionPreferenceDetailsBean>();
-		for (AttrSelCacheEntry entry : this.attrSelList){
-			list.add(entry.getDetails());
+		synchronized (attrSelList) {
+			for (AttrSelCacheEntry entry : this.attrSelList){
+				list.add(entry.getDetails());
+			}
+			return list;	
 		}
-		return list;
 	}
 
 	public boolean removePPNPreferences(){
 		boolean removed = true;
-		
-		PPNCacheEntry[] entriesArray = new PPNCacheEntry[ppnList.size()];
-		ppnList.toArray(entriesArray);
-		for (PPNCacheEntry entry : entriesArray){
 
-			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-			try {
-				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-				if (ctxModelObject == null){
+		synchronized (ppnList) {
+			PPNCacheEntry[] entriesArray = new PPNCacheEntry[ppnList.size()];
+			ppnList.toArray(entriesArray);
+			for (PPNCacheEntry entry : entriesArray){
+
+				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+				try {
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+					if (ctxModelObject == null){
+						removed = false;
+					}else{
+						ppnList.remove(entry);
+					}
+
+				} catch (InterruptedException e) {
 					removed = false;
-				}else{
-					ppnList.remove(entry);
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
+				} catch (CtxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
 				}
-
-			} catch (InterruptedException e) {
-				removed = false;
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
-			} catch (CtxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
 			}
+
+			return removed;	
 		}
-		
-		return removed;
-		
+
 	}
 
 	public boolean removeIDSPreferences(){
 		boolean removed = true;
-		IDSCacheEntry[] entriesArray = new IDSCacheEntry[idsList.size()];
-		idsList.toArray(entriesArray);
-		for (IDSCacheEntry entry : entriesArray){
+		synchronized (idsList) {
+			IDSCacheEntry[] entriesArray = new IDSCacheEntry[idsList.size()];
+			idsList.toArray(entriesArray);
+			for (IDSCacheEntry entry : entriesArray){
 
-			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-			try {
-				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-				if (ctxModelObject == null){
+				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+				try {
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+					if (ctxModelObject == null){
+						removed = false;
+					}else{
+						idsList.remove(entry);
+					}
+
+				} catch (InterruptedException e) {
 					removed = false;
-				}else{
-					idsList.remove(entry);
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
+				} catch (CtxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
 				}
-
-			} catch (InterruptedException e) {
-				removed = false;
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
-			} catch (CtxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
 			}
+
+			return removed;	
 		}
-		
-		return removed;
 	}
 
 	public boolean removeDObfPreferences(){
 		boolean removed = true;
-		DObfCacheEntry[] entriesArray = new DObfCacheEntry[dobfList.size()];
-		dobfList.toArray(entriesArray);
-		for (DObfCacheEntry entry : entriesArray){
+		synchronized (dobfList) {
+			DObfCacheEntry[] entriesArray = new DObfCacheEntry[dobfList.size()];
+			dobfList.toArray(entriesArray);
+			for (DObfCacheEntry entry : entriesArray){
 
-			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-			try {
-				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-				if (ctxModelObject == null){
+				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+				try {
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+					if (ctxModelObject == null){
+						removed = false;
+					}else{
+						dobfList.remove(entry);
+					}
+
+				} catch (InterruptedException e) {
 					removed = false;
-				}else{
-					dobfList.remove(entry);
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
+				} catch (CtxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
 				}
-
-			} catch (InterruptedException e) {
-				removed = false;
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
-			} catch (CtxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
 			}
+
+			return removed;	
 		}
-		
-		return removed;
 	}
 
 	public boolean removeAccCtrlPreferences(){
 		boolean removed = true;
-		AccCtrlCacheEntry[] entriesArray = new AccCtrlCacheEntry[accCtrlList.size()];
-		accCtrlList.toArray(entriesArray);
-		for (AccCtrlCacheEntry entry : entriesArray){
+		synchronized (accCtrlList) {
+			AccCtrlCacheEntry[] entriesArray = new AccCtrlCacheEntry[accCtrlList.size()];
+			accCtrlList.toArray(entriesArray);
+			for (AccCtrlCacheEntry entry : entriesArray){
 
-			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-			try {
-				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-				if (ctxModelObject == null){
+				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+				try {
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+					if (ctxModelObject == null){
+						removed = false;
+					}else{
+						accCtrlList.remove(entry);
+					}
+
+				} catch (InterruptedException e) {
 					removed = false;
-				}else{
-					accCtrlList.remove(entry);
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
+				} catch (CtxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
 				}
-
-			} catch (InterruptedException e) {
-				removed = false;
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
-			} catch (CtxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
 			}
+
+			return removed;	
 		}
-		
-		return removed;
 	}
 
 	public boolean removeAttSelPreferences(){
 		boolean removed = true;
-		AttrSelCacheEntry[] entriesArray = new AttrSelCacheEntry[attrSelList.size()];
-		attrSelList.toArray(entriesArray);
-		for (AttrSelCacheEntry entry : entriesArray){
+		synchronized (attrSelList) {
+			AttrSelCacheEntry[] entriesArray = new AttrSelCacheEntry[attrSelList.size()];
+			attrSelList.toArray(entriesArray);
+			for (AttrSelCacheEntry entry : entriesArray){
 
-			CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
-			try {
-				CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
-				if (ctxModelObject == null){
+				CtxAttributeIdentifier locationCtxID = entry.getLocationCtxID();
+				try {
+					CtxModelObject ctxModelObject = privPrefMgr.getCtxBroker().remove(locationCtxID).get();
+					if (ctxModelObject == null){
+						removed = false;
+					}else{
+						attrSelList.remove(entry);
+					}
+
+				} catch (InterruptedException e) {
 					removed = false;
-				}else{
-					attrSelList.remove(entry);
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
+				} catch (CtxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					removed = false;
 				}
-
-			} catch (InterruptedException e) {
-				removed = false;
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
-			} catch (CtxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				removed = false;
 			}
+
+			return removed;	
 		}
-		
-		return removed;
 	}
 }

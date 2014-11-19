@@ -100,27 +100,24 @@ public class NegotiationClient implements INegotiationClient {
 	private Hashtable<RequestorBean, ResponsePolicy> myPolicies;
 	private Hashtable<RequestorBean, Agreement> agreements;
 	private IPrivacyAgreementManagerInternal policyAgreementMgr;
-	private IPrivacyDataManagerInternal privacyDataManager;
-	private IPrivacyPolicyManager privacyPolicyManager;
 	private IIdentitySelection idS;
 	private IPrivacyPreferenceManager privPrefMgr;
 	private IIdentityManager idm;
 	private IIdentity userIdentity;
 	private IUserFeedback userFeedback;
 	private NegotiationDetailsBean details;
+	private boolean automatic = false;
 
 	public NegotiationClient(INegotiationAgent negotiationAgent,
 			PrivacyPolicyNegotiationManager privacyPolicyNegotiationManager) {
 		this.negotiationAgentRemote = negotiationAgent;
 		this.policyMgr = privacyPolicyNegotiationManager;
-		this.privacyPolicyManager = privacyPolicyNegotiationManager
-				.getPrivacyPolicyManager();
+
 		this.ctxBroker = privacyPolicyNegotiationManager.getCtxBroker();
 		this.eventMgr = privacyPolicyNegotiationManager.getEventMgr();
 		this.policyAgreementMgr = privacyPolicyNegotiationManager
 				.getPrivacyAgreementManagerInternal();
-		this.privacyDataManager = privacyPolicyNegotiationManager
-				.getPrivacyDataManagerInternal();
+
 		this.idS = privacyPolicyNegotiationManager.getIdentitySelection();
 		this.privPrefMgr = privacyPolicyNegotiationManager
 				.getPrivacyPreferenceManager();
@@ -174,8 +171,9 @@ public class NegotiationClient implements INegotiationClient {
 		 * After the user edits the policy, we get the ResponsePolicy and send it back to the provider.
 		 */
 		//JOptionPane.showMessageDialog(null, "Generating response policy");
-		ClientResponsePolicyGenerator gen = new ClientResponsePolicyGenerator();
-		ResponsePolicy responsePolicyGenerated = gen.generatePolicy(this.policyMgr,details, policy);
+		ClientResponsePolicyGenerator gen = new ClientResponsePolicyGenerator(this.policyMgr,details, policy);
+		ResponsePolicy responsePolicyGenerated = gen.generatePolicy();
+		this.automatic = gen.isAutomatic();
 		if (responsePolicyGenerated==null){
 			if (details.getRequestor() instanceof RequestorServiceBean){
 				RequestorServiceBean requestor = (RequestorServiceBean) details.getRequestor();
@@ -257,7 +255,7 @@ public class NegotiationClient implements INegotiationClient {
 			ResponsePolicy finalResponsePolicy = checker.checkResponse(myResponsePolicy, policy);
 			if (null!=finalResponsePolicy) {
 				this.logging.debug("ResponsePolicy is OK, creating agreement");
-				
+
 				this.setFinalIdentity(policy, policy.getRequestor());
 
 			} else {
@@ -275,16 +273,44 @@ public class NegotiationClient implements INegotiationClient {
 		}
 
 	}
+	private String getFriendlyNameOfService(RequestorBean requestor) {
+		if (requestor instanceof RequestorServiceBean){
+			ServiceResourceIdentifier serviceID = ((RequestorServiceBean) requestor).getRequestorServiceId();
+			if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("hwu")){
+				return "HWU Campus Guide";
+			}else if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("google")){
+				return "Google Venue Finder ";
+			}else if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("bbc")){
+				return "BBC News Service";
+			}else if (ServiceModelUtils.serviceResourceIdentifierToString(serviceID).contains("itunes")){
+				return "iTunes Music Service";
+			}
+		}
+		return requestor.getRequestorId();
+	}
 	private IIdentity getIdentity(Agreement agreement, List<IIdentity> list){
-		
+
 
 		IIdentity recommendedIdentity = privPrefMgr.evaluateIDSPreferences(agreement, list );
-		
+
+		if (automatic && recommendedIdentity!=null){
+			List<CtxIdentifier> ctxIDList = idS.getLinkedAttributes(recommendedIdentity);
+			for (CtxIdentifier ctxID : ctxIDList){
+				for (ResponseItem item : agreement.getRequestedItems()){
+					CtxIdentifier newCtxID = CtxIDChanger.changeIDOwner(recommendedIdentity.getBareJid(), (CtxAttributeIdentifier) ctxID);
+					if (item.getRequestItem().getResource().getDataType().equalsIgnoreCase(newCtxID.getType())){
+						item.getRequestItem().getResource().setDataIdUri(newCtxID.getUri());
+					}
+				}
+			}
+
+			return recommendedIdentity;
+		}
 		if (list.size()==0){
-			
+
 			//create new identity
 			Hashtable<String, List<CtxIdentifier>> identityInformation = idS.showIdentityCreationGUI(agreement);
-			
+
 			if (identityInformation.isEmpty()){
 				return null;
 			}
@@ -295,7 +321,7 @@ public class NegotiationClient implements INegotiationClient {
 
 			IIdentity identity = idS.createIdentity(idName, ctxIDList);
 
-			
+
 			for (CtxIdentifier ctxID : ctxIDList){
 				CtxIdentifier newCtxID = CtxIDChanger.changeIDOwner(identity.getBareJid(), (CtxAttributeIdentifier) ctxID);
 				System.out.println("Replaced owner in ctxID:"+newCtxID.getOwnerId()+" full ID: "+newCtxID.getUri());
@@ -315,33 +341,34 @@ public class NegotiationClient implements INegotiationClient {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 			return identity;
 		}else{
 			//select from identity list
 			List<IIdentity> identities = new ArrayList<IIdentity>();
-			
-			
-			
-			IIdentity identity = idS.showIdentitySelectionGUI(list, recommendedIdentity);
+
+
+
+			IIdentity identity = idS.showIdentitySelectionGUI(getFriendlyNameOfService(agreement.getRequestor()), list, recommendedIdentity);
 			if(identity==null){
 				return getIdentity(agreement, new ArrayList<IIdentity>());
 			}
-			
+
 			List<CtxIdentifier> ctxIDList = idS.getLinkedAttributes(identity);
 			for (CtxIdentifier ctxID : ctxIDList){
 				for (ResponseItem item : agreement.getRequestedItems()){
-					if (item.getRequestItem().getResource().getDataType().equalsIgnoreCase(ctxID.getType())){
-						item.getRequestItem().getResource().setDataIdUri(ctxID.getUri());
+					CtxIdentifier newCtxID = CtxIDChanger.changeIDOwner(identity.getBareJid(), (CtxAttributeIdentifier) ctxID);
+					if (item.getRequestItem().getResource().getDataType().equalsIgnoreCase(newCtxID.getType())){
+						item.getRequestItem().getResource().setDataIdUri(newCtxID.getUri());
 					}
 				}
 			}
-			
+
 			return identity;
 		}
 	}
-	
-/*	private IIdentity selectIdentity(Agreement agreement) {
+
+	/*	private IIdentity selectIdentity(Agreement agreement) {
 		List<IIdentityOption> idOptions = this.idS.processIdentityContext(agreement);
 
 		List<IIdentity> list = new ArrayList<IIdentity>();
@@ -349,12 +376,12 @@ public class NegotiationClient implements INegotiationClient {
 			list.add(option.getReferenceIdentity());
 		}
 		IIdentity recommendedIdentity = this.privPrefMgr.evaluateIDSPreferences(agreement, list );
-		
+
 		if (idOptions.size()==0){
-			
+
 			//create new identity
 			Hashtable<String, List<CtxIdentifier>> identityInformation = this.idS.showIdentityCreationGUI(agreement);
-			
+
 			if (identityInformation.isEmpty()){
 				return selectIdentity(agreement);
 			}
@@ -365,7 +392,7 @@ public class NegotiationClient implements INegotiationClient {
 
 			IIdentity identity = this.idS.createIdentity(idName, ctxIDList);
 
-			
+
 			for (CtxIdentifier ctxID : ctxIDList){
 				CtxIdentifier newCtxID = CtxIDChanger.changeOwner(identity.getBareJid(), (CtxAttributeIdentifier) ctxID);
 				this.logging.debug("Replaced owner in ctxID:"+newCtxID.getOwnerId()+" full ID: "+newCtxID.getUri());
@@ -385,7 +412,7 @@ public class NegotiationClient implements INegotiationClient {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 			return identity;
 		}else{
 			//select from identity list
@@ -393,13 +420,13 @@ public class NegotiationClient implements INegotiationClient {
 			for (IIdentityOption option : idOptions){
 				identities.add(option.getReferenceIdentity());
 			}
-			
-			
+
+
 			IIdentity identity = this.idS.showIdentitySelectionGUI(identities, recommendedIdentity);
 			if(identity==null){
 				return selectIdentity(agreement);
 			}
-			
+
 			List<CtxIdentifier> ctxIDList = this.idS.getLinkedAttributes(identity);
 			for (CtxIdentifier ctxID : ctxIDList){
 				for (ResponseItem item : agreement.getRequestedItems()){
@@ -408,10 +435,10 @@ public class NegotiationClient implements INegotiationClient {
 					}
 				}
 			}
-			
 
-			
-			
+
+
+
 			return identity;
 		}
 	}*/
@@ -436,25 +463,26 @@ public class NegotiationClient implements INegotiationClient {
 
 
 			// this.privacyCallback.setInitialAgreement(agreement);
-			
+
 			Agreement agreement = new Agreement();
-			
+
 			agreement.setRequestedItems(policy.getResponseItems());
 			agreement.setRequestor(policy.getRequestor());
 			List<IIdentityOption> idOptions = idS.processIdentityContext(agreement);
 
-			List<IIdentity> list = new ArrayList<IIdentity>();
+			List<IIdentity> matchingIdentities = new ArrayList<IIdentity>();
 			for (IIdentityOption option: idOptions){
-				list.add(option.getReferenceIdentity());
+				matchingIdentities.add(option.getReferenceIdentity());
 			}
 			IIdentity selectedIdentity = null;
 			while (selectedIdentity==null){
-				selectedIdentity = getIdentity(agreement, list);
+				selectedIdentity = getIdentity(agreement, matchingIdentities);
 			}
+
 			agreement.setUserIdentity(selectedIdentity.getBareJid());
 			this.logging.debug("Identity selected: "+ selectedIdentity.getJid());
 			this.agreements.put(policy.getRequestor(), agreement);
-			
+
 			//Agreement agreement = this.agreements.get(requestor);
 			agreement.setUserIdentity(selectedIdentity.getJid());
 			// agreement.setUserPublicDPI(this.IDM.getPublicDigitalPersonalIdentifier());
@@ -546,7 +574,7 @@ public class NegotiationClient implements INegotiationClient {
 	}
 
 	private void startNegotiation() {
-
+		automatic = false;
 		RequestorBean requestor = details.getRequestor();
 		this.logging.debug("Starting negotiation. NegotiationID: "
 				+ details.getNegotiationID() + " with: "
@@ -679,6 +707,7 @@ public class NegotiationClient implements INegotiationClient {
 	@Override
 	public void startPrivacyPolicyNegotiation(NegotiationDetailsBean details,
 			RequestPolicy policy) {
+		automatic = false;
 		this.details = details;
 		this.logging.debug("Starting new negotiation (id:"
 				+ details.getNegotiationID() + ") with: "

@@ -134,27 +134,27 @@ public class HWUService extends JFrame implements ActionListener, CtxChangeEvent
 		imagePanel.add(lblYourProfile);
 		
 		lblName = new JLabel("name");
-		lblName.setBounds(160, 193, 254, 30);
+		lblName.setBounds(172, 193, 242, 30);
 		imagePanel.add(lblName);
 		
 		lblName1 = new JLabel("Name:");
-		lblName1.setBounds(46, 193, 103, 30);
+		lblName1.setBounds(46, 193, 116, 30);
 		imagePanel.add(lblName1);
 		
 		lblDob1 = new JLabel("Date of Birth:");
-		lblDob1.setBounds(46, 229, 103, 30);
+		lblDob1.setBounds(46, 229, 116, 30);
 		imagePanel.add(lblDob1);
 		
 		lblDoB = new JLabel("DoB");
-		lblDoB.setBounds(160, 229, 254, 30);
+		lblDoB.setBounds(172, 229, 242, 30);
 		imagePanel.add(lblDoB);
 		
 		lblEmailAddress = new JLabel("Email address:");
-		lblEmailAddress.setBounds(46, 270, 103, 30);
+		lblEmailAddress.setBounds(46, 270, 116, 30);
 		imagePanel.add(lblEmailAddress);
 		
 		lblEmail = new JLabel("Email");
-		lblEmail.setBounds(160, 270, 254, 30);
+		lblEmail.setBounds(172, 270, 242, 30);
 		imagePanel.add(lblEmail);
 		
 		lblLoggedIn = new JLabel("New label");
@@ -162,11 +162,11 @@ public class HWUService extends JFrame implements ActionListener, CtxChangeEvent
 		imagePanel.add(lblLoggedIn);
 		
 		lblCurrentLocation = new JLabel("Current location:");
-		lblCurrentLocation.setBounds(46, 311, 103, 30);
+		lblCurrentLocation.setBounds(46, 311, 116, 30);
 		imagePanel.add(lblCurrentLocation);
 		
 		lblLoc = new JLabel("loc");
-		lblLoc.setBounds(160, 311, 254, 30);
+		lblLoc.setBounds(172, 311, 242, 48);
 		imagePanel.add(lblLoc);
 		btnRetrieve.addActionListener(this);
 

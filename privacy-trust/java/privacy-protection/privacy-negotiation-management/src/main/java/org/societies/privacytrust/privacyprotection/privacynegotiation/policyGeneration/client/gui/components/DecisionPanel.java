@@ -28,7 +28,7 @@ public class DecisionPanel extends JPanel {
 		this.decision = decision;
 		
 		tglbtnNewToggleButton = new JToggleButton("Allow Access");
-		tglbtnNewToggleButton.setBounds(0, 0, 127, 23);
+		tglbtnNewToggleButton.setBounds(0, 0, 127, 26);
 		
 		tglbtnNewToggleButton.setSelected(true);
 		tglbtnNewToggleButton.addActionListener(btnActionListener);

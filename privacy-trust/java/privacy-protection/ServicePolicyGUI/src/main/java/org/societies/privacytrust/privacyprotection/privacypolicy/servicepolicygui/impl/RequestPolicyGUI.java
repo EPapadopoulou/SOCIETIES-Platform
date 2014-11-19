@@ -374,18 +374,6 @@ implements ActionListener, WindowListener
 			}
 			else
 			{
-				String s = null;
-				while (null==s){
-					s = (String)JOptionPane.showInputDialog(
-							RequestPolicyGUI.this,
-							"Please enter the purpose for which you request this data type",
-							"Purpose",
-							JOptionPane.QUESTION_MESSAGE,
-							null,
-							null,
-							"");
-				}
-				requestItem.setPurpose(s);
 				this.reqEditor.dispose();
 				this.reqEditor = null;
 				this.requestItems.add(requestItem);

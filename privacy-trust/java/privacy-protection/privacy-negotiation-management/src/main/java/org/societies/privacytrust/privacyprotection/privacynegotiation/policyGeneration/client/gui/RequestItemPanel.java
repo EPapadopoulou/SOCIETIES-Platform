@@ -1,17 +1,21 @@
 package org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Decision;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
+
+
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components.ConditionsPanel;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components.DecisionPanel;
 import org.societies.privacytrust.privacyprotection.privacynegotiation.policyGeneration.client.gui.components.PurposePanel;
@@ -37,40 +41,48 @@ public class RequestItemPanel extends JPanel {
 		
 		this.item = requestItem;
 		this.firstRound = firstRound;
-		setBorder(new EtchedBorder(EtchedBorder.RAISED, null, null));
+		String string = "    Conditions for accessing: "+requestItem.getResource().getDataType()+"    ";
+		
+		
+		TitledBorder titledBorder = new TitledBorder(null, string, TitledBorder.LEADING, TitledBorder.TOP, null, null);
+		
+		titledBorder.setTitleFont(new Font("Tahoma", Font.BOLD, 14));
+		titledBorder.setTitleColor(new Color(10,29,139));
+		setBorder(titledBorder);
 		
 		setLayout(null);
 		setBounds(0,0, 760, 387);
 		JLabel lblPurpose = new JLabel("Purpose");
-		lblPurpose.setBounds(17, 15, 60, 16);
+		lblPurpose.setBounds(18, 32, 100, 16);
 		add(lblPurpose);
 		
 		PurposePanel purposePanel = new PurposePanel(requestItem.getPurpose());
-		purposePanel.setBounds(97, 11, 650, 27);
+		lblPurpose.setLabelFor(purposePanel);
+		purposePanel.setBounds(120, 30, 650, 27);
 		add(purposePanel);
 		purposePanel.setLayout(null);
 		WebSeparator separator_1 = new WebSeparator(WebSeparator.HORIZONTAL);
-		separator_1.setBounds(2, 45, 756, 3);
+		separator_1.setBounds(3, 57, 756, 3);
 		
 		separator_1.setDrawSideLines(false);//new JSeparator(JSeparator.HORIZONTAL);
 		add(separator_1);
 		
 		JLabel lblConditions = new JLabel("Conditions");
-		lblConditions.setBounds(17, 137, 60, 14);
+		lblConditions.setBounds(18, 149, 100, 14);
 		add(lblConditions);
 		
 		conditionsPanel = new ConditionsPanel(requestItem, responseItem, firstRound);
 		lblConditions.setLabelFor(conditionsPanel);
-		conditionsPanel.setBounds(97, 55, 650, 200);
+		conditionsPanel.setBounds(120, 67, 650, 200);
 		add(conditionsPanel);
 		
 		WebSeparator separator_2 = new WebSeparator(WebSeparator.HORIZONTAL);
-		separator_2.setBounds(2, 266, 796, 3);
+		separator_2.setBounds(3, 278, 747, 3);
 		separator_2.setDrawSideLines(false);
 		add(separator_2);
 		
 		JLabel lblDecision = new JLabel("Decision");
-		lblDecision.setBounds(17, 287, 63, 14);
+		lblDecision.setBounds(18, 299, 100, 14);
 		add(lblDecision);
 		
 		Decision decision = Decision.PERMIT;
@@ -81,20 +93,20 @@ public class RequestItemPanel extends JPanel {
 		ToggleButtonActionListener btnActionListener = new ToggleButtonActionListener(this);
 		decisionPanel = new DecisionPanel(decision, btnActionListener);
 		lblDecision.setLabelFor(decisionPanel);
-		decisionPanel.setBounds(94, 280, 152, 30);
+		decisionPanel.setBounds(120, 292, 152, 26);
 		add(decisionPanel);
 		
 		WebSeparator separator_3 = new WebSeparator();
-		separator_3.setBounds(-1, 321, 748, 3);
+		separator_3.setBounds(0, 333, 748, 3);
 		separator_3.setDrawSideLines(false);
 		add(separator_3);
 		
 		JPanel panel = new JPanel();
-		panel.setBounds(97, 335, 650, 40);
+		panel.setBounds(5, 345, 745, 26);
 		add(panel);
 		
 		btnPersonalise = new JButton("Get Personalised Suggestions");
-		btnPersonalise.setBounds(0, 10, 223, 23);
+		btnPersonalise.setBounds(10, 0, 223, 26);
 		btnPersonalise.addActionListener(new PersonalisationActionListener());
 		panel.setLayout(null);
 		btnPersonalise.setToolTipText("Click here to apply your privacy preferences and get personalised suggestions for how to negotiate based on your previous negotiation interactions");
@@ -104,7 +116,7 @@ public class RequestItemPanel extends JPanel {
 		}
 		
 		btnRestoreChanges = new JButton("Restore changes");
-		btnRestoreChanges.setBounds(504, 10, 146, 23);
+		btnRestoreChanges.setBounds(600, 0, 140, 26);
 		btnRestoreChanges.addActionListener(new ResetActionListener());
 		btnRestoreChanges.setToolTipText("Click here to reset the form to view the original Request Policy without personalisation suggestions");
 		panel.add(btnRestoreChanges);

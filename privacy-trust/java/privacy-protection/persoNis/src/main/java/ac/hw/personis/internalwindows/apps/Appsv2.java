@@ -82,20 +82,26 @@ public class Appsv2 extends JInternalFrame {
 			InstalledApps.add(p2);
 		}
 		if (storeAppNames.contains(PersonisHelper.BBC_NEWS_APP)){
-			p3 = new AppButtonPanel(helper,helper.getBbcRequestor(), "/bbcnews.png", "BBC <br />News",detailspanel, false, PersonisHelper.BBC_NEWS_APP);
+			p3 = new AppButtonPanel(helper,helper.getBBCNewsRequestor(), "/bbcnews.png", "BBC <br />News",detailspanel, false, PersonisHelper.BBC_NEWS_APP);
 			AvailApps.add(p3);
 		}else{
-			p3 = new AppButtonPanel(helper,helper.getBbcRequestor(), "/bbcnews.png", "BBC <br />News",detailspanel, true, PersonisHelper.BBC_NEWS_APP);
+			p3 = new AppButtonPanel(helper,helper.getBBCNewsRequestor(), "/bbcnews.png", "BBC <br />News",detailspanel, true, PersonisHelper.BBC_NEWS_APP);
 			InstalledApps.add(p3);
 		}
-		if (storeAppNames.contains(PersonisHelper.ITUNES_MUSIC_APP)){
+		if (storeAppNames.contains(PersonisHelper.BBC_WEATHER_APP)){
+			p4 = new AppButtonPanel(helper,helper.getBbcWeatherRequestor(), "/bbcweather.png", "BBC <br /> Weather",detailspanel, false, PersonisHelper.BBC_WEATHER_APP);
+			AvailApps.add(p4);
+		}else{
+			p4 = new AppButtonPanel(helper,helper.getBbcWeatherRequestor(), "/bbcweather.png", "BBC <br /> Weather",detailspanel, true, PersonisHelper.BBC_WEATHER_APP);
+			InstalledApps.add(p4);
+		}
+/*		if (storeAppNames.contains(PersonisHelper.ITUNES_MUSIC_APP)){
 			p4 = new AppButtonPanel(helper,helper.getItunesRequestor(), "/itunesapp.png", "iTunes",detailspanel, false, PersonisHelper.ITUNES_MUSIC_APP);
 			AvailApps.add(p4);
 		}else{
 			p4 = new AppButtonPanel(helper,helper.getItunesRequestor(), "/itunesapp.png", "iTunes",detailspanel, true, PersonisHelper.ITUNES_MUSIC_APP);
 			InstalledApps.add(p4);
-		}
-
+		}*/
 
 		//pnlmain.add(p1);
 

@@ -61,7 +61,8 @@ import ac.hw.personis.dataInit.policies.XMLPolicyReader;
 import ac.hw.personis.event.NegotiationListener;
 import ac.hw.personis.internalwindows.apps.Appsv2;
 import ac.hw.personis.internalwindows.apps.ImagePanel;
-import ac.hw.personis.services.BBCService;
+import ac.hw.personis.services.BBCNewsService;
+import ac.hw.personis.services.BBCWeatherService;
 import ac.hw.personis.services.GoogleMapsService;
 import ac.hw.personis.services.HWUService;
 
@@ -85,8 +86,10 @@ public class PersonisHelper {
 	private Application application;
 	private RequestorServiceBean googleRequestor;
 	private RequestorServiceBean hwuRequestor;
-	private RequestorServiceBean bbcRequestor;
-	private RequestorServiceBean itunesRequestor;
+	private RequestorServiceBean bbcNewsRequestor;
+	private RequestorServiceBean bbcWeatherRequestor;
+	//private RequestorServiceBean itunesRequestor;
+	
 	private Logger logging = LoggerFactory.getLogger(this.getClass());
 	private Appsv2 appsPage;
 	
@@ -94,7 +97,8 @@ public class PersonisHelper {
 	public static final String HWU_CAMPUS_GUIDE_APP = "HWU Campus Guide App";
 	public static final String GOOGLE_VENUE_FINDER = "Google Venue finder";
 	public static final String BBC_NEWS_APP = "BBC News App";
-	public static final String ITUNES_MUSIC_APP = "iTunes Music Service";
+	public static final String BBC_WEATHER_APP = "BBC Weather App";
+	//public static final String ITUNES_MUSIC_APP = "iTunes Music Service";
 	
 	
 	private Hashtable<String, List<String>> requestDataTypesPerService; 
@@ -105,7 +109,8 @@ public class PersonisHelper {
 	private List<String> installedApps;
 	private GoogleMapsService googleService;
 	private HWUService hwuService;
-	private BBCService bbcService;
+	private BBCNewsService bbcNewsService;
+	private BBCWeatherService bbcWeatherService;
 
 	public PersonisHelper(){
 
@@ -115,28 +120,35 @@ public class PersonisHelper {
 		this.requestDataTypesPerService = new Hashtable<String, List<String>>();
 		this.identityPerService = new Hashtable<String, IIdentity>();
 		ServiceResourceIdentifier serviceIDGoogle = ServiceModelUtils.generateServiceResourceIdentifierFromString("GoogleVenueFinder www.google.com/venueFinder");
-		String googleId = "venueFinder.google.com";
+		String googleId = "www.google.com";
 		googleRequestor = new RequestorServiceBean();
 		googleRequestor.setRequestorId(googleId);
 		googleRequestor.setRequestorServiceId(serviceIDGoogle);
 
 		ServiceResourceIdentifier serviceIDHWU = ServiceModelUtils.generateServiceResourceIdentifierFromString("HWUCampusGuide www.hw.ac.uk/campusGuideApp");
-		String hwuId = "campusGuide.hw.ac.uk";
+		String hwuId = "www.hw.ac.uk";
 		hwuRequestor = new RequestorServiceBean();
 		hwuRequestor.setRequestorId(hwuId);
 		hwuRequestor.setRequestorServiceId(serviceIDHWU);    	
 
-		ServiceResourceIdentifier serviceIDBBC = ServiceModelUtils.generateServiceResourceIdentifierFromString("BBCNews www.bbc.co.uk/news");
-		String bbcId = "news.bbc.co.uk";
-		bbcRequestor = new RequestorServiceBean();
-		bbcRequestor.setRequestorId(bbcId);
-		bbcRequestor.setRequestorServiceId(serviceIDBBC);    	
+		ServiceResourceIdentifier serviceIDBBCNews = ServiceModelUtils.generateServiceResourceIdentifierFromString("BBCNews www.bbc.co.uk/news");
+		String bbcId = "bbc.co.uk";
+		bbcNewsRequestor = new RequestorServiceBean();
+		bbcNewsRequestor.setRequestorId(bbcId);
+		bbcNewsRequestor.setRequestorServiceId(serviceIDBBCNews);    	
 
-		ServiceResourceIdentifier serviceIDiTunes = ServiceModelUtils.generateServiceResourceIdentifierFromString("iTunes www.apple.com/iTunes");
+		ServiceResourceIdentifier serviceIDBBCWeather = ServiceModelUtils.generateServiceResourceIdentifierFromString("BBCWeather www.bbc.co.uk/weather");
+		bbcWeatherRequestor = new RequestorServiceBean();
+		bbcWeatherRequestor.setRequestorId(bbcId);
+		bbcWeatherRequestor.setRequestorServiceId(serviceIDBBCWeather);    	
+
+				
+		
+/*		ServiceResourceIdentifier serviceIDiTunes = ServiceModelUtils.generateServiceResourceIdentifierFromString("iTunes www.apple.com/iTunes");
 		String iTunesId = "itunes.apple.com";
 		itunesRequestor = new RequestorServiceBean();
 		itunesRequestor.setRequestorId(iTunesId);
-		itunesRequestor.setRequestorServiceId(serviceIDiTunes);    	
+		itunesRequestor.setRequestorServiceId(serviceIDiTunes);    */	
 
 				
 	}
@@ -203,10 +215,10 @@ public class PersonisHelper {
 				this.logging.debug(printPolicyDetails(hwuPolicy));
 			}
 			
-			RequestPolicy bbcPolicy = this.privacyPolicyManager.getPrivacyPolicy(bbcRequestor);
+			RequestPolicy bbcPolicy = this.privacyPolicyManager.getPrivacyPolicy(bbcNewsRequestor);
 			if (null==bbcPolicy){
 				//bbcPolicy = createPolicy(bbcRequestor, BBC_NEWS_APP);
-				bbcPolicy = getBBCPolicy();
+				bbcPolicy = getBBCNewsPolicy();
 				this.logging.debug(printPolicyDetails(bbcPolicy));
 				Hashtable<String,ConditionRanges> ranges = RangesBBC.getRanges(bbcPolicy);
 				this.privacyPolicyManager.updatePrivacyPolicy(bbcPolicy, ranges);
@@ -223,24 +235,24 @@ public class PersonisHelper {
 				this.logging.debug(printPolicyDetails(bbcPolicy));
 			}
 			
-			RequestPolicy itunesPolicy = this.privacyPolicyManager.getPrivacyPolicy(itunesRequestor);
-			if (null==itunesPolicy){
+			RequestPolicy bbcWeatherPolicy = this.privacyPolicyManager.getPrivacyPolicy(bbcWeatherRequestor);
+			if (null==bbcWeatherPolicy){
 				//itunesPolicy = createPolicy(itunesRequestor, ITUNES_MUSIC_APP);
-				itunesPolicy = getITunesPolicy();
-				this.logging.debug(printPolicyDetails(itunesPolicy));
-				Hashtable<String,ConditionRanges> ranges = RangesITunes.getRanges(itunesPolicy);
-				this.privacyPolicyManager.updatePrivacyPolicy(itunesPolicy, ranges);
+				bbcWeatherPolicy = getBBCWeatherPolicy();
+				this.logging.debug(printPolicyDetails(bbcWeatherPolicy));
+				Hashtable<String,ConditionRanges> ranges = RangesBBC.getRanges(bbcWeatherPolicy);
+				this.privacyPolicyManager.updatePrivacyPolicy(bbcWeatherPolicy, ranges);
 				Enumeration<String> keys = ranges.keys();
 				List<String> requestedDataTypes = new ArrayList<String>();
 				while (keys.hasMoreElements()){
 					String dataType = keys.nextElement();
 					requestedDataTypes.add(dataType);
 				}
-				this.requestDataTypesPerService.put(ITUNES_MUSIC_APP, requestedDataTypes);
-				this.logging.debug("Updated privacy policy for itunes");
+				this.requestDataTypesPerService.put(BBC_WEATHER_APP, requestedDataTypes);
+				this.logging.debug("Updated privacy policy for BBC Weather");
 			}else{
-				logging.debug("PrivacyPolicyManager already has policy for iTunes:");
-				logging.debug(printPolicyDetails(itunesPolicy));
+				logging.debug("PrivacyPolicyManager already has policy for BBC Weather:");
+				logging.debug(printPolicyDetails(bbcWeatherPolicy));
 			}
 		} catch (PrivacyException e) {
 			// TODO Auto-generated catch block
@@ -268,14 +280,14 @@ public class PersonisHelper {
 			this.requestDataTypesPerService.put(HWU_CAMPUS_GUIDE_APP, dataTypes);
 			identityPerService.put(HWU_CAMPUS_GUIDE_APP, this.commsMgr.getIdManager().fromJid(agreement.getUserIdentity()));
 			agreementsTable.put(HWU_CAMPUS_GUIDE_APP, agreement);
-		}else if (RequestorUtils.equals(agreement.getRequestor(), this.bbcRequestor)){
+		}else if (RequestorUtils.equals(agreement.getRequestor(), this.bbcNewsRequestor)){
 			this.requestDataTypesPerService.put(BBC_NEWS_APP, dataTypes);
 			identityPerService.put(BBC_NEWS_APP, this.commsMgr.getIdManager().fromJid(agreement.getUserIdentity()));
 			agreementsTable.put(BBC_NEWS_APP, agreement);
-		}else if (RequestorUtils.equals(agreement.getRequestor(), this.itunesRequestor)){
-			this.requestDataTypesPerService.put(ITUNES_MUSIC_APP, dataTypes);	
-			identityPerService.put(ITUNES_MUSIC_APP, this.commsMgr.getIdManager().fromJid(agreement.getUserIdentity()));
-			agreementsTable.put(ITUNES_MUSIC_APP, agreement);
+		}else if (RequestorUtils.equals(agreement.getRequestor(), this.bbcWeatherRequestor)){
+			this.requestDataTypesPerService.put(BBC_WEATHER_APP, dataTypes);	
+			identityPerService.put(BBC_WEATHER_APP, this.commsMgr.getIdManager().fromJid(agreement.getUserIdentity()));
+			agreementsTable.put(BBC_WEATHER_APP, agreement);
 		}
 	}
 	
@@ -293,14 +305,14 @@ public class PersonisHelper {
 		policy.setRequestor(googleRequestor);
 		return policy;
 	}
-	private RequestPolicy getBBCPolicy(){
+	private RequestPolicy getBBCNewsPolicy(){
 		XMLPolicyReader reader = new XMLPolicyReader(ctxBroker, this.commsMgr.getIdManager());
 		//File file = new File("policies\\bbc.xml");
 		//System.out.println(file.getAbsolutePath());
 		//RequestPolicy policy = reader.readPolicyFromFile(file);
 		InputStream resourceAsStream = this.getClass().getResourceAsStream("/policies/bbc.xml");
 		RequestPolicy policy = reader.readPolicyFromFile(resourceAsStream);
-		policy.setRequestor(bbcRequestor);
+		policy.setRequestor(bbcNewsRequestor);
 		return policy;
 	}
 	private RequestPolicy getHWUPolicy(){
@@ -313,14 +325,14 @@ public class PersonisHelper {
 		policy.setRequestor(hwuRequestor);
 		return policy;
 	}
-	private RequestPolicy getITunesPolicy(){
+	private RequestPolicy getBBCWeatherPolicy(){
 		XMLPolicyReader reader = new XMLPolicyReader(ctxBroker, this.commsMgr.getIdManager());
 //		File file = new File("policies\\itunes.xml");
 //		System.out.println(file.getAbsolutePath());
 //		RequestPolicy policy = reader.readPolicyFromFile(file);
-		InputStream resourceAsStream = this.getClass().getResourceAsStream("/policies/itunes.xml");
+		InputStream resourceAsStream = this.getClass().getResourceAsStream("/policies/bbc.xml");
 		RequestPolicy policy = reader.readPolicyFromFile(resourceAsStream);
-		policy.setRequestor(itunesRequestor);
+		policy.setRequestor(bbcWeatherRequestor);
 		return policy;
 	}
 	private RequestPolicy createPolicy(RequestorBean requestor, String friendly){
@@ -476,12 +488,20 @@ public class PersonisHelper {
 		return this.application;
 	}
 
-	public RequestorServiceBean getItunesRequestor() {
+	/*public RequestorServiceBean getItunesRequestor() {
 		return itunesRequestor;
+	}*/
+
+	public RequestorServiceBean getBBCNewsRequestor() {
+		return bbcNewsRequestor;
 	}
 
-	public RequestorServiceBean getBbcRequestor() {
-		return bbcRequestor;
+	public RequestorServiceBean getBbcWeatherRequestor() {
+		return bbcWeatherRequestor;
+	}
+
+	public void setBbcWeatherRequestor(RequestorServiceBean bbcWeatherRequestor) {
+		this.bbcWeatherRequestor = bbcWeatherRequestor;
 	}
 
 	public List<String> getStoreApps() {
@@ -505,10 +525,10 @@ public class PersonisHelper {
 				requestorName = GOOGLE_VENUE_FINDER;
 			}else if (RequestorUtils.equals(requestor, hwuRequestor)){
 				requestorName = HWU_CAMPUS_GUIDE_APP;
-			}else if (RequestorUtils.equals(requestor, bbcRequestor)){
+			}else if (RequestorUtils.equals(requestor, bbcNewsRequestor)){
 				requestorName = BBC_NEWS_APP;
-			}else if (RequestorUtils.equals(requestor, itunesRequestor)){
-				requestorName = ITUNES_MUSIC_APP;
+			}else if (RequestorUtils.equals(requestor, bbcWeatherRequestor)){
+				requestorName = BBC_WEATHER_APP;
 			}
 			String userIdentity = agreement.getUserIdentity();
 			if (table.containsKey(userIdentity)){
@@ -548,7 +568,7 @@ public class PersonisHelper {
 				storeApps.add(HWU_CAMPUS_GUIDE_APP);
 			}
 			
-			AgreementEnvelope envelope2 = this.privacyAgreementManager.getAgreement(RequestorUtils.toRequestor(bbcRequestor, this.commsMgr.getIdManager()));
+			AgreementEnvelope envelope2 = this.privacyAgreementManager.getAgreement(RequestorUtils.toRequestor(bbcNewsRequestor, this.commsMgr.getIdManager()));
 			if (null!=envelope2){
 				installedApps.add(BBC_NEWS_APP);
 				Agreement agreement = AgreementUtils.toAgreementBean(envelope2.getAgreement());
@@ -557,8 +577,17 @@ public class PersonisHelper {
 			}else{
 				storeApps.add(BBC_NEWS_APP);
 			}
+			AgreementEnvelope envelope3 = this.privacyAgreementManager.getAgreement(RequestorUtils.toRequestor(bbcWeatherRequestor, this.commsMgr.getIdManager()));
+			if (null!=envelope3){
+				installedApps.add(BBC_WEATHER_APP);
+				Agreement agreement = AgreementUtils.toAgreementBean(envelope3.getAgreement());
+				this.agreementsTable.put(BBC_WEATHER_APP, agreement);
+				this.identityPerService.put(BBC_WEATHER_APP, this.commsMgr.getIdManager().fromJid(agreement.getUserIdentity()));
+			}else{
+				storeApps.add(BBC_WEATHER_APP);
+			}
 			
-			AgreementEnvelope envelope3 = this.privacyAgreementManager.getAgreement(RequestorUtils.toRequestor(itunesRequestor, this.commsMgr.getIdManager()));
+			/*AgreementEnvelope envelope3 = this.privacyAgreementManager.getAgreement(RequestorUtils.toRequestor(itunesRequestor, this.commsMgr.getIdManager()));
 			if (null!=envelope3){
 				installedApps.add(ITUNES_MUSIC_APP);
 				Agreement agreement = AgreementUtils.toAgreementBean(envelope3.getAgreement());
@@ -566,7 +595,7 @@ public class PersonisHelper {
 				this.identityPerService.put(ITUNES_MUSIC_APP, this.commsMgr.getIdManager().fromJid(agreement.getUserIdentity()));
 			}else{
 				storeApps.add(ITUNES_MUSIC_APP);
-			}
+			}*/
 			
 		} catch (PrivacyException e) {
 			// TODO Auto-generated catch block
@@ -634,13 +663,22 @@ public class PersonisHelper {
 		}
 	}
 	
-	public void startBBCService(){
-		if (bbcService == null){
-			bbcService = new BBCService(this);
+	public void startBBCNewsService(){
+		if (bbcNewsService == null){
+			bbcNewsService = new BBCNewsService(this);
 		}else{
-			bbcService.setVisible(true);
-			bbcService.requestFocus();
+			bbcNewsService.setVisible(true);
+			bbcNewsService.requestFocus();
 		}
 		
+	}
+	
+	public void startBBCWeatherService(){
+		if (bbcWeatherService == null){
+			bbcWeatherService = new BBCWeatherService(this);
+		}else{
+			bbcWeatherService.setVisible(true);
+			bbcNewsService.requestFocus();
+		}
 	}
 }

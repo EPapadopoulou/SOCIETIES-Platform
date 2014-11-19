@@ -191,9 +191,7 @@ public class ConditionUtils {
 		// -- Verify obj type
 		Condition ro2 = (Condition) o2;
 		return (ConditionConstantsUtils.equal(o1.getConditionConstant(), ro2.getConditionConstant())
-				&& (StringUtils.equals(o1.getValue(), ro2.getValue()))
-				&& (dontCheckOptional || o1.isOptional() == ro2.isOptional())
-				);
+				&& (StringUtils.equals(o1.getValue(), ro2.getValue())));
 	}
 	@Deprecated
 	public static boolean equals(Condition o1, Object o2) {

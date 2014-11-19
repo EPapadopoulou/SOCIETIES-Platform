@@ -117,7 +117,7 @@ public class TrustGUI extends JInternalFrame {
 		/*
 		 * iTunes
 		 */
-		txtItunes = new JTextField();
+/*		txtItunes = new JTextField();
 		txtItunes.setText("0");
 		txtItunes.setEditable(false);
 		txtItunes.setColumns(10);
@@ -134,22 +134,22 @@ public class TrustGUI extends JInternalFrame {
 		sliderItunes.setPaintLabels(true);
 		sliderItunes.setMinorTickSpacing(1);
 		sliderItunes.setBounds(135, 484, 425, 23);
-		getContentPane().add(sliderItunes);
+		getContentPane().add(sliderItunes);*/
 			
 
 		AppButtonPanel p1 = new AppButtonPanel(helper, helper.getGoogleRequestor(), "/gvf.png", "Google Venue<br />Finder", PersonisHelper.GOOGLE_VENUE_FINDER);    	
 		AppButtonPanel p2 = new AppButtonPanel(helper,helper.getHwuRequestor(), "/hwucampus.png","HWU Campus<br />Guide", PersonisHelper.HWU_CAMPUS_GUIDE_APP);    	
-		AppButtonPanel p3 = new AppButtonPanel(helper,helper.getBbcRequestor(), "/bbcnews.png", "BBC <br />News", PersonisHelper.BBC_NEWS_APP);
-		AppButtonPanel p4 = new AppButtonPanel(helper,helper.getItunesRequestor(), "/itunesapp.png", "iTunes", PersonisHelper.ITUNES_MUSIC_APP);
+		AppButtonPanel p3 = new AppButtonPanel(helper,helper.getBBCNewsRequestor(), "/bbcnews.png", "BBC", PersonisHelper.BBC_NEWS_APP);
+		//AppButtonPanel p4 = new AppButtonPanel(helper,helper.getBbcWeatherRequestor(), "/itunesapp.png", "BBC <br /> Weather", PersonisHelper.BBC_WEATHER_APP);
 		p1.setLocation(20, 20);
 		p2.setLocation(20, 160);
 		p3.setLocation(20, 300);
-		p4.setLocation(20, 440);
+		//p4.setLocation(20, 440);
 		
 		getContentPane().add(p1);
 		getContentPane().add(p2);
 		getContentPane().add(p3);
-		getContentPane().add(p4);
+		//getContentPane().add(p4);
 		
 		JButton btnSave = new JButton("Save");
 		btnSave.addActionListener(new ActionListener() {
@@ -158,14 +158,14 @@ public class TrustGUI extends JInternalFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				Double googleValue = new Double(sliderGoogle.getValue());
 				Double hwuValue = new Double(sliderHWU.getValue());
-				Double bbcValue = new Double(sliderBBC.getValue());
-				Double itunesValue = new Double(sliderItunes.getValue());
+				Double bbcNewsValue = new Double(sliderBBC.getValue());
+				//Double itunesValue = new Double(sliderItunes.getValue());
 				
 				try {
 					saveTrustValue(TrustGUI.this.helper.getGoogleRequestor(), googleValue);
 					saveTrustValue(TrustGUI.this.helper.getHwuRequestor(), hwuValue);
-					saveTrustValue(TrustGUI.this.helper.getBbcRequestor(), bbcValue);
-					saveTrustValue(TrustGUI.this.helper.getItunesRequestor(), itunesValue);
+					saveTrustValue(TrustGUI.this.helper.getBBCNewsRequestor(), bbcNewsValue);
+					//saveTrustValue(TrustGUI.this.helper.getItunesRequestor(), itunesValue);
 				} catch (TrustException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -204,8 +204,8 @@ public class TrustGUI extends JInternalFrame {
 		try {
 			TrustQuery googleQuery = getQuery(TrustGUI.this.helper.getGoogleRequestor());
 			TrustQuery hwuQuery = getQuery(TrustGUI.this.helper.getHwuRequestor());
-			TrustQuery bbcQuery = getQuery(TrustGUI.this.helper.getBbcRequestor());
-			TrustQuery itunesQuery = getQuery(TrustGUI.this.helper.getItunesRequestor());
+			TrustQuery bbcQuery = getQuery(TrustGUI.this.helper.getBBCNewsRequestor());
+			//TrustQuery itunesQuery = getQuery(TrustGUI.this.helper.getItunesRequestor());
 			
 			Double googleValue = TrustGUI.this.helper.getTrustBroker().retrieveTrustValue(googleQuery).get();
 			sliderGoogle.setValue(googleValue.intValue());
@@ -213,8 +213,8 @@ public class TrustGUI extends JInternalFrame {
 			sliderHWU.setValue(hwuValue.intValue());
 			Double bbcValue = TrustGUI.this.helper.getTrustBroker().retrieveTrustValue(bbcQuery).get();
 			sliderBBC.setValue(bbcValue.intValue());
-			Double itunesValue = TrustGUI.this.helper.getTrustBroker().retrieveTrustValue(itunesQuery).get();
-			sliderItunes.setValue(itunesValue.intValue());
+//			Double itunesValue = TrustGUI.this.helper.getTrustBroker().retrieveTrustValue(itunesQuery).get();
+//			sliderItunes.setValue(itunesValue.intValue());
 			
 		} catch (MalformedTrustedEntityIdException e) {
 			// TODO Auto-generated catch block

@@ -1,160 +1,49 @@
 <RequestPolicy>
 	<Target>
 		<Resource>
-			<Attribute AttributeId="context"
-				DataType="http://www.w3.org/2001/XMLSchema#string">
-				<AttributeValue>locationSymbolic</AttributeValue>
-			</Attribute>
-		</Resource>
-		<Purpose>Your location is required to offer you services near you.
-		</Purpose>
-		<Action>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
-				<AttributeValue>READ</AttributeValue>
-			</Attribute>
-			<optional>false</optional>
-		</Action>
-		<Action>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
-				<AttributeValue>CREATE</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Action>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="DATA_RETENTION">12 hours</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="MAY_BE_INFERRED">yes</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="RIGHT_TO_OPTOUT">yes</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="SHARE_WITH_3RD_PARTIES">No sharing</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="STORE_IN_SECURE_STORAGE">no</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="RIGHT_TO_ACCESS_HELD_DATA">no</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="RIGHT_TO_CORRECT_INCORRECT_DATA">no</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Condition>
-		<optional>false</optional>
-	</Target>
-	<Target>
-		<Resource>
-			<Attribute AttributeId="context"
-				DataType="http://www.w3.org/2001/XMLSchema#string">
+			<Attribute AttributeId="context" DataType="http://www.w3.org/2001/XMLSchema#string">
 				<AttributeValue>name</AttributeValue>
 			</Attribute>
 		</Resource>
-		<Purpose>Your name is needed so you can be identified by your contacts.</Purpose>
+		<Purpose>We need your name to be able to address you personally when we need to contact you. </Purpose>
 		<Action>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
 				<AttributeValue>READ</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
 		</Action>
-		<Action>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
-				<AttributeValue>WRITE</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Action>
-		<Action>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
-				<AttributeValue>CREATE</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Action>
-		<Action>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
-				<AttributeValue>DELETE</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Action>
 		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="DATA_RETENTION">until account is deactivated
-				</AttributeValue>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="DATA_RETENTION">until account is deactivated</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="SHARE_WITH_3RD_PARTIES">anyone</AttributeValue>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="SHARE_WITH_3RD_PARTIES">3rd parties</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="RIGHT_TO_OPTOUT">no</AttributeValue>
-			</Attribute>
-			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="MAY_BE_INFERRED">yes</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="RIGHT_TO_OPTOUT">yes</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="STORE_IN_SECURE_STORAGE">yes</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="RIGHT_TO_ACCESS_HELD_DATA">yes</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="RIGHT_TO_CORRECT_INCORRECT_DATA">yes</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
@@ -163,135 +52,152 @@
 	</Target>
 	<Target>
 		<Resource>
-			<Attribute AttributeId="context"
-				DataType="http://www.w3.org/2001/XMLSchema#string">
+			<Attribute AttributeId="context" DataType="http://www.w3.org/2001/XMLSchema#string">
 				<AttributeValue>email</AttributeValue>
 			</Attribute>
 		</Resource>
-		<Purpose>We require your email so we can contact you.</Purpose>
+		<Purpose>We need your email address to be able to contact you and to use as your BBC iD.</Purpose>
 		<Action>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
 				<AttributeValue>READ</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
 		</Action>
 		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="DATA_RETENTION">until account is deactivated
-				</AttributeValue>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="DATA_RETENTION">until account is deactivated</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="RIGHT_TO_OPTOUT">no</AttributeValue>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="SHARE_WITH_3RD_PARTIES">3rd parties</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="MAY_BE_INFERRED">no</AttributeValue>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="MAY_BE_INFERRED">yes</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="RIGHT_TO_OPTOUT">yes</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="STORE_IN_SECURE_STORAGE">yes</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="RIGHT_TO_ACCESS_HELD_DATA">yes</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="RIGHT_TO_CORRECT_INCORRECT_DATA">yes</AttributeValue>
-			</Attribute>
-			<optional>false</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="SHARE_WITH_3RD_PARTIES">affiliated services
-				</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
 		</Condition>
 		<optional>false</optional>
 	</Target>
-
 	<Target>
 		<Resource>
-			<Attribute AttributeId="context"
-				DataType="http://www.w3.org/2001/XMLSchema#string">
+			<Attribute AttributeId="context" DataType="http://www.w3.org/2001/XMLSchema#string">
 				<AttributeValue>birthday</AttributeValue>
 			</Attribute>
 		</Resource>
-		<Purpose>Your birthday is required because you must confirm that you are	over 18 years old.</Purpose>
+		<Purpose>We need your date of birth to verify you are over 18 years old.</Purpose>
 		<Action>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
 				<AttributeValue>READ</AttributeValue>
 			</Attribute>
 			<optional>false</optional>
 		</Action>
 		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="DATA_RETENTION">30 minutes</AttributeValue>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="DATA_RETENTION">until account is deactivated</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="SHARE_WITH_3RD_PARTIES">3rd parties</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="MAY_BE_INFERRED">yes</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="RIGHT_TO_OPTOUT">yes</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="STORE_IN_SECURE_STORAGE">yes</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="RIGHT_TO_ACCESS_HELD_DATA">yes</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="RIGHT_TO_CORRECT_INCORRECT_DATA">yes</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Condition>
+		<optional>false</optional>
+	</Target>
+	<Target>
+		<Resource>
+			<Attribute AttributeId="context" DataType="http://www.w3.org/2001/XMLSchema#string">
+				<AttributeValue>locationSymbolic</AttributeValue>
+			</Attribute>
+		</Resource>
+		<Purpose>Your location is needed to present local news and other information we may find relevant to you. </Purpose>
+		<Action>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:action-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ActionConstants">
+				<AttributeValue>READ</AttributeValue>
+			</Attribute>
+			<optional>false</optional>
+		</Action>
+		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="DATA_RETENTION">until account is deactivated</AttributeValue>
 			</Attribute>
 			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="RIGHT_TO_OPTOUT">no</AttributeValue>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="SHARE_WITH_3RD_PARTIES">3rd parties</AttributeValue>
 			</Attribute>
 			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="MAY_BE_INFERRED">yes</AttributeValue>
 			</Attribute>
 			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="STORE_IN_SECURE_STORAGE">no</AttributeValue>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="RIGHT_TO_OPTOUT">yes</AttributeValue>
 			</Attribute>
 			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+				<AttributeValue DataType="STORE_IN_SECURE_STORAGE">yes</AttributeValue>
+			</Attribute>
+			<optional>true</optional>
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="RIGHT_TO_ACCESS_HELD_DATA">yes</AttributeValue>
 			</Attribute>
 			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
+		</Condition>		<Condition>
+			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id" DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
 				<AttributeValue DataType="RIGHT_TO_CORRECT_INCORRECT_DATA">yes</AttributeValue>
-			</Attribute>
-			<optional>true</optional>
-		</Condition>
-		<Condition>
-			<Attribute AttributeId="urn:oasis:names:tc:xacml:1.0:action:condition-id"
-				DataType="org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants">
-				<AttributeValue DataType="SHARE_WITH_3RD_PARTIES">affiliated services
-				</AttributeValue>
 			</Attribute>
 			<optional>true</optional>
 		</Condition>

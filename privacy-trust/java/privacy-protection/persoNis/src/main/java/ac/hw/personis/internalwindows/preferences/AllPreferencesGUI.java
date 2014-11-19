@@ -441,14 +441,20 @@ public class AllPreferencesGUI extends JInternalFrame {
 
 	private String getTitleString(RequestorBean requestor, Resource resource, boolean printCtxID){
 		StringBuilder sb = new StringBuilder();
-		sb.append("Requestor: ");
+		sb.append("Req: ");
 		if (requestor instanceof RequestorServiceBean){
-			if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getGoogleRequestor().getRequestorServiceId())){
+			sb.append(((RequestorServiceBean) requestor).getRequestorServiceId().getServiceInstanceIdentifier());
+			/*			if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getGoogleRequestor().getRequestorServiceId())){
 				sb.append(PersonisHelper.GOOGLE_VENUE_FINDER);
 			}else if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getHwuRequestor().getRequestorServiceId())){
 				sb.append(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
 			}else{
 				sb.append(ServiceModelUtils.serviceResourceIdentifierToString(((RequestorServiceBean) requestor).getRequestorServiceId()));
+			}
+			 */		
+		}else{
+			if (requestor!=null){
+			sb.append(requestor.getRequestorId());
 			}
 		}
 		sb.append("\t Resource: ");
@@ -464,15 +470,21 @@ public class AllPreferencesGUI extends JInternalFrame {
 
 	private String getPPNTitleString(RequestorBean requestor, Resource resource, ConditionConstants cc, boolean printCtxID){
 		StringBuilder sb = new StringBuilder();
-		sb.append("Requestor: ");
+		sb.append("Req: ");
 		if (requestor instanceof RequestorServiceBean){
-			if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getGoogleRequestor().getRequestorServiceId())){
+			sb.append(((RequestorServiceBean) requestor).getRequestorServiceId().getServiceInstanceIdentifier());
+			/*			if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getGoogleRequestor().getRequestorServiceId())){
 				sb.append(PersonisHelper.GOOGLE_VENUE_FINDER);
 			}else if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getHwuRequestor().getRequestorServiceId())){
 				sb.append(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
 			}else{
 				sb.append(ServiceModelUtils.serviceResourceIdentifierToString(((RequestorServiceBean) requestor).getRequestorServiceId()));
 			}
+			 */		
+		}else{
+			if (requestor!=null){
+				sb.append(requestor.getRequestorId());
+				}
 		}
 		sb.append("\t Resource: ");
 		sb.append(resource.getScheme()+"://");
@@ -488,15 +500,21 @@ public class AllPreferencesGUI extends JInternalFrame {
 	}
 	private String getIDSString(RequestorBean requestor, String identity){
 		StringBuilder sb = new StringBuilder();
-		sb.append("Requestor: ");
+		sb.append("Req: ");
 		if (requestor instanceof RequestorServiceBean){
-			if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getGoogleRequestor().getRequestorServiceId())){
+			sb.append(((RequestorServiceBean) requestor).getRequestorServiceId().getServiceInstanceIdentifier());
+			/*			if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getGoogleRequestor().getRequestorServiceId())){
 				sb.append(PersonisHelper.GOOGLE_VENUE_FINDER);
 			}else if (ServiceModelUtils.compare(((RequestorServiceBean) requestor).getRequestorServiceId(), this.personisHelper.getHwuRequestor().getRequestorServiceId())){
 				sb.append(PersonisHelper.HWU_CAMPUS_GUIDE_APP);
 			}else{
 				sb.append(ServiceModelUtils.serviceResourceIdentifierToString(((RequestorServiceBean) requestor).getRequestorServiceId()));
 			}
+			 */		
+		}else{
+			if (requestor!=null){
+				sb.append(requestor.getRequestorId());
+				}
 		}
 
 		sb.append("\t Identity: "+identity);

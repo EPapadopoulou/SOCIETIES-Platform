@@ -42,94 +42,125 @@ public class PPNPreferenceMerger {
 		// TODO Auto-generated constructor stub
 	}
 
-	public void notifyNegotiationResult(InternalEvent event){
-		this.logging.debug("Received event: name: "+event.geteventName()+" - type: "+event.geteventType());
-		if (event.geteventInfo() instanceof PPNegotiationEvent){
-			PPNegotiationEvent ppnEvent = (PPNegotiationEvent) event.geteventInfo();
-			Agreement agreement = ppnEvent.getAgreement();
-			this.logging.debug("Retrieved agreement from PPNegotiationEvent with "+agreement.getRequestedItems().size()+" requestItems");
+	public void notifyNegotiationResult(final InternalEvent event){
+		new Thread() {
+
+			public void run() {
+				try{
+					logging.debug("Received event: name: "+event.geteventName()+" - type: "+event.geteventType());
+					if (event.geteventInfo() instanceof PPNegotiationEvent){
+						PPNegotiationEvent ppnEvent = (PPNegotiationEvent) event.geteventInfo();
+						Agreement agreement = ppnEvent.getAgreement();
+						logging.debug("Retrieved agreement from PPNegotiationEvent with "+agreement.getRequestedItems().size()+" requestItems");
 
 
-			ITrustBroker trustBroker = this.privacyPreferenceManager.getTrustBroker();
-			RequestorBean requestor = agreement.getRequestor();
+						ITrustBroker trustBroker = privacyPreferenceManager.getTrustBroker();
+						RequestorBean requestor = agreement.getRequestor();
 
 
-			try {
-				TrustedEntityId trusteeID = new TrustedEntityId(TrustedEntityType.SVC, requestor.getRequestorId());
+						try {
+							TrustedEntityId trusteeID = new TrustedEntityId(TrustedEntityType.SVC, requestor.getRequestorId());
 
-				TrustedEntityId trustorID = new TrustedEntityId(TrustedEntityType.CSS, this.privacyPreferenceManager.getCommsMgr().getIdManager().getThisNetworkNode().getBareJid());
-				TrustQuery trustQuery = new TrustQuery(trustorID);
-				trustQuery.setTrusteeId(trusteeID);
-				Double trustValue = trustBroker.retrieveTrustValue(trustQuery).get();
+							TrustedEntityId trustorID = new TrustedEntityId(TrustedEntityType.CSS, privacyPreferenceManager.getCommsMgr().getIdManager().getThisNetworkNode().getBareJid());
+							TrustQuery trustQuery = new TrustQuery(trustorID);
+							trustQuery.setTrusteeId(trusteeID);
+							Double trustValue = trustBroker.retrieveTrustValue(trustQuery).get();
 
 
-				List<ResponseItem> responseItems = agreement.getRequestedItems();
+							List<ResponseItem> responseItems = agreement.getRequestedItems();
 
-				for (ResponseItem item : responseItems){
-					ResponseItem responseItem = ResponseItemUtils.copyOf(item);
-					responseItem = stripCtxIdentifiers(responseItem);
-					for (Condition condition : responseItem.getRequestItem().getConditions()){
+							for (ResponseItem item : responseItems){
+								Resource resource = new Resource();
+								resource.setDataType(item.getRequestItem().getResource().getDataType());
+								resource.setScheme(item.getRequestItem().getResource().getScheme());
+								ResponseItem responseItem = ResponseItemUtils.copyOf(item);
+								responseItem = stripCtxIdentifiers(responseItem);
+								for (Condition condition : responseItem.getRequestItem().getConditions()){
+									//requestor id and serviceId :
+									mergeAndStoreRequestorSpecific(requestor, resource, condition);
+									//requestor id only:
+									RequestorBean requestorIdOnly = new RequestorBean();
+									requestorIdOnly.setRequestorId(requestor.getRequestorId());
+									mergeAndStoreRequestorSpecific(requestorIdOnly, resource, condition);
 
-						PPNPreferenceDetailsBean details = new PPNPreferenceDetailsBean();
-						details.setRequestor(requestor);
-						details.setResource(responseItem.getRequestItem().getResource());
-						details.setCondition(condition.getConditionConstant());
+									//now merge and store requestor agnostic preferences
+									mergeAndStoreGeneric(trustValue, resource, condition);
+								}
+							}
 
-						this.logging.debug("Creating PPN preference with details: "+PrivacyPreferenceUtils.toString(details));
-						PPNPrivacyPreferenceTreeModel ppnPreference = this.privacyPreferenceManager.getPPNPreference(details);
-
-						PPNPrivacyPreferenceTreeModel model = null;
-						if (ppnPreference==null){
-							this.logging.debug("Creating new PPN preference with requestor");
-							model = createPPNPreference(requestor,responseItem.getRequestItem().getResource(), condition);
-						}else{
-
-							this.logging.debug("Merging PPN preference");
-							model = mergePPNPreference(requestor, responseItem.getRequestItem().getResource(), condition, ppnPreference);
+						} catch (MalformedTrustedEntityIdException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (TrustException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (PrivacyException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
 						}
 
-						if (model==null){
-							this.logging.debug("the model is null");
-						}
-						privacyPreferenceManager.storePPNPreference(details, model);
 
-
-						//now merge and store requestor agnostic preferences
-
-						PPNPreferenceDetailsBean copyOfDetails = PrivacyPreferenceUtils.copyOf(details);
-						copyOfDetails.setRequestor(null);
-						PPNPrivacyPreferenceTreeModel ppnPreference2 = this.privacyPreferenceManager.getPPNPreference(copyOfDetails);
-						PPNPrivacyPreferenceTreeModel model2 = null;
-						if (ppnPreference2==null){
-							this.logging.debug("Creating new PPN preference without requestor");
-							model2 = this.createPPNPreference(trustValue, responseItem.getRequestItem().getResource(), condition);
-						}else{
-							model2 = this.mergePPNPreference(trustValue, responseItem.getRequestItem().getResource(), condition, ppnPreference2);
-						}
-
-						privacyPreferenceManager.storePPNPreference(copyOfDetails, model2);
 					}
+				}catch(Exception exc){
+					exc.printStackTrace();
 				}
+			}}.start();
+	}
 
-			} catch (MalformedTrustedEntityIdException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (TrustException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (PrivacyException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	private void mergeAndStoreRequestorSpecific(RequestorBean requestor, Resource resource, Condition condition) throws PrivacyException{
+		this.logging.debug("\nmergeAndStoreRequestorSpecific: \n"+RequestorUtils.toString(requestor)+"\nResource: "+resource.getDataType()+" \nCondition:"+ConditionUtils.toString(condition));
+		PPNPreferenceDetailsBean details = new PPNPreferenceDetailsBean();
+		details.setRequestor(requestor);
+		details.setResource(resource);
+		details.setCondition(condition.getConditionConstant());
 
+		this.logging.debug("Creating PPN preference with details: "+PrivacyPreferenceUtils.toString(details));
+		PPNPrivacyPreferenceTreeModel ppnPreference = this.privacyPreferenceManager.getPPNPreference(details);
 
+		PPNPrivacyPreferenceTreeModel model = null;
+		if (ppnPreference==null){
+			this.logging.debug("Creating new PPN preference with requestor");
+			model = createPPNPreference(requestor,resource, condition);
+		}else{
+
+			this.logging.debug("Merging PPN preference");
+			model = mergePPNPreference(requestor, resource, condition, ppnPreference);
 		}
+
+		if (model==null){
+			this.logging.debug("the model is null");
+		}
+		privacyPreferenceManager.storePPNPreference(details, model);
+	}
+
+	private void mergeAndStoreGeneric(Double trustValue, Resource resource, Condition condition) throws PrivacyException{
+		this.logging.debug("\nmergeandStoreGeneric: \nTrustValue  = "+trustValue+" \nResource:"+resource.getDataType()+" \nCondition:"+ConditionUtils.toString(condition));
+		PPNPreferenceDetailsBean details = new PPNPreferenceDetailsBean();
+		details.setResource(resource);
+		details.setCondition(condition.getConditionConstant());
+		this.logging.debug("Creating PPN preference with details: "+PrivacyPreferenceUtils.toString(details));
+		PPNPrivacyPreferenceTreeModel ppnPreference = this.privacyPreferenceManager.getPPNPreference(details);
+
+		PPNPrivacyPreferenceTreeModel model = null;
+		if (ppnPreference==null){
+			this.logging.debug("Creating new PPN preference with requestor");
+			model = createPPNPreference(trustValue,resource, condition);
+		}else{
+
+			this.logging.debug("Merging PPN preference");
+			model = mergePPNPreference(trustValue, resource, condition, ppnPreference);
+		}
+
+		if (model==null){
+			this.logging.debug("the model is null");
+		}
+		privacyPreferenceManager.storePPNPreference(details, model);
 	}
 
 	private ResponseItem stripCtxIdentifiers(ResponseItem responseItem) {
@@ -149,7 +180,7 @@ public class PPNPreferenceMerger {
 	private PPNPrivacyPreferenceTreeModel mergePPNPreference(Double trustValue, Resource resource, Condition condition, PPNPrivacyPreferenceTreeModel ppnPreference) throws PrivacyException {
 		PrivacyPreferenceMerger merger = new PrivacyPreferenceMerger( this.privacyPreferenceManager);
 		return merger.mergePPNPreference(createPPNPreference(trustValue, resource, condition), ppnPreference);
-		
+
 	}
 	private PPNPrivacyPreferenceTreeModel createPPNPreference(RequestorBean requestor, Resource resource, Condition condition) throws PrivacyException {
 
