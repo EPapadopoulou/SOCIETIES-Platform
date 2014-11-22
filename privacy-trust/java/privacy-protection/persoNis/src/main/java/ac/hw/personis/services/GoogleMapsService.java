@@ -81,6 +81,7 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 
 	public GoogleMapsService(PersonisHelper personisHelper) {
 		super();
+		setResizable(false);
 		getContentPane().setBackground(Color.BLUE);
 		this.personisHelper = personisHelper;
 		this.ctxBroker = personisHelper.getCtxBroker();
@@ -113,7 +114,7 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 		this.userID = personisHelper.getUserID(myServiceName);
 		this.registerForContext();
 		getContentPane().setLayout(null);
-		setSize(467, 637);
+		setSize(456, 628);
 
 		ImagePanel imagePanel = new ImagePanel("/gvfappback1.png");
 		imagePanel.setBounds(0, 0, 450, 600);
@@ -290,6 +291,7 @@ public class GoogleMapsService extends JFrame implements ActionListener, CtxChan
 					lblLoggedIn.setText("<html><p>You are logged in as "+userID.getBareJid()+"</p></html>");
 					setLabelsVisible();
 					GoogleMapsService.this.logging.debug("Exiting thread");
+					GoogleMapsService.this.requestFocus();
 				}
 			}.start();
 		}

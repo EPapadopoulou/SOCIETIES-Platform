@@ -42,53 +42,74 @@ public class RangesGoogle {
 			Hashtable<String, ConditionRanges> table = new Hashtable<String, ConditionRanges>();
 
 			for (RequestItem item : policy.getRequestItems()){
+				List<Condition> conditionsInPolicy = item.getConditions();
+
+
 				String dataType = item.getResource().getDataType();
 				if (dataType.equalsIgnoreCase(CtxAttributeTypes.LOCATION_SYMBOLIC)){
 					List<Condition> conditions = new ArrayList<Condition>();
+					DataRetentionRange dataRetentionRange = null;
+					ShareDataRange shareDataRange = null;
+					BooleanRange mayInferBooleanRange = null;
+					BooleanRange storeSecureBooleanRange = null;
+					BooleanRange accessHeldBooleanRange = null;
+					BooleanRange correctDataBooleanRange = null;
+					BooleanRange rightToOptOutBooleanRange = null;
 
-					Condition dataRetention = new Condition();
-					dataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION);
-					dataRetention.setValue(dataRetentionValues[4]);
-					conditions.add(dataRetention);
-					DataRetentionRange dataRetentionRange = new DataRetentionRange(dataRetentionValues[1], dataRetentionValues[4]); //1h - 12h
-
-					Condition shareData = new Condition();
-					shareData.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
-					shareData.setValue(shareValues[0]);
-					conditions.add(shareData);
-					ShareDataRange shareDataRange = new ShareDataRange(shareValues[0], shareValues[0]);//no sharing
-
-					Condition mayInfer = new Condition();
-					mayInfer.setConditionConstant(ConditionConstants.MAY_BE_INFERRED);
-					mayInfer.setValue(booleanValues[0]);
-					conditions.add(mayInfer);
-					BooleanRange mayInferBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.MAY_BE_INFERRED);// no-yes
-
-					Condition storeSecure = new Condition();
-					storeSecure.setConditionConstant(ConditionConstants.STORE_IN_SECURE_STORAGE);
-					storeSecure.setValue(booleanValues[1]);
-					conditions.add(storeSecure);
-					BooleanRange storeSecureBooleanRange = new BooleanRange(booleanValues[1], booleanValues[1], ConditionConstants.STORE_IN_SECURE_STORAGE); //no
-
-					Condition access = new Condition();
-					access.setConditionConstant(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA);
-					access.setValue(booleanValues[1]);
-					conditions.add(access);
-					BooleanRange accessHeldBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA); //no-yes
-
-					Condition correct = new Condition();
-					correct.setConditionConstant(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
-					correct.setValue(booleanValues[1]);
-					conditions.add(correct);
-					BooleanRange correctDataBooleanRange = new BooleanRange(booleanValues[1], booleanValues[1], ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
-
-					Condition optOut = new Condition();
-					optOut.setConditionConstant(ConditionConstants.RIGHT_TO_OPTOUT);
-					optOut.setValue(booleanValues[0]);
-					conditions.add(optOut);
-					BooleanRange rightToOptOutBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.RIGHT_TO_OPTOUT);
-					
-					
+					for (Condition conditionInPolicy : conditionsInPolicy){
+						switch (conditionInPolicy.getConditionConstant()){
+						case DATA_RETENTION:
+							Condition dataRetention = new Condition();
+							dataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION);
+							dataRetention.setValue(dataRetentionValues[4]);
+							conditions.add(dataRetention);
+							dataRetentionRange = new DataRetentionRange(dataRetentionValues[1], conditionInPolicy.getValue()); //1h - 12h
+							break;
+						case SHARE_WITH_3RD_PARTIES:
+							Condition shareData = new Condition();
+							shareData.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
+							shareData.setValue(shareValues[0]);
+							conditions.add(shareData);
+							shareDataRange = new ShareDataRange(shareValues[0], conditionInPolicy.getValue());//no sharing
+							break;
+						case MAY_BE_INFERRED:
+							Condition mayInfer = new Condition();
+							mayInfer.setConditionConstant(ConditionConstants.MAY_BE_INFERRED);
+							mayInfer.setValue(booleanValues[0]);
+							conditions.add(mayInfer);
+							mayInferBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.MAY_BE_INFERRED);// no-yes
+							break;
+						case STORE_IN_SECURE_STORAGE:
+							Condition storeSecure = new Condition();
+							storeSecure.setConditionConstant(ConditionConstants.STORE_IN_SECURE_STORAGE);
+							storeSecure.setValue(booleanValues[1]);
+							conditions.add(storeSecure);
+							storeSecureBooleanRange = new BooleanRange(booleanValues[1], conditionInPolicy.getValue(), ConditionConstants.STORE_IN_SECURE_STORAGE); //no
+							break;
+						case RIGHT_TO_ACCESS_HELD_DATA:
+							Condition access = new Condition();
+							access.setConditionConstant(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA);
+							access.setValue(booleanValues[1]);
+							conditions.add(access);
+							accessHeldBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA); //no-yes
+							break;
+						case RIGHT_TO_CORRECT_INCORRECT_DATA:
+							Condition correct = new Condition();
+							correct.setConditionConstant(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
+							correct.setValue(booleanValues[1]);
+							conditions.add(correct);
+							correctDataBooleanRange = new BooleanRange(booleanValues[1], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
+							break;
+						case RIGHT_TO_OPTOUT:
+							Condition optOut = new Condition();
+							optOut.setConditionConstant(ConditionConstants.RIGHT_TO_OPTOUT);
+							optOut.setValue(booleanValues[0]);
+							conditions.add(optOut);
+							rightToOptOutBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_OPTOUT);
+							break;
+						}
+										
+					}
 					ConditionRanges ranges = new ConditionRanges(dataRetentionRange, shareDataRange, mayInferBooleanRange, storeSecureBooleanRange, accessHeldBooleanRange, correctDataBooleanRange, rightToOptOutBooleanRange);
 					table.put(CtxAttributeTypes.LOCATION_SYMBOLIC, ranges);
 					
@@ -96,99 +117,135 @@ public class RangesGoogle {
 					
 				}else if (dataType.equalsIgnoreCase(CtxAttributeTypes.NAME)){
 					List<Condition> conditions = new ArrayList<Condition>();
+					DataRetentionRange dataRetentionRange = null;
+					ShareDataRange shareDataRange = null;
+					BooleanRange mayInferBooleanRange = null;
+					BooleanRange storeSecureBooleanRange = null;
+					BooleanRange accessHeldBooleanRange = null;
+					BooleanRange correctDataBooleanRange = null;
+					BooleanRange rightToOptOutBooleanRange = null;
 
-					Condition dataRetention = new Condition();
-					dataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION);
-					dataRetention.setValue(dataRetentionValues[10]);
-					conditions.add(dataRetention);
-					DataRetentionRange dataRetentionRange = new DataRetentionRange(dataRetentionValues[10], dataRetentionValues[10]); //until...
-
-					Condition shareData = new Condition();
-					shareData.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
-					shareData.setValue(shareValues[2]);
-					conditions.add(shareData);
-					ShareDataRange shareDataRange = new ShareDataRange(shareValues[0], shareValues[2]);//no sharing - affiliated
-
-					Condition mayInfer = new Condition();
-					mayInfer.setConditionConstant(ConditionConstants.MAY_BE_INFERRED);
-					mayInfer.setValue(booleanValues[0]);
-					conditions.add(mayInfer);
-					BooleanRange mayInferBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.MAY_BE_INFERRED);// no-yes
-
-					Condition storeSecure = new Condition();
-					storeSecure.setConditionConstant(ConditionConstants.STORE_IN_SECURE_STORAGE);
-					storeSecure.setValue(booleanValues[0]);
-					conditions.add(storeSecure);
-					BooleanRange storeSecureBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.STORE_IN_SECURE_STORAGE); //no
-
-					Condition access = new Condition();
-					access.setConditionConstant(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA);
-					access.setValue(booleanValues[0]);
-					conditions.add(access);
-					BooleanRange accessHeldBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA); //no-yes
-
-					Condition correct = new Condition();
-					correct.setConditionConstant(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
-					correct.setValue(booleanValues[0]);
-					conditions.add(correct);
-					BooleanRange correctDataBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
-
-					Condition optOut = new Condition();
-					optOut.setConditionConstant(ConditionConstants.RIGHT_TO_OPTOUT);
-					optOut.setValue(booleanValues[1]);
-					conditions.add(optOut);
-					BooleanRange rightToOptOutBooleanRange = new BooleanRange(booleanValues[1], booleanValues[1], ConditionConstants.RIGHT_TO_OPTOUT);
-					
-					
+					for (Condition conditionInPolicy : conditionsInPolicy){
+						switch (conditionInPolicy.getConditionConstant()){
+						case DATA_RETENTION:
+							Condition dataRetention = new Condition();
+							dataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION);
+							dataRetention.setValue(dataRetentionValues[10]);
+							conditions.add(dataRetention);
+							dataRetentionRange = new DataRetentionRange(dataRetentionValues[10], conditionInPolicy.getValue()); //until...
+							break;
+						case SHARE_WITH_3RD_PARTIES:
+							Condition shareData = new Condition();
+							shareData.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
+							shareData.setValue(shareValues[2]);
+							conditions.add(shareData);
+							shareDataRange = new ShareDataRange(shareValues[0], conditionInPolicy.getValue());//no sharing - affiliated
+							break;
+						case MAY_BE_INFERRED:
+							Condition mayInfer = new Condition();
+							mayInfer.setConditionConstant(ConditionConstants.MAY_BE_INFERRED);
+							mayInfer.setValue(booleanValues[0]);
+							conditions.add(mayInfer);
+							mayInferBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.MAY_BE_INFERRED);// no-yes
+							break;
+						case STORE_IN_SECURE_STORAGE:
+							Condition storeSecure = new Condition();
+							storeSecure.setConditionConstant(ConditionConstants.STORE_IN_SECURE_STORAGE);
+							storeSecure.setValue(booleanValues[0]);
+							conditions.add(storeSecure);
+							storeSecureBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.STORE_IN_SECURE_STORAGE); //no
+							break;
+						case RIGHT_TO_ACCESS_HELD_DATA:
+							Condition access = new Condition();
+							access.setConditionConstant(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA);
+							access.setValue(booleanValues[0]);
+							conditions.add(access);
+							accessHeldBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA); //no-yes
+							break;
+						case RIGHT_TO_CORRECT_INCORRECT_DATA:
+							Condition correct = new Condition();
+							correct.setConditionConstant(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
+							correct.setValue(booleanValues[0]);
+							conditions.add(correct);
+							correctDataBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
+							break;
+						case RIGHT_TO_OPTOUT:
+							Condition optOut = new Condition();
+							optOut.setConditionConstant(ConditionConstants.RIGHT_TO_OPTOUT);
+							optOut.setValue(booleanValues[1]);
+							conditions.add(optOut);
+							rightToOptOutBooleanRange = new BooleanRange(booleanValues[1], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_OPTOUT);
+							break;
+						}
+					}
 					ConditionRanges ranges = new ConditionRanges(dataRetentionRange, shareDataRange, mayInferBooleanRange, storeSecureBooleanRange, accessHeldBooleanRange, correctDataBooleanRange, rightToOptOutBooleanRange);
 					table.put(CtxAttributeTypes.NAME, ranges);
 					
 					item.setConditions(conditions);
 				}else if (dataType.equalsIgnoreCase(CtxAttributeTypes.EMAIL)){
 					List<Condition> conditions = new ArrayList<Condition>();
+					DataRetentionRange dataRetentionRange = null;
+					ShareDataRange shareDataRange = null;
+					BooleanRange mayInferBooleanRange = null;
+					BooleanRange storeSecureBooleanRange = null;
+					BooleanRange accessHeldBooleanRange = null;
+					BooleanRange correctDataBooleanRange = null;
+					BooleanRange rightToOptOutBooleanRange = null;
 
-					Condition dataRetention = new Condition();
-					dataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION);
-					dataRetention.setValue(dataRetentionValues[10]);
-					conditions.add(dataRetention);
-					DataRetentionRange dataRetentionRange = new DataRetentionRange(dataRetentionValues[10], dataRetentionValues[10]); //until...
-
-					Condition shareData = new Condition();
-					shareData.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
-					shareData.setValue(shareValues[2]);
-					conditions.add(shareData);
-					ShareDataRange shareDataRange = new ShareDataRange(shareValues[0], shareValues[2]);//no sharing - affiliated
-
-					Condition mayInfer = new Condition();
-					mayInfer.setConditionConstant(ConditionConstants.MAY_BE_INFERRED);
-					mayInfer.setValue(booleanValues[0]);
-					conditions.add(mayInfer);
-					BooleanRange mayInferBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.MAY_BE_INFERRED);// no-yes
-
-					Condition storeSecure = new Condition();
-					storeSecure.setConditionConstant(ConditionConstants.STORE_IN_SECURE_STORAGE);
-					storeSecure.setValue(booleanValues[0]);
-					conditions.add(storeSecure);
-					BooleanRange storeSecureBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.STORE_IN_SECURE_STORAGE); //no
-
-					Condition access = new Condition();
-					access.setConditionConstant(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA);
-					access.setValue(booleanValues[0]);
-					conditions.add(access);
-					BooleanRange accessHeldBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA); //no-yes
-
-					Condition correct = new Condition();
-					correct.setConditionConstant(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
-					correct.setValue(booleanValues[0]);
-					conditions.add(correct);
-					BooleanRange correctDataBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
-
-					Condition optOut = new Condition();
-					optOut.setConditionConstant(ConditionConstants.RIGHT_TO_OPTOUT);
-					optOut.setValue(booleanValues[1]);
-					conditions.add(optOut);
-					BooleanRange rightToOptOutBooleanRange = new BooleanRange(booleanValues[1], booleanValues[1], ConditionConstants.RIGHT_TO_OPTOUT);
-					
+					for (Condition conditionInPolicy : conditionsInPolicy){
+						switch (conditionInPolicy.getConditionConstant()){
+						case DATA_RETENTION:
+							Condition dataRetention = new Condition();
+							dataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION);
+							dataRetention.setValue(dataRetentionValues[10]);
+							conditions.add(dataRetention);
+							dataRetentionRange = new DataRetentionRange(dataRetentionValues[10], conditionInPolicy.getValue()); //until...
+							break;
+						case SHARE_WITH_3RD_PARTIES:
+							Condition shareData = new Condition();
+							shareData.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
+							shareData.setValue(shareValues[2]);
+							conditions.add(shareData);
+							shareDataRange = new ShareDataRange(shareValues[0], conditionInPolicy.getValue());//no sharing - affiliated
+							break;
+						case MAY_BE_INFERRED:
+							Condition mayInfer = new Condition();
+							mayInfer.setConditionConstant(ConditionConstants.MAY_BE_INFERRED);
+							mayInfer.setValue(booleanValues[0]);
+							conditions.add(mayInfer);
+							mayInferBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.MAY_BE_INFERRED);// no-yes
+							break;
+						case STORE_IN_SECURE_STORAGE:
+							Condition storeSecure = new Condition();
+							storeSecure.setConditionConstant(ConditionConstants.STORE_IN_SECURE_STORAGE);
+							storeSecure.setValue(booleanValues[0]);
+							conditions.add(storeSecure);
+							storeSecureBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.STORE_IN_SECURE_STORAGE); //no
+							break;
+						case RIGHT_TO_ACCESS_HELD_DATA:
+							Condition access = new Condition();
+							access.setConditionConstant(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA);
+							access.setValue(booleanValues[0]);
+							conditions.add(access);
+							accessHeldBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA); //no-yes
+							break;
+						case RIGHT_TO_CORRECT_INCORRECT_DATA:
+							Condition correct = new Condition();
+							correct.setConditionConstant(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
+							correct.setValue(booleanValues[0]);
+							conditions.add(correct);
+							correctDataBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
+							break;
+						case RIGHT_TO_OPTOUT:
+							Condition optOut = new Condition();
+							optOut.setConditionConstant(ConditionConstants.RIGHT_TO_OPTOUT);
+							optOut.setValue(booleanValues[1]);
+							conditions.add(optOut);
+							rightToOptOutBooleanRange = new BooleanRange(booleanValues[1], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_OPTOUT);
+							break;
+						}
+					}
+										
 					
 					ConditionRanges ranges = new ConditionRanges(dataRetentionRange, shareDataRange, mayInferBooleanRange, storeSecureBooleanRange, accessHeldBooleanRange, correctDataBooleanRange, rightToOptOutBooleanRange);
 					table.put(CtxAttributeTypes.EMAIL, ranges);
@@ -196,49 +253,69 @@ public class RangesGoogle {
 					item.setConditions(conditions);
 				}else if (dataType.equalsIgnoreCase(CtxAttributeTypes.BIRTHDAY)){
 					List<Condition> conditions = new ArrayList<Condition>();
+					DataRetentionRange dataRetentionRange = null;
+					ShareDataRange shareDataRange = null;
+					BooleanRange mayInferBooleanRange = null;
+					BooleanRange storeSecureBooleanRange = null;
+					BooleanRange accessHeldBooleanRange = null;
+					BooleanRange correctDataBooleanRange = null;
+					BooleanRange rightToOptOutBooleanRange = null;
 
-					Condition dataRetention = new Condition();
-					dataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION);
-					dataRetention.setValue(dataRetentionValues[0]);
-					conditions.add(dataRetention);
-					DataRetentionRange dataRetentionRange = new DataRetentionRange(dataRetentionValues[0], dataRetentionValues[0]); //30min
+					for (Condition conditionInPolicy : conditionsInPolicy){
+						switch (conditionInPolicy.getConditionConstant()){
+						case DATA_RETENTION:
+							Condition dataRetention = new Condition();
+							dataRetention.setConditionConstant(ConditionConstants.DATA_RETENTION);
+							dataRetention.setValue(dataRetentionValues[0]);
+							conditions.add(dataRetention);
+							dataRetentionRange = new DataRetentionRange(dataRetentionValues[0], conditionInPolicy.getValue()); //30min
+							break;
+						case SHARE_WITH_3RD_PARTIES:
+							Condition shareData = new Condition();
+							shareData.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
+							shareData.setValue(shareValues[2]);
+							conditions.add(shareData);
+							shareDataRange = new ShareDataRange(shareValues[0], conditionInPolicy.getValue());//no sharing - affiliated
+							break;
+						case MAY_BE_INFERRED:
+							Condition mayInfer = new Condition();
+							mayInfer.setConditionConstant(ConditionConstants.MAY_BE_INFERRED);
+							mayInfer.setValue(booleanValues[0]);
+							conditions.add(mayInfer);
+							mayInferBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.MAY_BE_INFERRED);// no-yes
+							break;
+						case STORE_IN_SECURE_STORAGE:
+							Condition storeSecure = new Condition();
+							storeSecure.setConditionConstant(ConditionConstants.STORE_IN_SECURE_STORAGE);
+							storeSecure.setValue(booleanValues[1]);
+							conditions.add(storeSecure);
+							storeSecureBooleanRange = new BooleanRange(booleanValues[1], conditionInPolicy.getValue(), ConditionConstants.STORE_IN_SECURE_STORAGE); //no
+							break;
+						case RIGHT_TO_ACCESS_HELD_DATA:
+							Condition access = new Condition();
+							access.setConditionConstant(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA);
+							access.setValue(booleanValues[1]);
+							conditions.add(access);
+							accessHeldBooleanRange = new BooleanRange(booleanValues[0], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA); //no-yes
+							break;
+						case RIGHT_TO_CORRECT_INCORRECT_DATA:
+							Condition correct = new Condition();
+							correct.setConditionConstant(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
+							correct.setValue(booleanValues[1]);
+							conditions.add(correct);
+							correctDataBooleanRange = new BooleanRange(booleanValues[1], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
+							break;
+						case RIGHT_TO_OPTOUT:
+							Condition optOut = new Condition();
+							optOut.setConditionConstant(ConditionConstants.RIGHT_TO_OPTOUT);
+							optOut.setValue(booleanValues[1]);
+							conditions.add(optOut);
+							rightToOptOutBooleanRange = new BooleanRange(booleanValues[1], conditionInPolicy.getValue(), ConditionConstants.RIGHT_TO_OPTOUT);
 
-					Condition shareData = new Condition();
-					shareData.setConditionConstant(ConditionConstants.SHARE_WITH_3RD_PARTIES);
-					shareData.setValue(shareValues[2]);
-					conditions.add(shareData);
-					ShareDataRange shareDataRange = new ShareDataRange(shareValues[0], shareValues[2]);//no sharing - affiliated
-
-					Condition mayInfer = new Condition();
-					mayInfer.setConditionConstant(ConditionConstants.MAY_BE_INFERRED);
-					mayInfer.setValue(booleanValues[0]);
-					conditions.add(mayInfer);
-					BooleanRange mayInferBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.MAY_BE_INFERRED);// no-yes
-
-					Condition storeSecure = new Condition();
-					storeSecure.setConditionConstant(ConditionConstants.STORE_IN_SECURE_STORAGE);
-					storeSecure.setValue(booleanValues[1]);
-					conditions.add(storeSecure);
-					BooleanRange storeSecureBooleanRange = new BooleanRange(booleanValues[1], booleanValues[1], ConditionConstants.STORE_IN_SECURE_STORAGE); //no
-
-					Condition access = new Condition();
-					access.setConditionConstant(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA);
-					access.setValue(booleanValues[1]);
-					conditions.add(access);
-					BooleanRange accessHeldBooleanRange = new BooleanRange(booleanValues[0], booleanValues[1], ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA); //no-yes
-
-					Condition correct = new Condition();
-					correct.setConditionConstant(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
-					correct.setValue(booleanValues[1]);
-					conditions.add(correct);
-					BooleanRange correctDataBooleanRange = new BooleanRange(booleanValues[1], booleanValues[1], ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
-
-					Condition optOut = new Condition();
-					optOut.setConditionConstant(ConditionConstants.RIGHT_TO_OPTOUT);
-					optOut.setValue(booleanValues[1]);
-					conditions.add(optOut);
-					BooleanRange rightToOptOutBooleanRange = new BooleanRange(booleanValues[1], booleanValues[1], ConditionConstants.RIGHT_TO_OPTOUT);
-					
+							break;
+						}
+					}
+										
 					
 					ConditionRanges ranges = new ConditionRanges(dataRetentionRange, shareDataRange, mayInferBooleanRange, storeSecureBooleanRange, accessHeldBooleanRange, correctDataBooleanRange, rightToOptOutBooleanRange);
 					table.put(CtxAttributeTypes.BIRTHDAY, ranges);

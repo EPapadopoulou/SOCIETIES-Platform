@@ -2,6 +2,7 @@
 package ac.hw.personis.services;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -78,6 +79,7 @@ public class HWUService extends JFrame implements ActionListener, CtxChangeEvent
 
 	public HWUService(PersonisHelper personisHelper) {
 		super();
+		setResizable(false);
 		getContentPane().setBackground(Color.BLUE);
 		this.personisHelper = personisHelper;
 		this.ctxBroker = personisHelper.getCtxBroker();
@@ -110,7 +112,7 @@ public class HWUService extends JFrame implements ActionListener, CtxChangeEvent
 		this.userID = personisHelper.getUserID(myServiceName);
 		this.registerForContext();
 		getContentPane().setLayout(null);
-		setSize(467, 637);
+		setSize(456, 628);
 
 		ImagePanel imagePanel = new ImagePanel("/hwucgback1.png");
 		imagePanel.setBounds(0, 0, 450, 600);
@@ -287,6 +289,7 @@ public class HWUService extends JFrame implements ActionListener, CtxChangeEvent
 					lblLoggedIn.setText("You are logged in as "+userID.getBareJid());
 					setLabelsVisible();
 					HWUService.this.logging.debug("Exiting thread");
+					HWUService.this.requestFocus();
 				}
 			}.start();
 		}

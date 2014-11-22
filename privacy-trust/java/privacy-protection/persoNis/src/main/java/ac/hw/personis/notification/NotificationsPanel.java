@@ -83,6 +83,7 @@ public class NotificationsPanel extends JPanel {
 			panels.add(panel);
 			resetPanels();
 		}
+		requestFocus();
 	}
 	public void addDobfNotification(NotificationDobfEvent notifEvent) {
 		System.out.println("Adding new dobf notification panel");
@@ -95,7 +96,7 @@ public class NotificationsPanel extends JPanel {
 			panels.add(panel);
 			resetPanels();
 		} 
-		
+		requestFocus();
 	}
 
 	private void addEmptyNotification(){
@@ -103,6 +104,7 @@ public class NotificationsPanel extends JPanel {
 		
 		panels.add(textNotificationPanel);
 		resetPanels();
+		
 	}
 	
 	public void addTextNotification(TextNotificationEvent txtNotifEvent) {

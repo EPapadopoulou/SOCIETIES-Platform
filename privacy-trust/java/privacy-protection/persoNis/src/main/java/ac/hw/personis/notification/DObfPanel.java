@@ -128,12 +128,13 @@ public class DObfPanel extends NotificationPanel implements ChangeListener {
 				
 				obfValueLabel = new JLabel("New label");
 				GridBagConstraints gbc_obfValueLabel = new GridBagConstraints();
-				gbc_obfValueLabel.anchor = GridBagConstraints.NORTH;
-				gbc_obfValueLabel.fill = GridBagConstraints.HORIZONTAL;
+				gbc_obfValueLabel.fill = GridBagConstraints.BOTH;
 				gbc_obfValueLabel.insets = new Insets(0, 0, 5, 0);
 				gbc_obfValueLabel.gridx = 0;
 				gbc_obfValueLabel.gridy = 2;
+				obfValueLabel.setPreferredSize(new Dimension(300,100));
 				add(obfValueLabel, gbc_obfValueLabel);
+				
 				GridBagConstraints gbc_btnContinue = new GridBagConstraints();
 				gbc_btnContinue.anchor = GridBagConstraints.NORTHEAST;
 				gbc_btnContinue.gridx = 0;
@@ -146,7 +147,12 @@ public class DObfPanel extends NotificationPanel implements ChangeListener {
 		}
 		
 		if (dataType.equalsIgnoreCase(CtxAttributeTypes.LOCATION_SYMBOLIC)){
-			this.obfValueLabel.setText(locations[slider.getValue()]);
+			StringBuilder sb = new StringBuilder();
+			sb.append("<html><body><p style='width: 300px; text-wrap:normal'>");
+			sb.append(locations[slider.getValue()]);
+			sb.append("</p> </body> </html>");
+			this.obfValueLabel.setText(sb.toString());
+			
 		}else if (dataType.equalsIgnoreCase(CtxAttributeTypes.NAME)){
 			this.obfValueLabel.setText(names[slider.getValue()]);
 		}if (dataType.equalsIgnoreCase(CtxAttributeTypes.BIRTHDAY)){

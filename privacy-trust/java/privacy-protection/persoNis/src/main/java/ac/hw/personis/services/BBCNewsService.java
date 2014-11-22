@@ -82,7 +82,8 @@ public class BBCNewsService extends JFrame implements ActionListener, CtxChangeE
 
 	public BBCNewsService(PersonisHelper personisHelper) {
 		super();
-		getContentPane().setBackground(Color.BLUE);
+		setResizable(false);
+		//getContentPane().setBackground(Color.BLUE);
 		this.personisHelper = personisHelper;
 		this.ctxBroker = personisHelper.getCtxBroker();
 		this.myServiceName = PersonisHelper.BBC_NEWS_APP;
@@ -114,7 +115,7 @@ public class BBCNewsService extends JFrame implements ActionListener, CtxChangeE
 		this.userID = personisHelper.getUserID(myServiceName);
 		this.registerForContext();
 		getContentPane().setLayout(null);
-		setSize(467, 637);
+		setSize(456, 628);
 
 		//TODO: needs to be updated to show bbc background
 		ImagePanel imagePanel = new ImagePanel("/bbcnappback.png");
@@ -291,6 +292,7 @@ public class BBCNewsService extends JFrame implements ActionListener, CtxChangeE
 					lblLoggedIn.setText("You are logged in as "+userID.getBareJid());
 					setLabelsVisible();
 					BBCNewsService.this.logging.debug("Exiting thread");
+					BBCNewsService.this.requestFocus();
 				}
 			}.start();
 		}

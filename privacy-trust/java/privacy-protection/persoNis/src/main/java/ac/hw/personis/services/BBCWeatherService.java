@@ -82,6 +82,7 @@ public class BBCWeatherService extends JFrame implements ActionListener, CtxChan
 
 	public BBCWeatherService(PersonisHelper personisHelper) {
 		super();
+		setResizable(false);
 		getContentPane().setBackground(Color.BLUE);
 		this.personisHelper = personisHelper;
 		this.ctxBroker = personisHelper.getCtxBroker();
@@ -114,7 +115,7 @@ public class BBCWeatherService extends JFrame implements ActionListener, CtxChan
 		this.userID = personisHelper.getUserID(myServiceName);
 		this.registerForContext();
 		getContentPane().setLayout(null);
-		setSize(467, 637);
+		setSize(456, 628);
 
 		//TODO: needs to be updated to show bbc background
 		ImagePanel imagePanel = new ImagePanel("/bbcwappback.png");
@@ -291,6 +292,7 @@ public class BBCWeatherService extends JFrame implements ActionListener, CtxChan
 					lblLoggedIn.setText("You are logged in as "+userID.getBareJid());
 					setLabelsVisible();
 					BBCWeatherService.this.logging.debug("Exiting thread");
+					BBCWeatherService.this.requestFocus();
 				}
 			}.start();
 		}

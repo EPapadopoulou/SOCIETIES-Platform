@@ -11,13 +11,13 @@ import javax.swing.SwingConstants;
 import org.societies.api.schema.identity.RequestorServiceBean;
 
 import ac.hw.personis.PersonisHelper;
-import ac.hw.personis.internalwindows.apps.ServicePanel.ServiceAction;
-import ac.hw.personis.services.BBCNewsService;
-import ac.hw.personis.services.GoogleMapsService;
-import ac.hw.personis.services.HWUService;
 
 public class AppButtonPanel extends ImagePanel {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private AppDetailsPanel detpanel;
 	private String details = "";
 
@@ -139,11 +139,11 @@ public class AppButtonPanel extends ImagePanel {
 			sb.append("The HWU Campus Guide helps you find your way around the campus and explore local amenities.");
 		}else if (staticName.equals(PersonisHelper.BBC_NEWS_APP)){
 			sb.append("The official BBC News app for UK audiences.");
-			sb.append("<br>");
+			sb.append("<br />");
 			sb.append("Get the latest, breaking news from our trusted global network of journalists.");
 
 		}else if (staticName.equals(PersonisHelper.BBC_WEATHER_APP)){
-			sb.append("Wherever you are, and whatever your plans, you’re always prepared with the latest weather forecast from BBC Weather.");
+			sb.append("Wherever you are, and whatever your plans, you're always prepared with the latest weather forecast from BBC Weather.");
 		}
 		sb.append("</html>");
 		details = sb.toString();
