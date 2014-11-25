@@ -7,6 +7,7 @@ import javax.swing.JPanel;
 
 import org.societies.api.privacytrust.privacy.model.PrivacyException;
 import org.societies.api.privacytrust.privacy.model.privacypolicy.constants.PrivacyConditionsConstantValues;
+import org.societies.api.schema.identity.RequestorBean;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Condition;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ConditionConstants;
 
@@ -23,7 +24,7 @@ public class ConditionPanel extends JPanel {
 	 * Create the panel.
 	 * @param firstRound 
 	 */
-	public ConditionPanel(Condition requestedCondition, Condition suggestedCondition, boolean firstRound) {
+	public ConditionPanel(RequestorBean requestor, Condition requestedCondition, Condition suggestedCondition, boolean firstRound, String dataType) {
 		this.firstRound = firstRound;
 		this.requestedCondition = requestedCondition;
 		this.suggestedCondition = suggestedCondition;
@@ -31,20 +32,21 @@ public class ConditionPanel extends JPanel {
 		setLayout(null);
 		setBounds(0, 0, 650, 25);
 
-		JLabel lblNewLabel = new JLabel(ConditionConstantsFriendly.getFriendlyName(requestedCondition.getConditionConstant()));
+		JLabel lblNewLabel = new JLabel(ConditionConstantsFriendly.getFriendlyName(requestedCondition.getConditionConstant(), requestor, dataType));
 		lblNewLabel.setToolTipText(getToolTipText());
-		lblNewLabel.setBounds(2, 0, 429, 20);
+		lblNewLabel.setBounds(2, 0, 435, 20);
 		add(lblNewLabel);
 
 		comboBox = new JComboBox(PrivacyConditionsConstantValues.getValues(requestedCondition.getConditionConstant()));
-		comboBox.setBounds(441, 0, 180, 20);
+		comboBox.setBounds(450, 0, 180, 20);
 		add(comboBox);
 
 
 		
 		comboBox.setSelectedItem(requestedCondition.getValue());
 		comboBox.setToolTipText(getToolTipText());
-		System.out.println("I set the selectedItem to: "+requestedCondition.getValue()+" and the combobox is displaying: "+comboBox.getSelectedItem().toString());
+		//System.out.println("I set the selectedItem to: "+requestedCondition.getValue()+" and the combobox is displaying: "+comboBox.getSelectedItem().toString());
+		System.out.println(requestedCondition.getConditionConstant()+": "+requestedCondition.getValue());
 		comboBox.setEnabled(firstRound);
 		
 		WebSeparator webSeparator = new WebSeparator(0);

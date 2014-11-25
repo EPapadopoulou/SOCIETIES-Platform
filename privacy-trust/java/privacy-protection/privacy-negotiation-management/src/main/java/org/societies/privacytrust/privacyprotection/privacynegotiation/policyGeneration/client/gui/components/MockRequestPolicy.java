@@ -192,11 +192,27 @@ public class MockRequestPolicy {
 		conditionStoreSecure.setConditionConstant(ConditionConstants.STORE_IN_SECURE_STORAGE);
 		conditionStoreSecure.setValue("Yes");
 
+		Condition conditionCorrect = new Condition();
+		conditionCorrect.setConditionConstant(ConditionConstants.RIGHT_TO_CORRECT_INCORRECT_DATA);
+		conditionCorrect.setValue("Yes");
+		
+		Condition conditionAccess = new Condition();
+		conditionAccess.setConditionConstant(ConditionConstants.RIGHT_TO_ACCESS_HELD_DATA);
+		conditionAccess.setValue("Yes");
+		
+		Condition mayInfer = new Condition();
+		mayInfer.setConditionConstant(ConditionConstants.MAY_BE_INFERRED);
+		mayInfer.setValue("Yes");
+		
 		ArrayList<Condition> conditions = new ArrayList<Condition>();
 		conditions.add(conditionStoreSecure);
 		conditions.add(conditionShare3p);
 		conditions.add(conditionDataRetention);
 		conditions.add(conditionRightToOptOut);
+		conditions.add(conditionAccess);
+		conditions.add(mayInfer);
+		conditions.add(conditionCorrect);
+		
 		
 		Resource rLocation = new Resource();
 		rLocation.setScheme(DataIdentifierScheme.CONTEXT);
@@ -255,6 +271,8 @@ public class MockRequestPolicy {
 			for (Condition c : item.getConditions()){
 				if (c.getConditionConstant().equals(ConditionConstants.DATA_RETENTION)){
 					c.setValue(PrivacyConditionsConstantValues.getValues(ConditionConstants.DATA_RETENTION)[2]);		
+				}else{
+					c.setValue(PrivacyConditionsConstantValues.getValues(c.getConditionConstant())[1]);
 				}
 			}
 			

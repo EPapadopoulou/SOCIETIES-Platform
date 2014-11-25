@@ -113,6 +113,7 @@ public class DObfPrivacyPreferenceManager extends EventListener{
 			StringBuilder sb = new StringBuilder();
 			sb.append("How do you want to obfuscate your ");
 			sb.append(details.getResource().getDataType());
+			sb.append(" for disclosing it to "+details.getRequestor().getRequestorId());
 			NotificationDobfEvent notifEvent = new NotificationDobfEvent(uuid, sb.toString(), NotificationType.SIMPLE, 0, details.getResource().getDataType());
 			UserResponseDObfEvent userInput = getUserInput(notifEvent);
 			if (userInput.getUuid().equalsIgnoreCase(ERROR)){
@@ -128,6 +129,7 @@ public class DObfPrivacyPreferenceManager extends EventListener{
 			sb.append(((DObfOutcome) outcome).getObfuscationLevel());
 			sb.append(" to data type: ");
 			sb.append(details.getResource().getDataType());
+			sb.append(" for disclosing it to "+details.getRequestor().getRequestorId());
 			NotificationDobfEvent notifEvent = new NotificationDobfEvent(uuid, sb.toString(), NotificationType.TIMED, outcome.getObfuscationLevel(), details.getResource().getDataType());
 			UserResponseDObfEvent userInput = this.getUserInput(notifEvent);
 			if (userInput.getUuid().equalsIgnoreCase(ERROR)){
@@ -143,6 +145,7 @@ public class DObfPrivacyPreferenceManager extends EventListener{
 			sb.append(((DObfOutcome) outcome).getObfuscationLevel());
 			sb.append(" to data type: ");
 			sb.append(details.getResource().getDataType());
+			sb.append(" for disclosing it to "+details.getRequestor().getRequestorId());
 			NotificationDobfEvent notifEvent = new NotificationDobfEvent(uuid, sb.toString(), NotificationType.SIMPLE, outcome.getObfuscationLevel(), details.getResource().getDataType());
 			UserResponseDObfEvent userInput = this.getUserInput(notifEvent);
 			if (userInput.getUuid().equalsIgnoreCase(ERROR)){

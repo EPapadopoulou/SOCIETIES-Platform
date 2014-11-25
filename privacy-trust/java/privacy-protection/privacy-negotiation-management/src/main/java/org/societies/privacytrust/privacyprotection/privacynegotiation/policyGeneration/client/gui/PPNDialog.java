@@ -103,7 +103,7 @@ public class PPNDialog extends JDialog implements ActionListener, WindowListener
 			RequestItem requestItem = keys.next();
 			ResponseItem responseItem = this.items.get(requestItem);
 
-			RequestItemPanel requestItemPanel = new RequestItemPanel(requestItem, responseItem, firstRound);
+			RequestItemPanel requestItemPanel = new RequestItemPanel(negDetails.getRequestor(), requestItem, responseItem, firstRound);
 			//accordion.addBar("Terms of discosure of "+requestItem.getResource().getDataType(), requestItemPanel);
 			System.out.println("Adding tab for: "+requestItem.getResource().getDataType());
 			System.out.println("Adding tab for: "+requestItem.getResource().getDataType());

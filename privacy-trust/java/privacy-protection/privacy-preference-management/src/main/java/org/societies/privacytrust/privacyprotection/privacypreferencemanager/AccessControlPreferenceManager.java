@@ -257,9 +257,9 @@ public class AccessControlPreferenceManager extends EventListener{
 			logging.debug("checkPermission(RequestorBean requestor, DataIdentifier dataId, Action action): "+accCtrlOutcome);
 			StringBuilder sb = new StringBuilder();
 			if ((accCtrlOutcome).getEffect()==PrivacyOutcomeConstantsBean.ALLOW){
-				sb.append("Your preferences suggest that I give access to");
+				sb.append("Your preferences suggest that I give access to ");
 			}else{
-				sb.append("Your preferences suggest that I block access to");
+				sb.append("Your preferences suggest that I block access to ");
 			}
 			sb.append(requestor.getRequestorId());
 			sb.append(" to ");

@@ -5,6 +5,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.swing.BoxLayout;
@@ -18,7 +20,7 @@ import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.Conditi
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.RequestItem;
 import org.societies.api.schema.privacytrust.privacy.model.privacypolicy.ResponseItem;
 
-public class ConditionsPanel extends JPanel {
+public class ConditionsPanel2 extends JPanel {
 
 	private List<ConditionPanel> conditionPanels;
 	private ResponseItem respItem;
@@ -29,7 +31,7 @@ public class ConditionsPanel extends JPanel {
 	 * Create the panel.
 	 * @param firstRound 
 	 */
-	public ConditionsPanel(RequestorBean requestor, RequestItem reqItem, ResponseItem respItem, boolean firstRound) {
+	public ConditionsPanel2(RequestorBean requestor, RequestItem reqItem, ResponseItem respItem, boolean firstRound) {
 		this.reqItem = reqItem;
 		this.respItem = respItem;
 		this.firstRound = firstRound;
@@ -40,21 +42,19 @@ public class ConditionsPanel extends JPanel {
 		JPanel panel = new JPanel();
 		panel.setBounds(0, 0, 650, 200);
 		add(panel);
-
-
-
-
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-		int yAxis = 0;
-		List<ConditionConstants> conList = new ArrayList<ConditionConstants>();
-		for (ConditionConstants con : ConditionConstants.values()){
-			conList.add(con);
-		}
+		
 		conditionPanels = new ArrayList<ConditionPanel>();
-		System.out.println(conList.size());
 
 
+		ConditionPanel dataRetention = null;
+		ConditionPanel share = null;
+		ConditionPanel infer = null;
+		ConditionPanel optOut = null;
+		ConditionPanel store = null;
+		ConditionPanel access = null;
+		ConditionPanel correct = null;
 		for (Condition condition : reqItem.getConditions()){
 			Condition suggestedCondition = null;
 			if (respItem!=null){
@@ -67,40 +67,71 @@ public class ConditionsPanel extends JPanel {
 					}
 				}
 			}
-			ConditionPanel conPanel = new ConditionPanel(requestor, condition, suggestedCondition, firstRound, reqItem.getResource().getDataType());
-
-			conPanel.setBounds(0, yAxis, 650, 28);
-			yAxis+=28;
-			panel.add(conPanel);
-
-			conditionPanels.add(conPanel);
-			for (ConditionConstants con : conList){
-				if (con.equals(condition.getConditionConstant())){
-					conList.remove(con);
-					break;
-				}
+			switch (condition.getConditionConstant()){
+			case DATA_RETENTION:
+				dataRetention = new ConditionPanel(requestor, condition, suggestedCondition, firstRound, reqItem.getResource().getDataType());
+				conditionPanels.add(dataRetention);
+				break;
+			case SHARE_WITH_3RD_PARTIES:
+				share = new ConditionPanel(requestor, condition, suggestedCondition, firstRound, reqItem.getResource().getDataType());
+				conditionPanels.add(share);
+				break;
+			case MAY_BE_INFERRED:
+				infer = new ConditionPanel(requestor, condition, suggestedCondition, firstRound, reqItem.getResource().getDataType());
+				conditionPanels.add(infer);
+				break;
+			case STORE_IN_SECURE_STORAGE:
+				store = new ConditionPanel(requestor, condition, suggestedCondition, firstRound, reqItem.getResource().getDataType());
+				conditionPanels.add(store);
+				break;
+			case RIGHT_TO_OPTOUT:
+				optOut = new ConditionPanel(requestor, condition, suggestedCondition, firstRound, reqItem.getResource().getDataType());
+				conditionPanels.add(optOut);
+				break;
+			case RIGHT_TO_ACCESS_HELD_DATA:
+				access = new ConditionPanel(requestor, condition, suggestedCondition, firstRound, reqItem.getResource().getDataType());
+				conditionPanels.add(access);
+				break;
+			case RIGHT_TO_CORRECT_INCORRECT_DATA:
+				correct = new ConditionPanel(requestor, condition, suggestedCondition, firstRound, reqItem.getResource().getDataType());
+				conditionPanels.add(correct);
+				
 			}
+			
 		}
+		
+		
+		int yAxis = 0;
+		
+		
+		dataRetention.setBounds(0, yAxis, 650, 28);
+		panel.add(dataRetention);
+		yAxis+=28;
+		
+		share.setBounds(0, yAxis, 650, 28);
+		panel.add(share);
+		yAxis+=28;
+		
+		infer.setBounds(0, yAxis, 650, 28);
+		panel.add(infer);
+		yAxis+=28;
+		
+		store.setBounds(0, yAxis, 650, 28);
+		panel.add(store);
+		yAxis+=28;
+		
+		optOut.setBounds(0, yAxis, 650, 28);
+		panel.add(optOut);
+		yAxis+=28;
+		
+		access.setBounds(0, yAxis, 650, 28);
+		panel.add(access);
+		yAxis+=28;
+		
+		correct.setBounds(0, yAxis, 650, 28);
+		panel.add(correct);
+		yAxis+=28;
 
-		//System.out.println(conList.size());
-		for (ConditionConstants con : conList){
-			Condition condition = new Condition();
-			condition.setConditionConstant(con);
-			Condition suggestedCondition = null;
-			if (respItem!=null){
-				for (Condition sCondition : respItem.getRequestItem().getConditions()){
-					if (sCondition.getConditionConstant().equals(condition.getConditionConstant())){
-						suggestedCondition = sCondition;
-						break;
-					}
-				}
-			}
-			ConditionPanel conPanel = new ConditionPanel(requestor, condition, suggestedCondition, firstRound, reqItem.getResource().getDataType());
-			conPanel.setBounds(0, yAxis, 650, 28);
-			yAxis+=28;
-			panel.add(conPanel);
-			conditionPanels.add(conPanel);
-		}
 	}
 
 	public void applyPersonalisation() {

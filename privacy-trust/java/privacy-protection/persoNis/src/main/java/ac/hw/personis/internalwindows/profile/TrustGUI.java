@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
@@ -165,6 +166,7 @@ public class TrustGUI extends JInternalFrame {
 					saveTrustValue(TrustGUI.this.helper.getGoogleRequestor(), googleValue);
 					saveTrustValue(TrustGUI.this.helper.getHwuRequestor(), hwuValue);
 					saveTrustValue(TrustGUI.this.helper.getBBCNewsRequestor(), bbcNewsValue);
+					JOptionPane.showMessageDialog(TrustGUI.this, "Trust changes saved successfully", "Save successful", JOptionPane.INFORMATION_MESSAGE);
 					//saveTrustValue(TrustGUI.this.helper.getItunesRequestor(), itunesValue);
 				} catch (TrustException e) {
 					// TODO Auto-generated catch block

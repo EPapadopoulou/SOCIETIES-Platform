@@ -61,10 +61,10 @@ public class TrustBroker implements org.societies.api.privacytrust.trust.ITrustB
 	Hashtable<String, Double> trusts;
 	public TrustBroker(){
 		trusts = new Hashtable<String, Double>();
-		trusts.put("google", 45.0);
-		trusts.put("hwu", 80.0);
-		trusts.put("bbc", 75.0);
-		trusts.put("itunes", 65.0);
+		trusts.put("google", 50.0);
+		trusts.put("hwu", 50.0);
+		trusts.put("bbc", 50.0);
+		trusts.put("itunes", 50.0);
 	}
 	@Override
 	public Future<Set<TrustRelationship>> retrieveTrustRelationships(

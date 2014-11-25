@@ -39,6 +39,7 @@ import org.societies.api.context.model.CtxAttribute;
 import org.societies.api.context.model.CtxAttributeIdentifier;
 import org.societies.api.context.model.CtxIdentifier;
 import org.societies.api.context.model.IndividualCtxEntity;
+import org.societies.api.context.model.MalformedCtxIdentifierException;
 import org.societies.api.identity.IIdentity;
 import org.societies.api.internal.context.broker.ICtxBroker;
 import org.societies.api.internal.context.model.CtxAttributeTypes;
@@ -63,7 +64,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 	private Agreement agreement;
 	private JFrame frame;
 	private JTextField txtIdentityName;
-	private ICtxBroker ctxBroker;
+	//private ICtxBroker ctxBroker;
 	//key: dataType, value = list of available ctxidentifiers for that data type
 	private Hashtable<String, List<CtxAttributeWrapper>> dataTable;
 
@@ -81,7 +82,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 	private JScrollPane scrollPane;
 	private JButton btnPersonalise;
 	private List<IIdentity> allIdentities;
-	private IPrivacyPreferenceManager privacyPreferenceManager;
+	//private IPrivacyPreferenceManager privacyPreferenceManager;
 	private IdentitySelection identitySelection;
 
 	private final static String[] reservedTypes = new String[]{
@@ -133,11 +134,9 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 		this.agreement = agreement;
 		this.identitySelection = identitySelection;
 
-		this.ctxBroker = identitySelection.getCtxBroker();
-		privacyPreferenceManager = identitySelection.getPrivacyPreferenceManager();
+
 		userIdentity = userId;
 		this.allIdentities = allIdentities;
-		getModel();
 
 		setBounds(100, 100, 631, 676);
 		getContentPane().setLayout(new BorderLayout());
@@ -161,15 +160,15 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 		contentPanel.add(panel);
 		panel.setLayout(null);
 
-		JLabel lblRequestedData = new JLabel("");
-		lblRequestedData.setBounds(10, 11, 250, 14);
-		panel.add(lblRequestedData);
-
 		scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(10, 36, 250, 236);
 		panel.add(scrollPane_1);
+	
 
+
+		
 		dataTypeJList = new JList(this.getModel());
+		
 		dataTypeJList.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				if (!e.getValueIsAdjusting()){
@@ -187,6 +186,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 
 							//JOptionPane.showMessageDialog(IdentityCreationGUIDialog.this, "size of model list: "+model.getSize());
 							ctxAttributeJList.setModel(model);
+							ctxAttributeJList.setSelectedIndex(0);
 							scrollPane_2.revalidate();
 
 						}else{
@@ -358,6 +358,19 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 
 		return false;
 	}
+	
+	private DefaultListModel getDefaultModel() throws MalformedCtxIdentifierException{
+		DefaultListModel dataTypesListModel = new DefaultListModel();
+		
+		CtxAttributeIdentifier id = new CtxAttributeIdentifier("context://eliza.societies.local2/ENTITY/person/1/ATTRIBUTE/name/16");
+		CtxAttribute attribute = new CtxAttribute(id);
+		CtxAttributeWrapper wrapper = new CtxAttributeWrapper(attribute);
+		List<CtxAttributeWrapper> list = new ArrayList<IdentityCreationGUIDialog.CtxAttributeWrapper>();
+		list.add(wrapper);
+		dataTable.put(attribute.getType(), list);
+		dataTypesListModel.addElement(attribute.getType());
+		return dataTypesListModel;
+	}
 	private DefaultListModel getModel(){
 		this.dataTable = new Hashtable<String, List<CtxAttributeWrapper>>();
 
@@ -365,7 +378,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 
 			//if agreement is null, window started from GUI, not negotiation
 			try {
-				person = this.ctxBroker.retrieveIndividualEntity(this.userIdentity).get();
+				person = this.identitySelection.getCtxBroker().retrieveIndividualEntity(this.userIdentity).get();
 				DefaultListModel dataTypesListModel = new DefaultListModel();
 				Set<CtxAttribute> attributes = person.getAttributes();
 				Iterator<CtxAttribute> iterator = attributes.iterator();
@@ -402,7 +415,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 		}else{
 
 			try {
-				person = this.ctxBroker.retrieveIndividualEntity(this.userIdentity).get();
+				person = this.identitySelection.getCtxBroker().retrieveIndividualEntity(this.userIdentity).get();
 
 				DefaultListModel dataTypesListModel = new DefaultListModel();
 
@@ -454,11 +467,18 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 				JOptionPane.showMessageDialog(this, "Your identity cannot contain the character '.' . ", "Invalid character", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
+			
+			if (this.txtIdentityName.getText().contains(" ")){
+				JOptionPane.showMessageDialog(this, "Your identity cannot have spaces", "Invalid character", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
 
 			if (this.txtIdentityName.getText()==null || this.txtIdentityName.getText().isEmpty()){
 				JOptionPane.showMessageDialog(this, "Please enter a name for your new identity", "Identity name missing", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
+			
+			
 
 			for (IIdentity id : this.allIdentities){
 				if (id.getBareJid().equalsIgnoreCase(this.txtIdentityName.getText())){
@@ -515,7 +535,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 		}else if (event.getSource().equals(this.btnPersonalise)){
 
 			logging.debug("btnPersonalise");
-			Hashtable<Resource, CtxIdentifier> recommendedAttributes = this.privacyPreferenceManager.evaluateAttributeSelectionPreferences(agreement);
+			Hashtable<Resource, CtxIdentifier> recommendedAttributes = this.identitySelection.getPrivacyPreferenceManager().evaluateAttributeSelectionPreferences(agreement);
 			logging.debug("evaluated attribute selection preferences: "+recommendedAttributes.size());
 			if (recommendedAttributes.size()==0){
 				JOptionPane.showMessageDialog(IdentityCreationGUIDialog.this, "No suitable attributes were found", "Recommended Attributes Search Result", JOptionPane.INFORMATION_MESSAGE); 
@@ -571,9 +591,9 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 	private void createCtxAttribute(String dataType, String value){
 		if (person!=null){
 			try {
-				CtxAttribute ctxAttribute = this.ctxBroker.createAttribute(this.person.getId(), dataType).get();
+				CtxAttribute ctxAttribute = this.identitySelection.getCtxBroker().createAttribute(this.person.getId(), dataType).get();
 				ctxAttribute.setStringValue(value);
-				ctxAttribute = (CtxAttribute) ctxBroker.update(ctxAttribute).get();
+				ctxAttribute = (CtxAttribute) this.identitySelection.getCtxBroker().update(ctxAttribute).get();
 				//this.myListModel = (CtxAttributesListModel) this.ctxAttributeJList.getModel();
 				DefaultListModel model = (DefaultListModel) ctxAttributeJList.getModel();
 				CtxAttributeWrapper wrappedAttribute = new CtxAttributeWrapper(ctxAttribute);
@@ -639,6 +659,7 @@ public class IdentityCreationGUIDialog extends JDialog implements ActionListener
 			return attribute;
 		}
 	}
+
 
 	/*	class CtxAttributesListModel extends DefaultListModel{
 	 *//**
