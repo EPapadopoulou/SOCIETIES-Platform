@@ -215,7 +215,7 @@ public class NegotiationClient implements INegotiationClient {
 	@Override
 	public void receiveNegotiationResponse(ResponsePolicy policy) {
 		this.logging.debug("Received response policy from Provider!");
-		// this.logging.debug(policy.toString());
+		this.logging.debug(ResponsePolicyUtils.toXMLString(policy));
 		if (policy.getNegotiationStatus().equals(NegotiationStatus.FAILED)) {
 			this.logging.debug("Negotiation Failed by provider");
 			String requestorStr = "";

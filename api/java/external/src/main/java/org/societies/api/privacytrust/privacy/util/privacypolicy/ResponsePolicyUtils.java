@@ -58,6 +58,18 @@ public class ResponsePolicyUtils {
 		
 		return builder.toString();
 		
+
+	}
+	
+	public static String toXMLString(ResponsePolicy responsePolicy){
+		StringBuilder sb = new StringBuilder();
+		if (null != responsePolicy) {
+			sb.append("<ResponsePolicy>\n");
+			sb.append(RequestorUtils.toXmlString(responsePolicy.getRequestor()));
+			sb.append(ResponseItemUtils.toXmlString(responsePolicy.getResponseItems()));
+			sb.append("</ResponsePolicy>\n");
+		}
+		return sb.toString();
 	}
 
 	public static String toString(List<ResponsePolicy> responsePolicies){
